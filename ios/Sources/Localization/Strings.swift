@@ -23,6 +23,7 @@ enum LocKey: Hashable {
     case onboardingLocating
     case onboardingLocationFallback
     case onboardingProvinceRequired
+    case onboardingCitiesPreviewTitle
 
     case dashboardRefreshButton
     case dashboardLoading
@@ -164,6 +165,11 @@ enum Strings {
             .french: "Choisis ta province ci-dessus pour continuer",
             .english: "Pick your province above to continue",
             .spanish: "Elige tu provincia arriba para continuar",
+        ],
+        .onboardingCitiesPreviewTitle: [
+            .french: "Villes disponibles, des plus fiables aux moins fiables",
+            .english: "Available cities, from most to least reliable",
+            .spanish: "Ciudades disponibles, de más a menos confiables",
         ],
         .dashboardRefreshButton: [
             .french: "Actualiser",

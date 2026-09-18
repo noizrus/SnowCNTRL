@@ -10,9 +10,9 @@ final class AddressMapViewModel: ObservableObject {
     @Published private(set) var pinLabel: String?
     @Published private(set) var isBusy = false
     @Published var errorMessage: String?
+    @Published var alertsEnabled: Bool
 
     private let existingID: UUID?
-    private let existingAlertsEnabled: Bool
 
     init(fallbackCoordinate: CLLocationCoordinate2D, existing: SavedAddress? = nil) {
         let center = existing?.coordinate ?? fallbackCoordinate
@@ -26,7 +26,7 @@ final class AddressMapViewModel: ObservableObject {
         pinCoordinate = existing?.coordinate
         pinLabel = existing?.label
         existingID = existing?.id
-        existingAlertsEnabled = existing?.alertsEnabled ?? true
+        alertsEnabled = existing?.alertsEnabled ?? true
     }
 
     func search() async {
@@ -62,7 +62,7 @@ final class AddressMapViewModel: ObservableObject {
             label: label,
             coordinate: coordinate,
             cityID: cityID,
-            alertsEnabled: existingAlertsEnabled
+            alertsEnabled: alertsEnabled
         )
     }
 }

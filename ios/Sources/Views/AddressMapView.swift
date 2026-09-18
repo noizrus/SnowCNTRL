@@ -115,6 +115,8 @@ struct AddressMapView: View {
                 Text(label)
                     .font(.subheadline.weight(.medium))
                 Spacer()
+                Toggle(localizer.s(.myStreetAlertsCaption), isOn: $viewModel.alertsEnabled)
+                    .labelsHidden()
             }
             .padding()
         } else if let error = viewModel.errorMessage {
