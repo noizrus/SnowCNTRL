@@ -1,6 +1,6 @@
 import Foundation
 
-enum ParkingBanState {
+enum ParkingBanState: Equatable {
     case activeBanNow
     case noActiveBan
     case unknownNoData

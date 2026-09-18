@@ -27,6 +27,7 @@ targets:
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: "YES"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       properties:
         UILaunchScreen: {}
@@ -35,6 +36,14 @@ targets:
         NSUserTrackingUsageDescription: >-
           Cette identification permet d'afficher des publicités pertinentes.
           Vous pouvez refuser sans que cela affecte les fonctionnalités de l'app.
+        NSLocationWhenInUseUsageDescription: >-
+          Utilisée uniquement pour centrer la carte sur ta position et
+          faciliter la sélection de ta rue. Facultatif — tu peux aussi
+          chercher une adresse ou déposer un repère manuellement.
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.snowcntrl.app.refresh
         GADApplicationIdentifier: ca-app-pub-3940256099942544~1458002511
         SKAdNetworkItems:
           - SKAdNetworkIdentifier: cstr6suwn9.skadnetwork

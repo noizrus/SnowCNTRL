@@ -25,6 +25,22 @@ build — ça peut prendre une minute.
   de Google** — une vraie pub de test s'affiche dès le premier lancement.
 - Réglages : langue, rappel, à propos / contact, ligne "version sans pub" désactivée
   (prévue plus tard, cohérent avec le plan freemium d'abord).
+- **Carte colorée pour choisir sa rue** : dans le tableau de bord, "Choisir ma rue sur
+  la carte" ouvre une vraie carte (MapKit) — cherche une adresse, dépose/déplace un
+  repère en tapant sur la carte, ou utilise ta position actuelle. L'adresse choisie
+  est sauvegardée (localement, sans compte) avec un interrupteur d'alerte.
+- **Notification "déneigement programmé"** : pour une adresse dans une ville à donnée
+  live (Montréal pour l'instant), l'app vérifie le statut au lancement/premier plan
+  et via une tâche d'arrière-plan (`BGAppRefreshTask`), et envoie une notification si
+  une interdiction est active. Pour les autres villes, l'alerte retombe sur le rappel
+  quotidien générique (puisqu'il n'y a pas de donnée en temps réel à vérifier).
+
+### Tester la vérification en arrière-plan
+
+iOS décide seul du moment réel d'exécution d'un `BGAppRefreshTask` (jamais instantané,
+jamais garanti à heure fixe) — c'est normal, pas un bug. Pour forcer un test dans le
+simulateur : lance l'app, mets-la en arrière-plan, puis dans Xcode :
+`Debug > Simulate Background App Refresh`.
 
 ## Ce qui reste à faire avant une sortie réelle
 
@@ -47,7 +63,10 @@ build — ça peut prendre une minute.
 5. **Pas de compilation vérifiée** : ce code a été écrit sans accès à Xcode/au
    simulateur iOS. Attends-toi à devoir corriger quelques erreurs de compilation
    mineures (typos, signatures d'API) au premier build.
-6. Icône d'app, écran de lancement personnalisé, politique de confidentialité et
-   conditions d'utilisation réelles (des textes de base existent déjà dans
-   `Sources/Localization/Strings.swift`, à faire réviser par un vrai texte légal
-   avant publication).
+6. Politique de confidentialité et conditions d'utilisation réelles (des textes de
+   base existent déjà dans `Sources/Localization/Strings.swift`, à faire réviser par
+   un vrai texte légal avant publication). L'icône est en place (`Sources/Assets.xcassets/AppIcon.appiconset`)
+   mais dérivée d'un aperçu maquette (fond métallique + reflet) plutôt que d'un
+   artwork carré plat — à refaire proprement avant la mise en boutique.
+7. `NSLocationWhenInUseUsageDescription` est déjà dans `project.yml` (nécessaire pour
+   le bouton "utiliser ma position" sur la carte) — relis le texte avant publication.
