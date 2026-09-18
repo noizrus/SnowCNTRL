@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import Combine
 
 /// "Choisis ta rue" — search an address, drop/drag a pin, or use the
 /// current location, then save it as the street to watch for this city.
@@ -62,7 +63,7 @@ struct AddressMapView: View {
                     .disabled(viewModel.pinCoordinate == nil || viewModel.pinLabelIsMissing)
                 }
             }
-            .onChange(of: locationManager.lastLocation) { coordinate in
+            .onReceive(locationManager.$lastLocation) { coordinate in
                 guard let coordinate else { return }
                 viewModel.region = MKCoordinateRegion(
                     center: coordinate,
