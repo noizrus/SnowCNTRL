@@ -11,6 +11,10 @@ struct TappableMapView: UIViewRepresentable {
     @Binding var pinCoordinate: CLLocationCoordinate2D?
     var accentColor: UIColor
     var segments: [StreetSegment] = []
+    /// Extra, non-draggable pins shown alongside `pinCoordinate` — used to
+    /// show every saved address for a city on one map (with a callout
+    /// title) instead of just the one being edited.
+    var readOnlyPins: [SavedAddress] = []
     var isInteractive: Bool = true
     var onTap: ((CLLocationCoordinate2D) -> Void)? = nil
 
@@ -43,6 +47,12 @@ struct TappableMapView: UIViewRepresentable {
             annotation.coordinate = coordinate
             mapView.addAnnotation(annotation)
         }
+        for address in readOnlyPins {
+            let annotation = ReadOnlyPinAnnotation()
+            annotation.coordinate = address.coordinate
+            annotation.title = address.label
+            mapView.addAnnotation(annotation)
+        }
 
         if context.coordinator.renderedSegmentIDs != segments.map(\.id) {
             mapView.removeOverlays(mapView.overlays)
@@ -58,6 +68,8 @@ struct TappableMapView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
+
+    private final class ReadOnlyPinAnnotation: MKPointAnnotation {}
 
     final class Coordinator: NSObject, MKMapViewDelegate {
         private let parent: TappableMapView
@@ -93,6 +105,7 @@ struct TappableMapView: UIViewRepresentable {
             view.markerTintColor = parent.accentColor
             view.glyphImage = UIImage(systemName: "snowflake")
             view.animatesWhenAdded = true
+            view.canShowCallout = annotation is ReadOnlyPinAnnotation
             return view
         }
 

@@ -6,20 +6,21 @@ struct DashboardView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @StateObject private var viewModel = DashboardViewModel()
     @ObservedObject private var addressStore = AddressStore.shared
-    @State private var isPresentingMap = false
+    @State private var isAddingAddress = false
+    @State private var addressBeingEdited: SavedAddress?
     @State private var segments: [StreetSegment] = []
     let city: City
     var onChangeCity: () -> Void
 
-    private var myAddress: SavedAddress? {
-        addressStore.addresses.first { $0.cityID == city.id }
+    private var myAddresses: [SavedAddress] {
+        addressStore.addresses.filter { $0.cityID == city.id }
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    myStreetCard
+                    myStreetsCard
 
                     statusCard
 
@@ -43,9 +44,17 @@ struct DashboardView: View {
             }
             .task { await viewModel.load(city: city) }
             .refreshable { await viewModel.load(city: city) }
-            .task(id: myAddress?.id) { await loadSegments() }
-            .sheet(isPresented: $isPresentingMap) {
-                AddressMapView(city: city, existing: myAddress) { saved in
+            .task(id: myAddresses.map(\.id)) { await loadSegments() }
+            .sheet(isPresented: $isAddingAddress) {
+                AddressMapView(city: city, existing: nil) { saved in
+                    addressStore.upsert(saved)
+                    if saved.alertsEnabled, city.liveProviderID == nil {
+                        NotificationScheduler.scheduleDailyReminder(cityName: city.name, language: localizer.language)
+                    }
+                }
+            }
+            .sheet(item: $addressBeingEdited) { address in
+                AddressMapView(city: city, existing: address) { saved in
                     addressStore.upsert(saved)
                     if saved.alertsEnabled, city.liveProviderID == nil {
                         NotificationScheduler.scheduleDailyReminder(cityName: city.name, language: localizer.language)
@@ -57,66 +66,110 @@ struct DashboardView: View {
     }
 
     private func loadSegments() async {
-        guard let address = myAddress else {
+        guard let first = myAddresses.first else {
             segments = []
             return
         }
         let region = MKCoordinateRegion(
-            center: address.coordinate,
+            center: first.coordinate,
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         )
         segments = await SnowSegmentService.shared.fetchSegments(for: city, near: region)
     }
 
+    /// A region wide enough to show every saved address at once, with a
+    /// sane minimum zoom so a single address doesn't feel like it's
+    /// hovering over a blank map.
+    private func fittingRegion(for addresses: [SavedAddress]) -> MKCoordinateRegion {
+        let coordinates = addresses.map(\.coordinate)
+        guard !coordinates.isEmpty else {
+            return MKCoordinateRegion(center: city.approximateCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
+        }
+        let lats = coordinates.map(\.latitude)
+        let lons = coordinates.map(\.longitude)
+        let center = CLLocationCoordinate2D(
+            latitude: (lats.min()! + lats.max()!) / 2,
+            longitude: (lons.min()! + lons.max()!) / 2
+        )
+        let span = MKCoordinateSpan(
+            latitudeDelta: max((lats.max()! - lats.min()!) * 1.6, 0.01),
+            longitudeDelta: max((lons.max()! - lons.min()!) * 1.6, 0.01)
+        )
+        return MKCoordinateRegion(center: center, span: span)
+    }
+
     @ViewBuilder
-    private var myStreetCard: some View {
+    private var myStreetsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if let address = myAddress {
+            if myAddresses.isEmpty {
+                Button {
+                    isAddingAddress = true
+                } label: {
+                    Label(localizer.s(.myStreetPickPrompt), systemImage: "mappin.and.ellipse")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+            } else {
                 TappableMapView(
-                    region: .constant(MKCoordinateRegion(
-                        center: address.coordinate,
-                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                    )),
-                    pinCoordinate: .constant(address.coordinate),
+                    region: .constant(fittingRegion(for: myAddresses)),
+                    pinCoordinate: .constant(nil),
                     accentColor: UIColor(city.tier.color),
                     segments: segments,
+                    readOnlyPins: myAddresses,
                     isInteractive: false
                 )
                 .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .allowsHitTesting(false)
 
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(address.label).font(.subheadline.weight(.semibold))
-                        Text(localizer.s(.myStreetAlertsCaption))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                ForEach(myAddresses) { address in
+                    addressRow(address)
+                    if address.id != myAddresses.last?.id {
+                        Divider()
                     }
-                    Spacer()
-                    Toggle("", isOn: Binding(
-                        get: { address.alertsEnabled },
-                        set: { addressStore.setAlertsEnabled($0, for: address) }
-                    ))
-                    .labelsHidden()
                 }
 
-                Button(localizer.s(.myStreetEditButton)) { isPresentingMap = true }
-                    .font(.footnote)
-            } else {
                 Button {
-                    isPresentingMap = true
+                    isAddingAddress = true
                 } label: {
-                    Label(localizer.s(.myStreetPickPrompt), systemImage: "mappin.and.ellipse")
-                        .frame(maxWidth: .infinity)
+                    Label(localizer.s(.myStreetAddAnother), systemImage: "plus")
                 }
-                .buttonStyle(.borderedProminent)
+                .font(.footnote)
             }
         }
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func addressRow(_ address: SavedAddress) -> some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(address.label).font(.subheadline.weight(.semibold))
+                Text(localizer.s(.myStreetAlertsCaption))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Toggle("", isOn: Binding(
+                get: { address.alertsEnabled },
+                set: { addressStore.setAlertsEnabled($0, for: address) }
+            ))
+            .labelsHidden()
+
+            Button {
+                addressBeingEdited = address
+            } label: {
+                Image(systemName: "pencil.circle")
+            }
+
+            Button(role: .destructive) {
+                addressStore.remove(address)
+            } label: {
+                Image(systemName: "trash.circle")
+            }
+        }
     }
 
     @ViewBuilder

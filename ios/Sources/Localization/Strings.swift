@@ -11,9 +11,9 @@ enum LocKey: Hashable {
     case citySelectionSearchPlaceholder
     case citySelectionEmptyState
     case citySelectionChangeButton
-    case myStreetEditButton
     case myStreetAlertsCaption
     case myStreetPickPrompt
+    case myStreetAddAnother
     case mapSaveButton
     case settingsPrivacyPolicy
     case settingsTermsOfUse
@@ -104,11 +104,6 @@ enum Strings {
             .english: "Change city",
             .spanish: "Cambiar de ciudad",
         ],
-        .myStreetEditButton: [
-            .french: "Modifier mon adresse",
-            .english: "Edit my address",
-            .spanish: "Editar mi dirección",
-        ],
         .myStreetAlertsCaption: [
             .french: "Alertes activées",
             .english: "Alerts enabled",
@@ -118,6 +113,11 @@ enum Strings {
             .french: "Choisir ma rue sur la carte",
             .english: "Pick my street on the map",
             .spanish: "Elegir mi calle en el mapa",
+        ],
+        .myStreetAddAnother: [
+            .french: "Ajouter une autre adresse",
+            .english: "Add another address",
+            .spanish: "Añadir otra dirección",
         ],
         .mapSaveButton: [
             .french: "Enregistrer",
