@@ -46,6 +46,21 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink(localizer.s(.settingsPrivacyPolicy)) {
+                        LegalDocumentView(
+                            title: localizer.s(.settingsPrivacyPolicy),
+                            body_: LegalTexts.privacyPolicy(language: localizer.language, contactEmail: SupportConfig.contactEmail)
+                        )
+                    }
+                    NavigationLink(localizer.s(.settingsTermsOfUse)) {
+                        LegalDocumentView(
+                            title: localizer.s(.settingsTermsOfUse),
+                            body_: LegalTexts.termsOfUse(language: localizer.language, contactEmail: SupportConfig.contactEmail)
+                        )
+                    }
+                }
+
+                Section {
                     Text(localizer.s(.settingsVersionPrefix) + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -68,5 +83,12 @@ struct SettingsView: View {
             }
             NotificationScheduler.scheduleDailyReminder(cityName: city.name, language: localizer.language)
         }
+    }
+}
+
+struct SettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        SettingsView(selectedCity: CitiesData.all.first { $0.id == "montreal" })
+            .environmentObject(Localizer())
     }
 }

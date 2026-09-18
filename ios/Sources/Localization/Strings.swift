@@ -15,6 +15,8 @@ enum LocKey: Hashable {
     case myStreetAlertsCaption
     case myStreetPickPrompt
     case mapSaveButton
+    case settingsPrivacyPolicy
+    case settingsTermsOfUse
 
     case dashboardRefreshButton
     case dashboardLoading
@@ -116,6 +118,16 @@ enum Strings {
             .french: "Enregistrer",
             .english: "Save",
             .spanish: "Guardar",
+        ],
+        .settingsPrivacyPolicy: [
+            .french: "Politique de confidentialité",
+            .english: "Privacy Policy",
+            .spanish: "Política de privacidad",
+        ],
+        .settingsTermsOfUse: [
+            .french: "Conditions d'utilisation",
+            .english: "Terms of Use",
+            .spanish: "Términos de uso",
         ],
         .dashboardRefreshButton: [
             .french: "Actualiser",

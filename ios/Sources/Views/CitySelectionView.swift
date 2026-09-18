@@ -53,3 +53,10 @@ private struct ContentUnavailableFallback: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
+
+struct CitySelectionView_Previews: PreviewProvider {
+    static var previews: some View {
+        CitySelectionView(viewModel: CitySelectionViewModel(), onSelect: { _ in })
+            .environmentObject(Localizer())
+    }
+}

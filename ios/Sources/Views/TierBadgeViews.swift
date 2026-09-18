@@ -35,3 +35,19 @@ struct TierDisclaimerBanner: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
+
+struct TierBadgeViews_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(DataTier.allCases, id: \.self) { tier in
+                VStack(alignment: .leading, spacing: 6) {
+                    TierBadge(tier: tier)
+                    TierDisclaimerBanner(tier: tier, cityName: "Montréal")
+                }
+            }
+        }
+        .padding()
+        .environmentObject(Localizer())
+        .previewLayout(.sizeThatFits)
+    }
+}

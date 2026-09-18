@@ -149,3 +149,20 @@ struct DashboardView: View {
         }
     }
 }
+
+struct DashboardView_Previews: PreviewProvider {
+    static var previews: some View {
+        let montreal = CitiesData.all.first { $0.id == "montreal" }!
+        let regina = CitiesData.all.first { $0.id == "regina" }!
+
+        Group {
+            DashboardView(city: montreal, onChangeCity: {})
+                .environmentObject(Localizer())
+                .previewDisplayName("Montréal — Niveau 1")
+
+            DashboardView(city: regina, onChangeCity: {})
+                .environmentObject(Localizer())
+                .previewDisplayName("Regina — Niveau 3")
+        }
+    }
+}

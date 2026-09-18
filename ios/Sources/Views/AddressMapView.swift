@@ -116,3 +116,10 @@ struct AddressMapView: View {
 private extension AddressMapViewModel {
     var pinLabelIsMissing: Bool { pinLabel == nil }
 }
+
+struct AddressMapView_Previews: PreviewProvider {
+    static var previews: some View {
+        AddressMapView(city: CitiesData.all.first { $0.id == "montreal" }!, onSave: { _ in })
+            .environmentObject(Localizer())
+    }
+}
