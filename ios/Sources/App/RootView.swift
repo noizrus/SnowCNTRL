@@ -15,7 +15,10 @@ struct RootView: View {
                 TabView {
                     DashboardView(city: city) {
                         citySelection.clearSelection()
-                        skippedGeolocation = false
+                        // Straight to the manual list: the user tapped
+                        // "change city" on purpose, so re-running geolocation
+                        // here would just re-resolve to the same city.
+                        skippedGeolocation = true
                     }
                     .tabItem { Label(localizer.s(.tabDashboard), systemImage: "snowflake") }
 

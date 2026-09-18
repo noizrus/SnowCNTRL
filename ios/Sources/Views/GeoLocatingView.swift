@@ -20,7 +20,7 @@ struct GeoLocatingView: View {
                 .font(.headline)
 
             Button(localizer.s(.onboardingLocationFallback), action: onManualFallback)
-                .font(.subheadline)
+                .buttonStyle(.bordered)
                 .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
