@@ -42,15 +42,22 @@ struct OnboardingView: View {
                 .padding(20)
             }
             .safeAreaInset(edge: .bottom) {
-                Button {
-                    onFinished()
-                } label: {
-                    Text(localizer.s(.onboardingAcceptButton))
-                        .frame(maxWidth: .infinity)
+                VStack(spacing: 6) {
+                    if themeManager.province == nil {
+                        Text(localizer.s(.onboardingProvinceRequired))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button {
+                        onFinished()
+                    } label: {
+                        Text(localizer.s(.onboardingAcceptButton))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(themeManager.province == nil)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(themeManager.province == nil)
                 .padding()
                 .background(.ultraThinMaterial)
             }

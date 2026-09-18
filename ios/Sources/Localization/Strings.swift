@@ -22,6 +22,7 @@ enum LocKey: Hashable {
     case settingsTheme
     case onboardingLocating
     case onboardingLocationFallback
+    case onboardingProvinceRequired
 
     case dashboardRefreshButton
     case dashboardLoading
@@ -158,6 +159,11 @@ enum Strings {
             .french: "Choisir ma ville manuellement",
             .english: "Pick my city manually",
             .spanish: "Elegir mi ciudad manualmente",
+        ],
+        .onboardingProvinceRequired: [
+            .french: "Choisis ta province ci-dessus pour continuer",
+            .english: "Pick your province above to continue",
+            .spanish: "Elige tu provincia arriba para continuar",
         ],
         .dashboardRefreshButton: [
             .french: "Actualiser",
