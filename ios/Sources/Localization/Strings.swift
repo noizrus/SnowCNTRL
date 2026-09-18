@@ -17,6 +17,11 @@ enum LocKey: Hashable {
     case mapSaveButton
     case settingsPrivacyPolicy
     case settingsTermsOfUse
+    case provincePickerTitle
+    case onboardingProvincePrompt
+    case settingsTheme
+    case onboardingLocating
+    case onboardingLocationFallback
 
     case dashboardRefreshButton
     case dashboardLoading
@@ -128,6 +133,31 @@ enum Strings {
             .french: "Conditions d'utilisation",
             .english: "Terms of Use",
             .spanish: "Términos de uso",
+        ],
+        .provincePickerTitle: [
+            .french: "Province",
+            .english: "Province",
+            .spanish: "Provincia",
+        ],
+        .onboardingProvincePrompt: [
+            .french: "Ta province",
+            .english: "Your province",
+            .spanish: "Tu provincia",
+        ],
+        .settingsTheme: [
+            .french: "Thème",
+            .english: "Theme",
+            .spanish: "Tema",
+        ],
+        .onboardingLocating: [
+            .french: "Localisation en cours…",
+            .english: "Locating…",
+            .spanish: "Localizando…",
+        ],
+        .onboardingLocationFallback: [
+            .french: "Choisir ma ville manuellement",
+            .english: "Pick my city manually",
+            .spanish: "Elegir mi ciudad manualmente",
         ],
         .dashboardRefreshButton: [
             .french: "Actualiser",

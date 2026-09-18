@@ -34,6 +34,31 @@ build — ça peut prendre une minute.
   et via une tâche d'arrière-plan (`BGAppRefreshTask`), et envoie une notification si
   une interdiction est active. Pour les autres villes, l'alerte retombe sur le rappel
   quotidien générique (puisqu'il n'y a pas de donnée en temps réel à vérifier).
+- **Géolocalisation au premier lancement** : après l'onboarding, l'app essaie de
+  détecter automatiquement la ville la plus proche par GPS plutôt que de forcer une
+  recherche manuelle (`GeoLocatingView`). Un bouton "Choisir ma ville manuellement"
+  reste toujours visible en cas de refus de permission ou d'échec.
+- **Lignes de rue lumineuses (style Info-Neige)** : sur la carte, chaque côté de rue
+  peut s'afficher en ligne néon colorée selon le statut — rouge (interdiction active),
+  orange (planifié), mauve (chargement en cours), bleu (enneigée), vert (déneigée),
+  gris (en attente), les mêmes codes que Info-Neige MTL. Rendu via un
+  `MKOverlayRenderer` maison (`GlowPolylineRenderer`) avec halo flou + trait vif.
+  **Important** : comme pour le statut général, aucune géométrie de rue réelle n'a pu
+  être obtenue (même blocage `donnees.montreal.ca`) — `MontrealSnowSegmentProvider`
+  affiche donc des rues d'exemple générées autour du point choisi, pas de vraies
+  données. Toutes les autres villes n'affichent aucune ligne (pas de donnée du tout).
+  Voir les commentaires dans `Sources/Services/SnowSegmentProviding.swift` pour brancher
+  les vraies données une fois le `resource_id` obtenu.
+- **Carte "mutedStandard"** : style de carte désaturé (au lieu du standard MapKit) pour
+  que les lignes néon ressortent davantage — pas de service de tuiles personnalisé
+  (Mapbox, etc.), donc aucun coût ni clé API supplémentaire pour l'instant.
+- **Thèmes de couleurs** : un thème par province/territoire inspiré de son drapeau
+  (appliqué automatiquement selon la province choisie), plus deux thèmes saisonniers
+  (Noël, Halloween) sélectionnables dans Réglages. Les couleurs de niveau de donnée
+  (vert/jaune/rouge) restent séparées du thème décoratif — jamais changées par le thème,
+  pour ne pas brouiller leur sens.
+- **Réglages étendus** : langue, province (grille colorée par drapeau) et thème sont
+  modifiables à tout moment dans l'onglet Réglages, pas seulement à l'onboarding.
 
 ### Tester la vérification en arrière-plan
 
@@ -69,4 +94,11 @@ simulateur : lance l'app, mets-la en arrière-plan, puis dans Xcode :
    mais dérivée d'un aperçu maquette (fond métallique + reflet) plutôt que d'un
    artwork carré plat — à refaire proprement avant la mise en boutique.
 7. `NSLocationWhenInUseUsageDescription` est déjà dans `project.yml` (nécessaire pour
-   le bouton "utiliser ma position" sur la carte) — relis le texte avant publication.
+   le bouton "utiliser ma position" sur la carte et la géolocalisation au lancement)
+   — relis le texte avant publication.
+8. **Lignes de rue = données d'exemple, pas réelles** (voir plus haut) — c'est la limite
+   la plus visible actuellement : le rendu néon fonctionne, mais ce n'est pas encore un
+   vrai statut de déneigement rue par rue tant que le `resource_id` de Montréal n'est
+   pas branché.
+9. Les couleurs de thème par province sont une interprétation approximative des
+   drapeaux, pas une reproduction officielle — à ajuster si certaines ne plaisent pas.

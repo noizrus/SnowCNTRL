@@ -6,9 +6,11 @@ import Combine
 /// current location, then save it as the street to watch for this city.
 struct AddressMapView: View {
     @EnvironmentObject private var localizer: Localizer
+    @EnvironmentObject private var themeManager: ThemeManager
     @StateObject private var locationManager = LocationManager()
     @StateObject private var viewModel: AddressMapViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var segments: [StreetSegment] = []
 
     let city: City
     var onSave: (SavedAddress) -> Void
@@ -31,10 +33,12 @@ struct AddressMapView: View {
                     TappableMapView(
                         region: $viewModel.region,
                         pinCoordinate: $viewModel.pinCoordinate,
-                        accentColor: UIColor(city.tier.color)
-                    ) { coordinate in
-                        Task { await viewModel.dropPin(at: coordinate) }
-                    }
+                        accentColor: UIColor(city.tier.color),
+                        segments: segments,
+                        onTap: { coordinate in
+                            Task { await viewModel.dropPin(at: coordinate) }
+                        }
+                    )
 
                     Button {
                         locationManager.requestLocation()
@@ -71,7 +75,11 @@ struct AddressMapView: View {
                 )
                 Task { await viewModel.dropPin(at: coordinate) }
             }
+            .task {
+                segments = await SnowSegmentService.shared.fetchSegments(for: city, near: viewModel.region)
+            }
         }
+        .tint(themeManager.palette.primary)
     }
 
     private var searchPlaceholder: String {
@@ -122,5 +130,6 @@ struct AddressMapView_Previews: PreviewProvider {
     static var previews: some View {
         AddressMapView(city: CitiesData.all.first { $0.id == "montreal" }!, onSave: { _ in })
             .environmentObject(Localizer())
+            .environmentObject(ThemeManager())
     }
 }

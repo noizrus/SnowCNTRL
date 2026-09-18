@@ -2,7 +2,12 @@ import SwiftUI
 
 struct OnboardingView: View {
     @EnvironmentObject private var localizer: Localizer
+    @EnvironmentObject private var themeManager: ThemeManager
     var onFinished: () -> Void
+
+    private var provinceBinding: Binding<ProvinceCode?> {
+        Binding(get: { themeManager.province }, set: { themeManager.province = $0 })
+    }
 
     var body: some View {
         NavigationStack {
@@ -17,6 +22,10 @@ struct OnboardingView: View {
 
                     Text(localizer.s(.onboardingWelcomeTitle))
                         .font(.largeTitle.bold())
+
+                    Text(localizer.s(.onboardingProvincePrompt))
+                        .font(.headline)
+                    ProvinceGridPicker(selection: provinceBinding)
 
                     Text(
                         localizer.s(.onboardingIndependentDevNotice)
@@ -41,10 +50,12 @@ struct OnboardingView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+                .disabled(themeManager.province == nil)
                 .padding()
                 .background(.ultraThinMaterial)
             }
         }
+        .tint(themeManager.palette.primary)
     }
 }
 
@@ -52,5 +63,6 @@ struct OnboardingView_Previews: PreviewProvider {
     static var previews: some View {
         OnboardingView(onFinished: {})
             .environmentObject(Localizer())
+            .environmentObject(ThemeManager())
     }
 }

@@ -2,8 +2,13 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var localizer: Localizer
+    @EnvironmentObject private var themeManager: ThemeManager
     @AppStorage("snowcntrl.dailyReminder") private var dailyReminderEnabled = false
     let selectedCity: City?
+
+    private var provinceBinding: Binding<ProvinceCode?> {
+        Binding(get: { themeManager.province }, set: { themeManager.province = $0 })
+    }
 
     var body: some View {
         NavigationStack {
@@ -12,6 +17,20 @@ struct SettingsView: View {
                     Picker(localizer.s(.settingsLanguage), selection: $localizer.language) {
                         ForEach(AppLanguage.allCases) { lang in
                             Text(lang.nativeName).tag(lang)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Section(localizer.s(.provincePickerTitle)) {
+                    ProvinceGridPicker(selection: provinceBinding)
+                        .padding(.vertical, 4)
+                }
+
+                Section(localizer.s(.settingsTheme)) {
+                    Picker(localizer.s(.settingsTheme), selection: $themeManager.selectedTheme) {
+                        ForEach(AppTheme.allCases) { theme in
+                            Text(theme.label(language: localizer.language)).tag(theme)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -68,6 +87,7 @@ struct SettingsView: View {
             }
             .navigationTitle(localizer.s(.settingsTitle))
         }
+        .tint(themeManager.palette.primary)
     }
 
     private func handleReminderToggle(_ enabled: Bool) {
@@ -90,5 +110,6 @@ struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
         SettingsView(selectedCity: CitiesData.all.first { $0.id == "montreal" })
             .environmentObject(Localizer())
+            .environmentObject(ThemeManager())
     }
 }

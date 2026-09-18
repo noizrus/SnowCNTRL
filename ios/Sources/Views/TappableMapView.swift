@@ -3,21 +3,32 @@ import MapKit
 
 /// A real MKMapView (not the SwiftUI-16 `Map` view) so tapping the map to
 /// drop a pin works reliably at the iOS 16 deployment target — SwiftUI's own
-/// tap-to-coordinate API only arrived in iOS 17.
+/// tap-to-coordinate API only arrived in iOS 17. Also draws neon glow lines
+/// for street segments (see GlowPolylineRenderer) and uses the muted map
+/// style so those glow lines stand out against a calmer base map.
 struct TappableMapView: UIViewRepresentable {
     @Binding var region: MKCoordinateRegion
     @Binding var pinCoordinate: CLLocationCoordinate2D?
     var accentColor: UIColor
-    var onTap: (CLLocationCoordinate2D) -> Void
+    var segments: [StreetSegment] = []
+    var isInteractive: Bool = true
+    var onTap: ((CLLocationCoordinate2D) -> Void)? = nil
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
         mapView.showsUserLocation = true
+        mapView.mapType = .mutedStandard
         mapView.setRegion(region, animated: false)
+        mapView.isScrollEnabled = isInteractive
+        mapView.isZoomEnabled = isInteractive
+        mapView.isRotateEnabled = isInteractive
+        mapView.isPitchEnabled = isInteractive
 
-        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
-        mapView.addGestureRecognizer(tap)
+        if isInteractive {
+            let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+            mapView.addGestureRecognizer(tap)
+        }
         return mapView
     }
 
@@ -32,6 +43,16 @@ struct TappableMapView: UIViewRepresentable {
             annotation.coordinate = coordinate
             mapView.addAnnotation(annotation)
         }
+
+        if context.coordinator.renderedSegmentIDs != segments.map(\.id) {
+            mapView.removeOverlays(mapView.overlays)
+            for segment in segments {
+                let line = GlowPolyline(coordinates: segment.coordinates, count: segment.coordinates.count)
+                line.status = segment.status
+                mapView.addOverlay(line)
+            }
+            context.coordinator.renderedSegmentIDs = segments.map(\.id)
+        }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -41,6 +62,7 @@ struct TappableMapView: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         private let parent: TappableMapView
         var isDraggingOrAnimating = false
+        var renderedSegmentIDs: [String] = []
 
         init(_ parent: TappableMapView) {
             self.parent = parent
@@ -50,7 +72,7 @@ struct TappableMapView: UIViewRepresentable {
             guard let mapView = gesture.view as? MKMapView else { return }
             let point = gesture.location(in: mapView)
             let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
-            parent.onTap(coordinate)
+            parent.onTap?(coordinate)
         }
 
         func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
@@ -72,6 +94,13 @@ struct TappableMapView: UIViewRepresentable {
             view.glyphImage = UIImage(systemName: "snowflake")
             view.animatesWhenAdded = true
             return view
+        }
+
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let glow = overlay as? GlowPolyline {
+                return GlowPolylineRenderer(overlay: glow)
+            }
+            return MKOverlayRenderer(overlay: overlay)
         }
     }
 }

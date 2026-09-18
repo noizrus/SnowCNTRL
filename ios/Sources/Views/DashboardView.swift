@@ -3,9 +3,11 @@ import MapKit
 
 struct DashboardView: View {
     @EnvironmentObject private var localizer: Localizer
+    @EnvironmentObject private var themeManager: ThemeManager
     @StateObject private var viewModel = DashboardViewModel()
     @ObservedObject private var addressStore = AddressStore.shared
     @State private var isPresentingMap = false
+    @State private var segments: [StreetSegment] = []
     let city: City
     var onChangeCity: () -> Void
 
@@ -41,6 +43,7 @@ struct DashboardView: View {
             }
             .task { await viewModel.load(city: city) }
             .refreshable { await viewModel.load(city: city) }
+            .task(id: myAddress?.id) { await loadSegments() }
             .sheet(isPresented: $isPresentingMap) {
                 AddressMapView(city: city, existing: myAddress) { saved in
                     addressStore.upsert(saved)
@@ -50,22 +53,36 @@ struct DashboardView: View {
                 }
             }
         }
+        .tint(themeManager.palette.primary)
+    }
+
+    private func loadSegments() async {
+        guard let address = myAddress else {
+            segments = []
+            return
+        }
+        let region = MKCoordinateRegion(
+            center: address.coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+        segments = await SnowSegmentService.shared.fetchSegments(for: city, near: region)
     }
 
     @ViewBuilder
     private var myStreetCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let address = myAddress {
-                Map(
-                    coordinateRegion: .constant(
-                        MKCoordinateRegion(center: address.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
-                    ),
-                    interactionModes: [],
-                    annotationItems: [address]
-                ) { item in
-                    MapMarker(coordinate: item.coordinate, tint: city.tier.color)
-                }
-                .frame(height: 140)
+                TappableMapView(
+                    region: .constant(MKCoordinateRegion(
+                        center: address.coordinate,
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    )),
+                    pinCoordinate: .constant(address.coordinate),
+                    accentColor: UIColor(city.tier.color),
+                    segments: segments,
+                    isInteractive: false
+                )
+                .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .allowsHitTesting(false)
 
@@ -158,10 +175,12 @@ struct DashboardView_Previews: PreviewProvider {
         Group {
             DashboardView(city: montreal, onChangeCity: {})
                 .environmentObject(Localizer())
+                .environmentObject(ThemeManager())
                 .previewDisplayName("Montréal — Niveau 1")
 
             DashboardView(city: regina, onChangeCity: {})
                 .environmentObject(Localizer())
+                .environmentObject(ThemeManager())
                 .previewDisplayName("Regina — Niveau 3")
         }
     }

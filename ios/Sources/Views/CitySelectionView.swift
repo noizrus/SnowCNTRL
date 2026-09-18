@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CitySelectionView: View {
     @EnvironmentObject private var localizer: Localizer
+    @EnvironmentObject private var themeManager: ThemeManager
     @ObservedObject var viewModel: CitySelectionViewModel
     var onSelect: (City) -> Void
 
@@ -35,6 +36,7 @@ struct CitySelectionView: View {
             .searchable(text: $viewModel.searchText, prompt: localizer.s(.citySelectionSearchPlaceholder))
             .navigationTitle(localizer.s(.citySelectionTitle))
         }
+        .tint(themeManager.palette.primary)
     }
 }
 
@@ -58,5 +60,6 @@ struct CitySelectionView_Previews: PreviewProvider {
     static var previews: some View {
         CitySelectionView(viewModel: CitySelectionViewModel(), onSelect: { _ in })
             .environmentObject(Localizer())
+            .environmentObject(ThemeManager())
     }
 }
