@@ -93,7 +93,14 @@ struct TappableMapView: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             isDraggingOrAnimating = false
-            parent.region = mapView.region
+            // setRegion(_:animated:) in updateUIView can invoke this
+            // delegate callback synchronously, so writing straight into the
+            // SwiftUI binding here triggers "Publishing changes from within
+            // view updates". Deferring one runloop tick avoids that.
+            let newRegion = mapView.region
+            DispatchQueue.main.async { [parent] in
+                parent.region = newRegion
+            }
         }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
