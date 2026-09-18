@@ -55,7 +55,11 @@ struct AddressMapView: View {
             .navigationTitle(city.name)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("✕") { dismiss() }
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(localizer.s(.mapSaveButton)) {
