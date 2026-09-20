@@ -12,6 +12,11 @@ struct TierBadge: View {
             .background(tier.color.opacity(0.15))
             .foregroundStyle(tier.color)
             .clipShape(Capsule())
+            .overlay(Capsule().strokeBorder(tier.color.opacity(0.6), lineWidth: 1))
+            // A single cheap shadow, not the full 3-pass NeonGlow — this
+            // badge can appear 100+ times in a scrolling list, where three
+            // stacked shadows per row would visibly cost scroll performance.
+            .shadow(color: tier.color.opacity(0.5), radius: 3)
     }
 }
 

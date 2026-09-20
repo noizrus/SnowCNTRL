@@ -35,6 +35,11 @@ struct CitySelectionView: View {
             }
             .searchable(text: $viewModel.searchText, prompt: localizer.s(.citySelectionSearchPlaceholder))
             .navigationTitle(localizer.s(.citySelectionTitle))
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    SnowCntrlBrandmark()
+                }
+            }
         }
         .tint(themeManager.palette.primary)
     }

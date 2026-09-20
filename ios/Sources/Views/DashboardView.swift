@@ -47,6 +47,9 @@ struct DashboardView: View {
             .navigationTitle(city.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    SnowCntrlBrandmark()
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(localizer.s(.citySelectionChangeButton), action: onChangeCity)
                 }

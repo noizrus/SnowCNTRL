@@ -28,8 +28,19 @@ extension ProvinceCode {
     }
 }
 
+/// Ten selectable looks: "Automatique" follows the user's province, the
+/// rest are curated neon palettes (plus two seasonal ones) — all rendered
+/// with the same glow treatment (see NeonGlow.swift) so switching themes
+/// never changes what a color *means* (tier/status colors are separate).
 enum AppTheme: String, Codable, CaseIterable, Identifiable, Hashable {
     case automatic
+    case aurora
+    case blizzard
+    case inferno
+    case cyberpunk
+    case glacier
+    case midnight
+    case maple
     case christmas
     case halloween
 
@@ -40,6 +51,27 @@ enum AppTheme: String, Codable, CaseIterable, Identifiable, Hashable {
         case (.automatic, .french): return "Automatique (ma province)"
         case (.automatic, .english): return "Automatic (my province)"
         case (.automatic, .spanish): return "Automático (mi provincia)"
+        case (.aurora, .french): return "Aurore boréale"
+        case (.aurora, .english): return "Aurora"
+        case (.aurora, .spanish): return "Aurora boreal"
+        case (.blizzard, .french): return "Blizzard"
+        case (.blizzard, .english): return "Blizzard"
+        case (.blizzard, .spanish): return "Ventisca"
+        case (.inferno, .french): return "Brasier"
+        case (.inferno, .english): return "Inferno"
+        case (.inferno, .spanish): return "Infierno"
+        case (.cyberpunk, .french): return "Cyberpunk"
+        case (.cyberpunk, .english): return "Cyberpunk"
+        case (.cyberpunk, .spanish): return "Cyberpunk"
+        case (.glacier, .french): return "Glacier"
+        case (.glacier, .english): return "Glacier"
+        case (.glacier, .spanish): return "Glaciar"
+        case (.midnight, .french): return "Minuit"
+        case (.midnight, .english): return "Midnight"
+        case (.midnight, .spanish): return "Medianoche"
+        case (.maple, .french): return "Érable néon"
+        case (.maple, .english): return "Neon Maple"
+        case (.maple, .spanish): return "Arce neón"
         case (.christmas, .french): return "Noël"
         case (.christmas, .english): return "Christmas"
         case (.christmas, .spanish): return "Navidad"
@@ -49,11 +81,28 @@ enum AppTheme: String, Codable, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    var seasonalPalette: ThemePalette? {
+    var curatedPalette: ThemePalette? {
         switch self {
-        case .automatic: return nil
-        case .christmas: return ThemePalette(name: "Noël", primary: Color(red: 0.75, green: 0.05, blue: 0.12), accent: Color(red: 0.10, green: 0.45, blue: 0.20))
-        case .halloween: return ThemePalette(name: "Halloween", primary: Color(red: 0.95, green: 0.45, blue: 0.0), accent: Color(red: 0.35, green: 0.05, blue: 0.55))
+        case .automatic:
+            return nil
+        case .aurora:
+            return ThemePalette(name: "Aurore boréale", primary: Color(red: 0.0, green: 0.85, blue: 0.85), accent: Color(red: 0.60, green: 0.25, blue: 1.0))
+        case .blizzard:
+            return ThemePalette(name: "Blizzard", primary: Color(red: 0.10, green: 0.55, blue: 1.0), accent: Color(red: 0.80, green: 0.95, blue: 1.0))
+        case .inferno:
+            return ThemePalette(name: "Brasier", primary: Color(red: 1.0, green: 0.35, blue: 0.05), accent: Color(red: 1.0, green: 0.10, blue: 0.25))
+        case .cyberpunk:
+            return ThemePalette(name: "Cyberpunk", primary: Color(red: 1.0, green: 0.05, blue: 0.65), accent: Color(red: 0.0, green: 0.95, blue: 0.95))
+        case .glacier:
+            return ThemePalette(name: "Glacier", primary: Color(red: 0.0, green: 0.80, blue: 0.70), accent: Color(red: 0.60, green: 1.0, blue: 0.20))
+        case .midnight:
+            return ThemePalette(name: "Minuit", primary: Color(red: 0.35, green: 0.15, blue: 0.95), accent: Color(red: 0.10, green: 0.60, blue: 1.0))
+        case .maple:
+            return ThemePalette(name: "Érable néon", primary: Color(red: 1.0, green: 0.10, blue: 0.20), accent: Color(red: 1.0, green: 0.80, blue: 0.10))
+        case .christmas:
+            return ThemePalette(name: "Noël", primary: Color(red: 1.0, green: 0.10, blue: 0.20), accent: Color(red: 0.15, green: 0.95, blue: 0.45))
+        case .halloween:
+            return ThemePalette(name: "Halloween", primary: Color(red: 1.0, green: 0.50, blue: 0.0), accent: Color(red: 0.65, green: 0.15, blue: 1.0))
         }
     }
 }

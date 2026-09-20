@@ -27,8 +27,8 @@ final class ThemeManager: ObservableObject {
     }
 
     var palette: ThemePalette {
-        if let seasonal = selectedTheme.seasonalPalette {
-            return seasonal
+        if let curated = selectedTheme.curatedPalette {
+            return curated
         }
         return province?.flagPalette ?? ThemePalette(
             name: "SnowCNTRL",

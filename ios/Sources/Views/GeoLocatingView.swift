@@ -24,6 +24,10 @@ struct GeoLocatingView: View {
                 .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .topLeading) {
+            SnowCntrlBrandmark()
+                .padding()
+        }
         .tint(themeManager.palette.primary)
         .onAppear { locationManager.requestLocation() }
         .onReceive(locationManager.$lastLocation) { coordinate in

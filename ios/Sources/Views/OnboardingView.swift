@@ -45,6 +45,11 @@ struct OnboardingView: View {
                 }
                 .padding(20)
             }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    SnowCntrlBrandmark()
+                }
+            }
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 6) {
                     if themeManager.province == nil {

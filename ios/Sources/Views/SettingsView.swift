@@ -28,12 +28,8 @@ struct SettingsView: View {
                 }
 
                 Section(localizer.s(.settingsTheme)) {
-                    Picker(localizer.s(.settingsTheme), selection: $themeManager.selectedTheme) {
-                        ForEach(AppTheme.allCases) { theme in
-                            Text(theme.label(language: localizer.language)).tag(theme)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    ThemeGridPicker(selection: $themeManager.selectedTheme)
+                        .padding(.vertical, 4)
                 }
 
                 Section {
@@ -86,6 +82,11 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(localizer.s(.settingsTitle))
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    SnowCntrlBrandmark()
+                }
+            }
         }
         .tint(themeManager.palette.primary)
     }
