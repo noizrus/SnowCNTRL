@@ -5,7 +5,7 @@ import WidgetKit
 /// `Strings.swift`/`LocKey` from the main app target, since that file lives
 /// outside `Sources/Shared` and pulling it in would drag the rest of the
 /// app's localization surface into the extension for three short strings.
-private enum WidgetText {
+enum WidgetText {
     static func status(stateRawValue: String?, language: String) -> String {
         switch (stateRawValue, language) {
         case ("activeBanNow", "fr"): return "Interdiction active"

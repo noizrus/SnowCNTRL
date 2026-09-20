@@ -2,7 +2,7 @@ name: SnowCNTRL
 options:
   bundleIdPrefix: com.snowcntrl
   deploymentTarget:
-    iOS: "16.0"
+    iOS: "16.1"
 configs:
   Debug: debug
   Release: release
@@ -46,6 +46,7 @@ targets:
           - fetch
         BGTaskSchedulerPermittedIdentifiers:
           - com.snowcntrl.app.refresh
+        NSSupportsLiveActivities: true
         GADApplicationIdentifier: ca-app-pub-3940256099942544~1458002511
         SKAdNetworkItems:
           - SKAdNetworkIdentifier: cstr6suwn9.skadnetwork

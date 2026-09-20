@@ -5,5 +5,6 @@ import SwiftUI
 struct SnowCNTRLWidgetBundle: WidgetBundle {
     var body: some Widget {
         SnowCNTRLWidget()
+        SnowBanLiveActivityWidget()
     }
 }

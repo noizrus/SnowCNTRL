@@ -24,6 +24,7 @@ final class DashboardViewModel: ObservableObject {
             languageRawValue: language.rawValue
         )
         WidgetCenter.shared.reloadAllTimelines()
+        LiveActivityManager.sync(cityName: city.name, languageRawValue: language.rawValue, state: fetched.state, updatedAt: Date())
         isLoading = false
     }
 }

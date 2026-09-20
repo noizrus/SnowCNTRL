@@ -109,6 +109,14 @@ pour **les deux** (comme pour l'app seule avant) :
   écrit par `DashboardViewModel` et `SiriIntents` à chaque vérification de statut — le
   widget ne fait lui-même aucun appel réseau, il relit juste la dernière valeur connue et
   se rafraîchit via `WidgetCenter.reloadAllTimelines()`.
+- **Live Activity / Dynamic Island** (`Sources/Services/LiveActivityManager.swift` +
+  `Widget/Sources/SnowBanLiveActivityWidget.swift`) : quand une interdiction devient
+  active pour la ville affichée, une Live Activity démarre automatiquement (bannière
+  écran verrouillé + Dynamic Island sur iPhone 14 Pro et plus récents) et se termine
+  d'elle-même quand le statut redevient inactif/inconnu. Cible iOS 16.1+ (relèvement du
+  `deploymentTarget` depuis 16.0, requis par ActivityKit) — vit dans la même cible
+  `SnowCNTRLWidgetExtension` que le widget, aucune cible supplémentaire nécessaire.
+  `NSSupportsLiveActivities: true` est déjà dans `project.yml`.
 
 ### Tester la vérification en arrière-plan
 

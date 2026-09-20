@@ -29,6 +29,7 @@ struct CheckSnowStatusIntent: AppIntent {
             languageRawValue: language.rawValue
         )
         WidgetCenter.shared.reloadAllTimelines()
+        LiveActivityManager.sync(cityName: city.name, languageRawValue: language.rawValue, state: result.state, updatedAt: Date())
 
         let key: LocKey
         switch result.state {
