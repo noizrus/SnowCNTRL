@@ -14,6 +14,25 @@ open SnowCNTRL.xcodeproj
 Xcode va résoudre la dépendance Swift Package (Google Mobile Ads SDK) au premier
 build — ça peut prendre une minute.
 
+### Nouveau : cible Widget — signature à refaire pour DEUX cibles
+
+Ce projet a maintenant deux cibles : `SnowCNTRL` (l'app) et
+`SnowCNTRLWidgetExtension` (le widget écran d'accueil/verrouillage). Après un
+`xcodegen generate`, Xcode va probablement demander une équipe de signature
+pour **les deux** (comme pour l'app seule avant) :
+
+1. Sélectionne le projet `SnowCNTRL` dans le navigateur > onglet **Signing &
+   Capabilities**.
+2. Fais-le pour **chaque cible** dans le sélecteur en haut (`SnowCNTRL` puis
+   `SnowCNTRLWidgetExtension`) : coche "Automatically manage signing" et
+   choisis ton équipe (Cyril Bondiguet).
+3. Les deux cibles ont maintenant la capacité **App Groups**
+   (`group.com.snowcntrl.app`) pour partager le dernier statut connu entre
+   l'app et le widget. Si Xcode affiche une erreur du genre "no App Groups
+   found", clique sur le bouton pour qu'Xcode crée/enregistre le groupe
+   automatiquement avec ton compte développeur (nécessite d'être connecté à
+   ton Apple ID dans Xcode > Settings > Accounts).
+
 ## Ce qui est fonctionnel dès maintenant
 
 - Onboarding avec choix de langue (FR/EN/ES) et acceptation des disclaimers.
@@ -82,6 +101,14 @@ build — ça peut prendre une minute.
   dernier résultat (`StatusCache`) pour répondre même hors-ligne juste après un lancement
   précédent. Aucune cible Xcode supplémentaire requise (App Intents iOS 16+ vit dans la
   cible principale).
+- **Widget écran d'accueil + écran verrouillé** (`ios/Widget/`) : nouvelle cible
+  `SnowCNTRLWidgetExtension` (WidgetKit). Affiche la ville, un point coloré et le statut
+  en petit (accueil, `.systemSmall`/`.systemMedium`) ou en icône/texte (verrouillage,
+  `.accessoryCircular`/`.accessoryRectangular`/`.accessoryInline`). Les données passent
+  par un App Group (`group.com.snowcntrl.app`, voir `Sources/Shared/WidgetSharedStatus.swift`)
+  écrit par `DashboardViewModel` et `SiriIntents` à chaque vérification de statut — le
+  widget ne fait lui-même aucun appel réseau, il relit juste la dernière valeur connue et
+  se rafraîchit via `WidgetCenter.reloadAllTimelines()`.
 
 ### Tester la vérification en arrière-plan
 

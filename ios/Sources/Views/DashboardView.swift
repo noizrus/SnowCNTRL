@@ -56,7 +56,7 @@ struct DashboardView: View {
                     Button(localizer.s(.citySelectionChangeButton), action: onChangeCity)
                 }
             }
-            .task { await viewModel.load(city: city) }
+            .task { await viewModel.load(city: city, language: localizer.language) }
             .task(id: myAddresses.map(\.id)) {
                 await loadSegments()
                 if !hasCenteredOnAddresses, !myAddresses.isEmpty {
@@ -129,7 +129,7 @@ struct DashboardView: View {
                 statusPill
                 Spacer()
                 Button {
-                    Task { await viewModel.load(city: city) }
+                    Task { await viewModel.load(city: city, language: localizer.language) }
                 } label: {
                     Image(systemName: "arrow.clockwise.circle.fill")
                         .font(.title2)

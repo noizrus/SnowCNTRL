@@ -1,5 +1,6 @@
 import AppIntents
 import Foundation
+import WidgetKit
 
 /// "Hey Siri, check SnowCNTRL status" — reports the parking ban status for
 /// the first saved address without requiring the app to be opened. Uses the
@@ -22,6 +23,12 @@ struct CheckSnowStatusIntent: AppIntent {
 
         let result = await CityStatusService.shared.fetchStatus(for: city)
         StatusCache.save(cityID: city.id, cityName: city.name, state: result.state)
+        WidgetSharedStatus.save(
+            cityName: city.name,
+            stateRawValue: StatusCache.rawValue(for: result.state),
+            languageRawValue: language.rawValue
+        )
+        WidgetCenter.shared.reloadAllTimelines()
 
         let key: LocKey
         switch result.state {

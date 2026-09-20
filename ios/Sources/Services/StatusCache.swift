@@ -13,14 +13,16 @@ enum StatusCache {
         let updatedAt: Date
     }
 
-    static func save(cityID: String, cityName: String, state: ParkingBanState) {
-        let rawValue: String
+    static func rawValue(for state: ParkingBanState) -> String {
         switch state {
-        case .activeBanNow: rawValue = "activeBanNow"
-        case .noActiveBan: rawValue = "noActiveBan"
-        case .unknownNoData: rawValue = "unknownNoData"
+        case .activeBanNow: return "activeBanNow"
+        case .noActiveBan: return "noActiveBan"
+        case .unknownNoData: return "unknownNoData"
         }
-        let entry = Entry(cityID: cityID, cityName: cityName, stateRawValue: rawValue, updatedAt: Date())
+    }
+
+    static func save(cityID: String, cityName: String, state: ParkingBanState) {
+        let entry = Entry(cityID: cityID, cityName: cityName, stateRawValue: rawValue(for: state), updatedAt: Date())
         guard let data = try? JSONEncoder().encode(entry) else { return }
         UserDefaults.standard.set(data, forKey: key)
     }

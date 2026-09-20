@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import WidgetKit
 
 @MainActor
 final class DashboardViewModel: ObservableObject {
@@ -12,11 +13,17 @@ final class DashboardViewModel: ObservableObject {
         self.service = service
     }
 
-    func load(city: City) async {
+    func load(city: City, language: AppLanguage) async {
         isLoading = true
         let fetched = await service.fetchStatus(for: city)
         result = fetched
         StatusCache.save(cityID: city.id, cityName: city.name, state: fetched.state)
+        WidgetSharedStatus.save(
+            cityName: city.name,
+            stateRawValue: StatusCache.rawValue(for: fetched.state),
+            languageRawValue: language.rawValue
+        )
+        WidgetCenter.shared.reloadAllTimelines()
         isLoading = false
     }
 }

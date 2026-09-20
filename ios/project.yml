@@ -19,6 +19,8 @@ targets:
     dependencies:
       - package: GoogleMobileAds
         product: GoogleMobileAds
+      - target: SnowCNTRLWidgetExtension
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.snowcntrl.app
@@ -51,3 +53,35 @@ targets:
           - SKAdNetworkIdentifier: 2u9pt9hc89.skadnetwork
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
+    entitlements:
+      path: SnowCNTRL.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.snowcntrl.app
+
+  SnowCNTRLWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widget/Sources
+      - path: Sources/Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.snowcntrl.app.widget
+        PRODUCT_NAME: SnowCNTRLWidget
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: "YES"
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: SnowCNTRL
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widget/SnowCNTRLWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.snowcntrl.app
