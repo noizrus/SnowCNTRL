@@ -14,6 +14,8 @@ struct DashboardView: View {
     @State private var segments: [StreetSegment] = []
     @State private var region: MKCoordinateRegion
     @State private var hasCenteredOnAddresses = false
+    @State private var isShowingNearbyParking = false
+    @State private var isShowingCityRules = false
     let city: City
     var onChangeCity: () -> Void
 
@@ -68,8 +70,19 @@ struct DashboardView: View {
             .sheet(item: $addressBeingEdited) { address in
                 AddressMapView(city: city, existing: address, onSave: saveAddress)
             }
+            .sheet(isPresented: $isShowingNearbyParking) {
+                NearbyParkingView(coordinate: myAddresses.first?.coordinate ?? region.center)
+            }
+            .sheet(isPresented: $isShowingCityRules) {
+                CityRulesView(city: city)
+            }
         }
         .tint(themeManager.palette.primary)
+    }
+
+    private func isRecentlyVerified(_ address: SavedAddress) -> Bool {
+        guard let verifiedAt = address.lastVerifiedAt else { return false }
+        return Date().timeIntervalSince(verifiedAt) < 3 * 3600
     }
 
     private func saveAddress(_ saved: SavedAddress) {
@@ -125,6 +138,28 @@ struct DashboardView: View {
 
             TierDisclaimerBanner(tier: city.tier, cityName: city.name)
 
+            HStack(spacing: 8) {
+                Button {
+                    isShowingNearbyParking = true
+                } label: {
+                    Label(localizer.s(.nearbyParkingButton), systemImage: "parkingsign.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(themeManager.palette.accent)
+
+                Button {
+                    isShowingCityRules = true
+                } label: {
+                    Label(localizer.s(.cityRulesButton), systemImage: "info.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(themeManager.palette.accent)
+            }
+
             addressChips
 
             AdBannerView()
@@ -166,22 +201,34 @@ struct DashboardView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(myAddresses) { address in
-                    Button {
-                        addressBeingEdited = address
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: address.alertsEnabled ? "bell.fill" : "bell.slash")
-                                .font(.caption)
-                            Text(address.label)
-                                .font(.caption.weight(.medium))
-                                .lineLimit(1)
+                    HStack(spacing: 6) {
+                        Button {
+                            addressBeingEdited = address
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: address.alertsEnabled ? "bell.fill" : "bell.slash")
+                                    .font(.caption)
+                                Text(address.label)
+                                    .font(.caption.weight(.medium))
+                                    .lineLimit(1)
+                            }
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color(.tertiarySystemBackground))
-                        .clipShape(Capsule())
+                        .buttonStyle(.plain)
+
+                        Button {
+                            addressStore.markVerified(address)
+                        } label: {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.caption)
+                                .foregroundStyle(isRecentlyVerified(address) ? .green : .secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(localizer.s(.verifiedButton))
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color(.tertiarySystemBackground))
+                    .clipShape(Capsule())
                 }
 
                 Button {

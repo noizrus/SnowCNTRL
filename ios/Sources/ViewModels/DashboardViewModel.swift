@@ -14,7 +14,9 @@ final class DashboardViewModel: ObservableObject {
 
     func load(city: City) async {
         isLoading = true
-        result = await service.fetchStatus(for: city)
+        let fetched = await service.fetchStatus(for: city)
+        result = fetched
+        StatusCache.save(cityID: city.id, cityName: city.name, state: fetched.state)
         isLoading = false
     }
 }

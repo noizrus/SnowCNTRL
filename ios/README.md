@@ -59,6 +59,29 @@ build — ça peut prendre une minute.
   pour ne pas brouiller leur sens.
 - **Réglages étendus** : langue, province (grille colorée par drapeau) et thème sont
   modifiables à tout moment dans l'onglet Réglages, pas seulement à l'onboarding.
+- **10 thèmes néon + brandmark permanent** : `ThemeGridPicker` propose ~10 thèmes
+  (automatique par province, thèmes néon curatés, Noël, Halloween). "SNOW CNTRL" est
+  affiché en permanence (avec glow) sur les écrans principaux via `SnowCntrlBrandmark`.
+- **Stationnements de secours à proximité** : bouton "Où stationner ?" dans le tableau
+  de bord, ouvre `NearbyParkingView` qui interroge Apple Maps (`MKLocalSearch`, aucune
+  clé API) autour de l'adresse choisie et propose d'ouvrir l'itinéraire dans Plans.
+  Fonctionne dans les 114 villes puisqu'il ne dépend d'aucune donnée municipale.
+- **"Comment ça marche ici"** : résumé en langage simple du système de ban de
+  stationnement (`Sources/Data/CityRules.swift`), curaté à la main pour une douzaine de
+  grandes villes (Montréal, Québec, Toronto, Ottawa, Calgary, Edmonton, Winnipeg,
+  Halifax, etc.). Pour les autres villes, un message indique qu'aucun résumé n'existe
+  encore et renvoie vers la source officielle.
+- **Marqueur personnel "J'ai vérifié"** : un bouton à côté de chaque adresse permet de
+  noter (localement, sur l'appareil uniquement — pas de compte ni de partage) qu'on a
+  vérifié la signalisation sur place ; l'icône devient verte pendant 3h. Ce n'est PAS
+  du crowdsourcing entre utilisateurs (il n'y a pas de backend pour ça) — juste un
+  rappel personnel.
+- **Raccourci Siri** ("Hey Siri, check SnowCNTRL status" / "Vérifie le statut avec
+  SnowCNTRL…") : `Sources/App/SiriIntents.swift` déclare un `AppIntent` qui relit le
+  statut de la première adresse enregistrée sans ouvrir l'app, et met en cache le
+  dernier résultat (`StatusCache`) pour répondre même hors-ligne juste après un lancement
+  précédent. Aucune cible Xcode supplémentaire requise (App Intents iOS 16+ vit dans la
+  cible principale).
 
 ### Tester la vérification en arrière-plan
 
@@ -102,3 +125,13 @@ simulateur : lance l'app, mets-la en arrière-plan, puis dans Xcode :
    pas branché.
 9. Les couleurs de thème par province sont une interprétation approximative des
    drapeaux, pas une reproduction officielle — à ajuster si certaines ne plaisent pas.
+10. **Prochaine grosse étape : Widget (écran d'accueil/verrouillage), Apple Watch et
+    CarPlay.** Contrairement aux fonctionnalités ci-dessus, ces trois-là nécessitent
+    chacune une **nouvelle cible Xcode** avec sa propre signature (+ App Group pour
+    partager les données avec l'app principale), donc plus de risque de casser le
+    build existant. Elles seront ajoutées une par une, en commençant par le widget.
+    La Live Activity / Dynamic Island partagera probablement la cible du widget.
+11. **Pas d'alerte "X minutes avant" une interdiction** : volontairement absent. Une
+    vraie alerte "avant" (comme Info-Neige) suppose une donnée d'horaire *prévu*, pas
+    seulement un statut actuel — aucune ville couverte ici ne publie ça de façon fiable
+    pour l'instant. Mieux vaut ne pas fabriquer une fausse promesse de délai.

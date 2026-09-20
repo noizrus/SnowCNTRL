@@ -56,6 +56,28 @@ enum LocKey: Hashable {
     case settingsPremiumComingSoonTitle
     case settingsPremiumComingSoonSubtitle
     case settingsVersionPrefix
+
+    case nearbyParkingButton
+    case nearbyParkingTitle
+    case nearbyParkingSubtitle
+    case nearbyParkingEmpty
+    case nearbyParkingSearching
+    case nearbyParkingOpenInMaps
+    case nearbyParkingDistanceMeters
+    case nearbyParkingDistanceKm
+
+    case cityRulesButton
+    case cityRulesTitle
+    case cityRulesFooter
+    case cityRulesUnavailable
+
+    case verifiedButton
+    case verifiedRecently
+
+    case siriActiveBan
+    case siriNoActiveBan
+    case siriUnknown
+    case siriNoAddressSaved
 }
 
 enum Strings {
@@ -310,6 +332,96 @@ enum Strings {
             .french: "Version ",
             .english: "Version ",
             .spanish: "Versión ",
+        ],
+        .nearbyParkingButton: [
+            .french: "Où stationner ?",
+            .english: "Where to park?",
+            .spanish: "¿Dónde estacionar?",
+        ],
+        .nearbyParkingTitle: [
+            .french: "Stationnements à proximité",
+            .english: "Nearby parking",
+            .spanish: "Estacionamientos cercanos",
+        ],
+        .nearbyParkingSubtitle: [
+            .french: "Trouvé via Apple Plans — vérifie toujours les panneaux sur place avant de te garer.",
+            .english: "Found via Apple Maps — always check the signage on site before parking.",
+            .spanish: "Encontrado mediante Apple Maps — verifica siempre la señalización en el lugar antes de estacionar.",
+        ],
+        .nearbyParkingEmpty: [
+            .french: "Aucun stationnement trouvé à proximité.",
+            .english: "No parking found nearby.",
+            .spanish: "No se encontró estacionamiento cercano.",
+        ],
+        .nearbyParkingSearching: [
+            .french: "Recherche en cours…",
+            .english: "Searching…",
+            .spanish: "Buscando…",
+        ],
+        .nearbyParkingOpenInMaps: [
+            .french: "Ouvrir dans Plans",
+            .english: "Open in Maps",
+            .spanish: "Abrir en Maps",
+        ],
+        .nearbyParkingDistanceMeters: [
+            .french: "%d m",
+            .english: "%d m",
+            .spanish: "%d m",
+        ],
+        .nearbyParkingDistanceKm: [
+            .french: "%.1f km",
+            .english: "%.1f km",
+            .spanish: "%.1f km",
+        ],
+        .cityRulesButton: [
+            .french: "Comment ça marche ici",
+            .english: "How it works here",
+            .spanish: "Cómo funciona aquí",
+        ],
+        .cityRulesTitle: [
+            .french: "Comment ça marche",
+            .english: "How it works",
+            .spanish: "Cómo funciona",
+        ],
+        .cityRulesFooter: [
+            .french: "Résumé simplifié, à titre indicatif. Les règles peuvent changer — vérifie toujours la signalisation et la source officielle.",
+            .english: "Simplified summary, for guidance only. Rules can change — always check the signage and the official source.",
+            .spanish: "Resumen simplificado, solo a título informativo. Las reglas pueden cambiar — verifica siempre la señalización y la fuente oficial.",
+        ],
+        .cityRulesUnavailable: [
+            .french: "Pas encore de résumé simplifié pour cette ville. Consulte la source officielle ci-dessous.",
+            .english: "No simplified summary yet for this city. Check the official source below.",
+            .spanish: "Aún no hay un resumen simplificado para esta ciudad. Consulta la fuente oficial abajo.",
+        ],
+        .verifiedButton: [
+            .french: "J'ai vérifié sur place",
+            .english: "I checked on site",
+            .spanish: "Verifiqué en el lugar",
+        ],
+        .verifiedRecently: [
+            .french: "Vérifié par toi",
+            .english: "Checked by you",
+            .spanish: "Verificado por ti",
+        ],
+        .siriActiveBan: [
+            .french: "Interdiction de stationner active à %CITY%.",
+            .english: "Parking ban currently active in %CITY%.",
+            .spanish: "Prohibición de estacionar activa en %CITY%.",
+        ],
+        .siriNoActiveBan: [
+            .french: "Aucune interdiction de stationner à %CITY% en ce moment.",
+            .english: "No parking ban in %CITY% right now.",
+            .spanish: "Sin prohibición de estacionar en %CITY% en este momento.",
+        ],
+        .siriUnknown: [
+            .french: "Statut inconnu pour %CITY% — aucune donnée officielle disponible.",
+            .english: "Status unknown for %CITY% — no official data available.",
+            .spanish: "Estado desconocido para %CITY% — no hay datos oficiales disponibles.",
+        ],
+        .siriNoAddressSaved: [
+            .french: "Ouvre SnowCNTRL et choisis une adresse pour activer cette commande.",
+            .english: "Open SnowCNTRL and pick an address to enable this shortcut.",
+            .spanish: "Abre SnowCNTRL y elige una dirección para activar este acceso directo.",
         ],
     ]
 
