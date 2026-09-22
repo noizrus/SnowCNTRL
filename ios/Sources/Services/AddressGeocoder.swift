@@ -2,25 +2,30 @@ import Foundation
 import CoreLocation
 
 enum AddressGeocoder {
-    /// Turns a typed address/street into a coordinate + a clean display label.
-    static func search(_ query: String) async throws -> (coordinate: CLLocationCoordinate2D, label: String) {
-        let geocoder = CLGeocoder()
-        let placemarks = try await geocoder.geocodeAddressString(query)
-        guard let first = placemarks.first, let location = first.location else {
-            throw CityStatusError.badResponse
-        }
-        return (location.coordinate, label(for: first, fallback: query))
-    }
-
-    /// Turns a dropped pin (or the user's current location) into a readable
-    /// street label, e.g. "Rue Sainte-Catherine, Montréal".
+    /// Turns a coordinate into a readable street label, e.g.
+    /// "6702 Rue Saint-Denis, Montréal".
     static func reverseGeocode(_ coordinate: CLLocationCoordinate2D) async -> String {
         let geocoder = CLGeocoder()
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let fallback = String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
         guard let placemark = try? await geocoder.reverseGeocodeLocation(location).first else {
-            return String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
+            return fallback
         }
-        return label(for: placemark, fallback: String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude))
+        return label(for: placemark, fallback: fallback)
+    }
+
+    /// Label for an alert placed on a street side: the address plus which
+    /// side, e.g. "6702 Rue Saint-Denis, Montréal — côté est".
+    static func alertLabel(for match: StreetSideMatch, language: AppLanguage) async -> String {
+        let address = await reverseGeocode(match.curbPoint)
+        let side = match.segment.compassSide.label(language: language)
+        // Near corners reverse geocoding can name the cross street; the
+        // OSM name of the tapped block is the one the user meant.
+        if let streetName = match.segment.block.streetName,
+           !address.localizedCaseInsensitiveContains(streetName) {
+            return "\(streetName) — \(side)"
+        }
+        return "\(address) — \(side)"
     }
 
     private static func label(for placemark: CLPlacemark, fallback: String) -> String {

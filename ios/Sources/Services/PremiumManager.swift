@@ -1,6 +1,15 @@
 import Foundation
 import Combine
 
+/// Free: one alert at a time. Premium: as many as you like.
+enum AlertPolicy {
+    static let freeAlertLimit = 1
+
+    static func isAtLimit(alertCount: Int, isPremium: Bool) -> Bool {
+        !isPremium && alertCount >= freeAlertLimit
+    }
+}
+
 /// Ad-free status. There's no in-app purchase yet (StoreKit comes later),
 /// so the only way to turn it on today is the developer toggle in Settings,
 /// which exists in Debug builds only — App Store builds start non-premium.

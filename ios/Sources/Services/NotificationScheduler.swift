@@ -39,21 +39,4 @@ enum NotificationScheduler {
     static func cancelDailyReminder() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
     }
-
-    /// Fired as soon as a live-data check finds an active ban for a saved
-    /// address — this is the "déneigement programmé" alert, as opposed to
-    /// the generic daily reminder above.
-    static func notifyBanActive(addressLabel: String, language: AppLanguage) {
-        let content = UNMutableNotificationContent()
-        content.title = addressLabel
-        content.body = Strings.text(for: .dashboardStatusActive, language: language)
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: "snowcntrl.ban-active.\(addressLabel.hashValue)",
-            content: content,
-            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        )
-        UNUserNotificationCenter.current().add(request)
-    }
 }

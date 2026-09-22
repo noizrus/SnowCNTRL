@@ -1,8 +1,11 @@
 import SwiftUI
 
-/// Info-Neige color legend, shown over the map on demand.
+/// Card behind the "i" map button: Info-Neige color legend plus the way in
+/// to the plain-language explanation of the city's rules.
 struct MapLegendView: View {
     @EnvironmentObject private var localizer: Localizer
+    @EnvironmentObject private var themeManager: ThemeManager
+    var onShowCityRules: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -22,9 +25,15 @@ struct MapLegendView: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+            Button(action: onShowCityRules) {
+                Label(localizer.s(.cityRulesButton), systemImage: "questionmark.circle")
+                    .font(.caption.weight(.semibold))
+            }
+            .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette, cornerRadius: 10))
+            .padding(.top, 2)
         }
         .padding(12)
-        .frame(width: 230, alignment: .leading)
+        .frame(width: 240, alignment: .leading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

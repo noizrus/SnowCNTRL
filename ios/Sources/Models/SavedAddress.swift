@@ -1,6 +1,8 @@
 import Foundation
 import CoreLocation
 
+/// An alert marker: a spot on a street side (the curb where the car is
+/// parked) that rings the phone when snow clearing reaches it.
 struct SavedAddress: Identifiable, Codable, Hashable {
     let id: UUID
     var label: String
@@ -8,10 +10,6 @@ struct SavedAddress: Identifiable, Codable, Hashable {
     var longitude: Double
     var cityID: String
     var alertsEnabled: Bool
-    /// Personal, device-local "I checked on site" marker — there is no
-    /// backend to share this with other users, so it only ever reflects
-    /// what this one person confirmed on this one phone.
-    var lastVerifiedAt: Date?
 
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
@@ -22,8 +20,7 @@ struct SavedAddress: Identifiable, Codable, Hashable {
         label: String,
         coordinate: CLLocationCoordinate2D,
         cityID: String,
-        alertsEnabled: Bool = true,
-        lastVerifiedAt: Date? = nil
+        alertsEnabled: Bool = true
     ) {
         self.id = id
         self.label = label
@@ -31,6 +28,5 @@ struct SavedAddress: Identifiable, Codable, Hashable {
         self.longitude = coordinate.longitude
         self.cityID = cityID
         self.alertsEnabled = alertsEnabled
-        self.lastVerifiedAt = lastVerifiedAt
     }
 }

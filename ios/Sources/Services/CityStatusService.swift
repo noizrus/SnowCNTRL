@@ -14,7 +14,16 @@ final class CityStatusService {
         self.providers = providers
     }
 
+    /// Debug-only switch (Settings, Xcode builds) that makes every city report
+    /// an active ban, to test the red streets and the alert end to end.
+    static let simulateBanKey = "snowcntrl.debug.simulateBan"
+
     func fetchStatus(for city: City, now: Date = Date()) async -> CityStatusResult {
+        #if DEBUG
+        if city.tier != .notApplicable, UserDefaults.standard.bool(forKey: Self.simulateBanKey) {
+            return CityStatusResult(state: .activeBanNow, asOf: now, detail: nil)
+        }
+        #endif
         if city.tier != .notApplicable, Self.isOffSeason(for: city.province, on: now) {
             return CityStatusResult(state: .noActiveBan, asOf: now, detail: nil, isOffSeason: true)
         }

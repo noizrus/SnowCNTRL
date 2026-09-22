@@ -27,19 +27,23 @@ struct ThemePalette {
     /// `color` lightened in night mode / darkened in day mode just enough to
     /// reach text contrast (4.5:1) against the system background.
     static func readable(_ color: Color) -> Color {
+        Color(readableUIColor(color))
+    }
+
+    static func readableUIColor(_ color: Color) -> UIColor {
         let base = UIColor(color)
-        return Color(UIColor { traits in
+        return UIColor { traits in
             let isDark = traits.userInterfaceStyle == .dark
             let background = isDark ? UIColor(white: 0.11, alpha: 1) : UIColor.white
             let target: UIColor = isDark ? .white : .black
             var candidate = base
             var fraction: CGFloat = 0
-            while contrastRatio(candidate, background) < 4.5, fraction < 1 {
-                fraction += 0.1
-                candidate = mix(base, target, fraction)
+            while Self.contrastRatio(candidate, background) < 4.5, fraction < 1 {
+                fraction = min(fraction + 0.1, 1)
+                candidate = Self.mix(base, target, fraction)
             }
             return candidate
-        })
+        }
     }
 
     private static func components(_ color: UIColor) -> (r: CGFloat, g: CGFloat, b: CGFloat) {

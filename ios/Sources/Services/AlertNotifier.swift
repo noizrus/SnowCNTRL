@@ -1,0 +1,154 @@
+import Foundation
+import UserNotifications
+
+/// Rings the phone for an alert marker when snow clearing reaches its
+/// street: snow-truck sound, Time Sensitive so it gets through Focus / Do
+/// Not Disturb (moon mode), and repeated until "I moved my car".
+///
+/// Note: the ring/silent switch still mutes sounds — only Apple's Critical
+/// Alerts entitlement (granted case by case by Apple) overrides it.
+enum AlertNotifier {
+    static let categoryIdentifier = "snowcntrl.ban-alert"
+    static let movedActionIdentifier = "snowcntrl.moved"
+    static let snoozeActionIdentifier = "snowcntrl.snooze"
+    static let soundName = UNNotificationSoundName("snowplow.wav")
+    /// Seconds after detection: now, then two reminders if nobody reacts.
+    static let repeatOffsets: [TimeInterval] = [1, 10 * 60, 20 * 60]
+    static let snoozeDelay: TimeInterval = 10 * 60
+    static let testDelay: TimeInterval = 5
+    private static let alertedKey = "snowcntrl.alertedAddressIDs"
+    private static let snoozeIndex = 99
+
+    static func registerCategories(language: AppLanguage) {
+        let moved = UNNotificationAction(
+            identifier: movedActionIdentifier,
+            title: Strings.text(for: .notifActionMoved, language: language),
+            options: []
+        )
+        let snooze = UNNotificationAction(
+            identifier: snoozeActionIdentifier,
+            title: Strings.text(for: .notifActionSnooze, language: language),
+            options: []
+        )
+        let category = UNNotificationCategory(identifier: categoryIdentifier, actions: [moved, snooze], intentIdentifiers: [], options: [])
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
+
+    static func makeContent(for address: SavedAddress, language: AppLanguage, isTest: Bool) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = Strings.text(for: isTest ? .notifTestTitle : .notifBanTitle, language: language)
+            .replacingOccurrences(of: "%APP%", with: language.appName)
+        content.body = Strings.text(for: isTest ? .notifTestBody : .notifBanBody, language: language)
+            .replacingOccurrences(of: "%LABEL%", with: address.label)
+        content.sound = UNNotificationSound(named: soundName)
+        content.categoryIdentifier = categoryIdentifier
+        content.interruptionLevel = .timeSensitive
+        content.relevanceScore = 1
+        content.threadIdentifier = address.id.uuidString
+        content.userInfo = ["addressID": address.id.uuidString]
+        return content
+    }
+
+    /// A status check found a ban on this alert's street. Rings once per ban
+    /// (with its reminders), not again at every later check.
+    static func handleBanActive(for address: SavedAddress, language: AppLanguage) {
+        var alerted = alertedIDs
+        guard !alerted.contains(address.id.uuidString) else { return }
+        alerted.insert(address.id.uuidString)
+        alertedIDs = alerted
+
+        let content = makeContent(for: address, language: language, isTest: false)
+        for (index, offset) in repeatOffsets.enumerated() {
+            let request = UNNotificationRequest(
+                identifier: requestID(address.id, index),
+                content: content,
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: offset, repeats: false)
+            )
+            UNUserNotificationCenter.current().add(request)
+        }
+    }
+
+    /// The ban is over (or the alert was removed): stop ringing and allow a
+    /// future ban to ring again.
+    static func handleBanCleared(for addressID: UUID) {
+        var alerted = alertedIDs
+        alerted.remove(addressID.uuidString)
+        alertedIDs = alerted
+        cancelPending(for: addressID)
+    }
+
+    /// "J'ai déplacé ma voiture": stop the reminders for this ban.
+    static func acknowledge(addressID: UUID) {
+        cancelPending(for: addressID)
+    }
+
+    static func snooze(addressID: UUID, content: UNNotificationContent) {
+        cancelPending(for: addressID)
+        let request = UNNotificationRequest(
+            identifier: requestID(addressID, snoozeIndex),
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: snoozeDelay, repeats: false)
+        )
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    /// Lets the user hear the real alert: fires in a few seconds, so there's
+    /// time to lock the phone.
+    static func sendTest(for address: SavedAddress, language: AppLanguage) {
+        let request = UNNotificationRequest(
+            identifier: "snowcntrl.test.\(address.id.uuidString)",
+            content: makeContent(for: address, language: language, isTest: true),
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: testDelay, repeats: false)
+        )
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    static func requestIDs(for addressID: UUID) -> [String] {
+        (0..<repeatOffsets.count).map { requestID(addressID, $0) } + [requestID(addressID, snoozeIndex)]
+    }
+
+    private static func cancelPending(for addressID: UUID) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: requestIDs(for: addressID))
+    }
+
+    private static func requestID(_ addressID: UUID, _ index: Int) -> String {
+        "snowcntrl.ban.\(addressID.uuidString).\(index)"
+    }
+
+    private static var alertedIDs: Set<String> {
+        get { Set(UserDefaults.standard.stringArray(forKey: alertedKey) ?? []) }
+        set { UserDefaults.standard.set(Array(newValue), forKey: alertedKey) }
+    }
+}
+
+/// Shows alerts even while the app is open and handles the notification
+/// buttons ("J'ai déplacé ma voiture", "Rappelle-moi").
+final class NotificationCoordinator: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = NotificationCoordinator()
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .list, .sound])
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        defer { completionHandler() }
+        let content = response.notification.request.content
+        guard let raw = content.userInfo["addressID"] as? String, let addressID = UUID(uuidString: raw) else { return }
+        switch response.actionIdentifier {
+        case AlertNotifier.movedActionIdentifier:
+            AlertNotifier.acknowledge(addressID: addressID)
+        case AlertNotifier.snoozeActionIdentifier:
+            AlertNotifier.snooze(addressID: addressID, content: content)
+        default:
+            break
+        }
+    }
+}

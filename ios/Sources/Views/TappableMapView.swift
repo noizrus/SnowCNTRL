@@ -15,6 +15,7 @@ struct TappableMapView: UIViewRepresentable {
     /// Street sides drawn highlighted (selected or saved).
     var highlightedSegmentIDs: Set<String> = []
     var onTap: ((CLLocationCoordinate2D) -> Void)? = nil
+    var onSelectPin: ((UUID) -> Void)? = nil
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
@@ -73,6 +74,7 @@ struct TappableMapView: UIViewRepresentable {
             let annotation = SavedSpotAnnotation()
             annotation.coordinate = address.coordinate
             annotation.title = address.label
+            annotation.addressID = address.id
             mapView.addAnnotation(annotation)
         }
     }
@@ -117,7 +119,9 @@ struct TappableMapView: UIViewRepresentable {
         Coordinator(self)
     }
 
-    private final class SavedSpotAnnotation: MKPointAnnotation {}
+    private final class SavedSpotAnnotation: MKPointAnnotation {
+        var addressID: UUID?
+    }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
         var parent: TappableMapView
@@ -132,8 +136,25 @@ struct TappableMapView: UIViewRepresentable {
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard let mapView = gesture.view as? MKMapView else { return }
             let point = gesture.location(in: mapView)
+            // A tap on a marker selects it (didSelect below) — it must not
+            // also place a new alert underneath.
+            var hit = mapView.hitTest(point, with: nil)
+            while let view = hit, view !== mapView {
+                if view is MKAnnotationView { return }
+                hit = view.superview
+            }
             let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
             parent.onTap?(coordinate)
+        }
+
+        func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+            if let spot = view.annotation as? SavedSpotAnnotation, let id = spot.addressID {
+                parent.onSelectPin?(id)
+            }
+            // Deselect right away so the same marker can be tapped again.
+            if let annotation = view.annotation {
+                mapView.deselectAnnotation(annotation, animated: false)
+            }
         }
 
         func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
@@ -159,9 +180,10 @@ struct TappableMapView: UIViewRepresentable {
             view.annotation = annotation
             view.markerTintColor = parent.accentColor
             view.glyphTintColor = UIColor(ThemePalette.contrastingText(on: Color(uiColor: parent.accentColor)))
-            view.glyphImage = UIImage(systemName: "car.fill")
+            // Saved alert = car parked there; pending one = "+" (not added yet).
+            view.glyphImage = UIImage(systemName: annotation is SavedSpotAnnotation ? "car.fill" : "plus")
             view.animatesWhenAdded = true
-            view.canShowCallout = annotation is SavedSpotAnnotation
+            view.canShowCallout = false
             view.displayPriority = .required
             return view
         }

@@ -1,6 +1,6 @@
 import Foundation
 
-enum LocKey: Hashable {
+enum LocKey: Hashable, CaseIterable {
     case onboardingWelcomeTitle
     case onboardingIndependentDevNotice
     case onboardingLegalDisclaimer
@@ -11,13 +11,8 @@ enum LocKey: Hashable {
     case citySelectionSearchPlaceholder
     case citySelectionEmptyState
     case citySelectionChangeButton
-    case myStreetAlertsCaption
-    case myStreetPickPrompt
-    case myStreetAddAnother
-    case mapSaveButton
     case settingsPrivacyPolicy
     case settingsTermsOfUse
-    case provincePickerTitle
     case onboardingProvincePrompt
     case settingsTheme
     case onboardingLocating
@@ -30,7 +25,6 @@ enum LocKey: Hashable {
     case dashboardStatusActive
     case dashboardStatusInactive
     case dashboardStatusUnknown
-    case dashboardLastUpdatedPrefix
     case dashboardLearnMore
 
     case tierLabel1
@@ -57,30 +51,15 @@ enum LocKey: Hashable {
     case settingsPremiumComingSoonSubtitle
     case settingsVersionPrefix
 
-    case nearbyParkingButton
-    case nearbyParkingTitle
-    case nearbyParkingSubtitle
-    case nearbyParkingEmpty
-    case nearbyParkingSearching
-    case nearbyParkingOpenInMaps
-    case nearbyParkingDistanceMeters
-    case nearbyParkingDistanceKm
-
     case cityRulesButton
     case cityRulesTitle
     case cityRulesFooter
     case cityRulesUnavailable
 
-    case verifiedButton
-    case verifiedRecently
-
     case siriActiveBan
     case siriNoActiveBan
     case siriUnknown
     case siriNoAddressSaved
-
-    case addressMapSideSelected
-    case addressMapTapHint
 
     case dashboardStatusOffSeason
     case legendTitle
@@ -88,15 +67,33 @@ enum LocKey: Hashable {
     case mapZoomInHint
     case mapLoadingStreets
     case mapLocateMe
-    case mapLegendButton
     case panelToggle
-    case addressEdit
-    case addressDelete
-    case addressChipsHint
     case settingsAppearance
     case mapToggleDayNight
     case settingsPremiumActive
     case settingsPremiumDebugToggle
+
+    case infoButton
+    case alertAddTitle
+    case alertAddButton
+    case alertReplaceButton
+    case alertFreeLimit
+    case alertCancel
+    case alertRemove
+    case alertTest
+    case alertTestScheduled
+    case alertsEmptyHint
+    case alertsListHint
+    case alertCardDescription
+    case alertNotificationsDenied
+    case notifBanTitle
+    case notifBanBody
+    case notifTestTitle
+    case notifTestBody
+    case notifActionMoved
+    case notifActionSnooze
+    case settingsSimulateBan
+    case settingsSimulateBanHint
 }
 
 enum Strings {
@@ -147,26 +144,6 @@ enum Strings {
             .english: "Change city",
             .spanish: "Cambiar de ciudad",
         ],
-        .myStreetAlertsCaption: [
-            .french: "Alertes activées",
-            .english: "Alerts enabled",
-            .spanish: "Alertas activadas",
-        ],
-        .myStreetPickPrompt: [
-            .french: "Choisir ma rue sur la carte",
-            .english: "Pick my street on the map",
-            .spanish: "Elegir mi calle en el mapa",
-        ],
-        .myStreetAddAnother: [
-            .french: "Ajouter une autre adresse",
-            .english: "Add another address",
-            .spanish: "Añadir otra dirección",
-        ],
-        .mapSaveButton: [
-            .french: "Enregistrer",
-            .english: "Save",
-            .spanish: "Guardar",
-        ],
         .settingsPrivacyPolicy: [
             .french: "Politique de confidentialité",
             .english: "Privacy Policy",
@@ -176,11 +153,6 @@ enum Strings {
             .french: "Conditions d'utilisation",
             .english: "Terms of Use",
             .spanish: "Términos de uso",
-        ],
-        .provincePickerTitle: [
-            .french: "Province",
-            .english: "Province",
-            .spanish: "Provincia",
         ],
         .onboardingProvincePrompt: [
             .french: "Ta province",
@@ -236,11 +208,6 @@ enum Strings {
             .french: "Statut inconnu — donnée non disponible",
             .english: "Status unknown — data unavailable",
             .spanish: "Estado desconocido — datos no disponibles",
-        ],
-        .dashboardLastUpdatedPrefix: [
-            .french: "Mis à jour : ",
-            .english: "Updated: ",
-            .spanish: "Actualizado: ",
         ],
         .dashboardLearnMore: [
             .french: "Voir la source officielle",
@@ -352,46 +319,6 @@ enum Strings {
             .english: "Version ",
             .spanish: "Versión ",
         ],
-        .nearbyParkingButton: [
-            .french: "Où stationner ?",
-            .english: "Where to park?",
-            .spanish: "¿Dónde estacionar?",
-        ],
-        .nearbyParkingTitle: [
-            .french: "Stationnements à proximité",
-            .english: "Nearby parking",
-            .spanish: "Estacionamientos cercanos",
-        ],
-        .nearbyParkingSubtitle: [
-            .french: "Trouvé via Apple Plans — vérifie toujours les panneaux sur place avant de te garer.",
-            .english: "Found via Apple Maps — always check the signage on site before parking.",
-            .spanish: "Encontrado mediante Apple Maps — verifica siempre la señalización en el lugar antes de estacionar.",
-        ],
-        .nearbyParkingEmpty: [
-            .french: "Aucun stationnement trouvé à proximité.",
-            .english: "No parking found nearby.",
-            .spanish: "No se encontró estacionamiento cercano.",
-        ],
-        .nearbyParkingSearching: [
-            .french: "Recherche en cours…",
-            .english: "Searching…",
-            .spanish: "Buscando…",
-        ],
-        .nearbyParkingOpenInMaps: [
-            .french: "Ouvrir dans Plans",
-            .english: "Open in Maps",
-            .spanish: "Abrir en Maps",
-        ],
-        .nearbyParkingDistanceMeters: [
-            .french: "%d m",
-            .english: "%d m",
-            .spanish: "%d m",
-        ],
-        .nearbyParkingDistanceKm: [
-            .french: "%.1f km",
-            .english: "%.1f km",
-            .spanish: "%.1f km",
-        ],
         .cityRulesButton: [
             .french: "Comment ça marche ici",
             .english: "How it works here",
@@ -412,16 +339,6 @@ enum Strings {
             .english: "No simplified summary yet for this city. Check the official source below.",
             .spanish: "Aún no hay un resumen simplificado para esta ciudad. Consulta la fuente oficial abajo.",
         ],
-        .verifiedButton: [
-            .french: "J'ai vérifié sur place",
-            .english: "I checked on site",
-            .spanish: "Verifiqué en el lugar",
-        ],
-        .verifiedRecently: [
-            .french: "Vérifié par toi",
-            .english: "Checked by you",
-            .spanish: "Verificado por ti",
-        ],
         .siriActiveBan: [
             .french: "Interdiction de stationner active à %CITY%.",
             .english: "Parking ban currently active in %CITY%.",
@@ -441,16 +358,6 @@ enum Strings {
             .french: "Ouvre NEIGE CNTRL et choisis une adresse pour activer cette commande.",
             .english: "Open SnowCNTRL and pick an address to enable this shortcut.",
             .spanish: "Abre SnowCNTRL y elige una dirección para activar este acceso directo.",
-        ],
-        .addressMapSideSelected: [
-            .french: "Côté de rue sélectionné — ta voiture est placée le long de ce trottoir.",
-            .english: "Street side selected — your car is placed along this curb.",
-            .spanish: "Lado de la calle seleccionado — tu auto queda junto a esta acera.",
-        ],
-        .addressMapTapHint: [
-            .french: "Zoome puis touche le côté de la rue où tu te gares.",
-            .english: "Zoom in, then tap the side of the street where you park.",
-            .spanish: "Acerca el mapa y toca el lado de la calle donde estacionas.",
         ],
         .dashboardStatusOffSeason: [
             .french: "Hors saison — aucune opération de déneigement",
@@ -482,30 +389,10 @@ enum Strings {
             .english: "My location",
             .spanish: "Mi ubicación",
         ],
-        .mapLegendButton: [
-            .french: "Légende des couleurs",
-            .english: "Color legend",
-            .spanish: "Leyenda de colores",
-        ],
         .panelToggle: [
             .french: "Afficher ou réduire le panneau",
             .english: "Show or collapse the panel",
             .spanish: "Mostrar u ocultar el panel",
-        ],
-        .addressEdit: [
-            .french: "Modifier",
-            .english: "Edit",
-            .spanish: "Editar",
-        ],
-        .addressDelete: [
-            .french: "Supprimer",
-            .english: "Delete",
-            .spanish: "Eliminar",
-        ],
-        .addressChipsHint: [
-            .french: "Touche pour centrer · maintiens pour modifier ou supprimer",
-            .english: "Tap to center · long-press to edit or delete",
-            .spanish: "Toca para centrar · mantén pulsado para editar o eliminar",
         ],
         .settingsAppearance: [
             .french: "Mode jour / nuit",
@@ -527,9 +414,119 @@ enum Strings {
             .english: "Premium mode (developer test)",
             .spanish: "Modo premium (prueba de desarrollador)",
         ],
+        .infoButton: [
+            .french: "Informations et légende",
+            .english: "Information and legend",
+            .spanish: "Información y leyenda",
+        ],
+        .alertAddTitle: [
+            .french: "Ajouter une alerte ici ?",
+            .english: "Add an alert here?",
+            .spanish: "¿Añadir una alerta aquí?",
+        ],
+        .alertAddButton: [
+            .french: "Ajouter l'alerte",
+            .english: "Add alert",
+            .spanish: "Añadir alerta",
+        ],
+        .alertReplaceButton: [
+            .french: "Remplacer mon alerte",
+            .english: "Replace my alert",
+            .spanish: "Reemplazar mi alerta",
+        ],
+        .alertFreeLimit: [
+            .french: "Version gratuite : une alerte à la fois — celle-ci remplacera la précédente. Premium : alertes illimitées.",
+            .english: "Free version: one alert at a time — this one will replace the previous one. Premium: unlimited alerts.",
+            .spanish: "Versión gratuita: una alerta a la vez — esta reemplazará a la anterior. Premium: alertas ilimitadas.",
+        ],
+        .alertCancel: [
+            .french: "Annuler",
+            .english: "Cancel",
+            .spanish: "Cancelar",
+        ],
+        .alertRemove: [
+            .french: "Retirer",
+            .english: "Remove",
+            .spanish: "Quitar",
+        ],
+        .alertTest: [
+            .french: "Tester le son",
+            .english: "Test the sound",
+            .spanish: "Probar el sonido",
+        ],
+        .alertTestScheduled: [
+            .french: "Verrouille ton téléphone : l'alerte sonne dans 5 secondes.",
+            .english: "Lock your phone: the alert rings in 5 seconds.",
+            .spanish: "Bloquea tu teléfono: la alerta suena en 5 segundos.",
+        ],
+        .alertsEmptyHint: [
+            .french: "Touche une rue sur la carte pour placer une alerte du côté où tu es garé.",
+            .english: "Tap a street on the map to place an alert on the side where you're parked.",
+            .spanish: "Toca una calle en el mapa para poner una alerta del lado donde estacionaste.",
+        ],
+        .alertsListHint: [
+            .french: "Touche une alerte pour l'ouvrir · ✕ pour la retirer · touche une rue pour en ajouter",
+            .english: "Tap an alert to open it · ✕ to remove it · tap a street to add one",
+            .spanish: "Toca una alerta para abrirla · ✕ para quitarla · toca una calle para añadir",
+        ],
+        .alertCardDescription: [
+            .french: "Ton téléphone sonnera (son de déneigeuse) dès qu'une opération de déneigement touche cette rue — même en mode Ne pas déranger.",
+            .english: "Your phone will ring (snow truck sound) as soon as snow clearing reaches this street — even in Do Not Disturb.",
+            .spanish: "Tu teléfono sonará (sonido de quitanieves) en cuanto la remoción de nieve llegue a esta calle — incluso en No molestar.",
+        ],
+        .alertNotificationsDenied: [
+            .french: "Les notifications sont désactivées : active-les dans Réglages iOS › NEIGE CNTRL pour que l'alerte sonne.",
+            .english: "Notifications are off: turn them on in iOS Settings › SNOW CNTRL so the alert can ring.",
+            .spanish: "Las notificaciones están desactivadas: actívalas en Ajustes de iOS › SNOW CNTRL para que la alerta suene.",
+        ],
+        .notifBanTitle: [
+            .french: "Déneigement : déplace ta voiture",
+            .english: "Snow clearing: move your car",
+            .spanish: "Remoción de nieve: mueve tu auto",
+        ],
+        .notifBanBody: [
+            .french: "Interdiction de stationner en vigueur — %LABEL%. Le remorquage peut commencer.",
+            .english: "Parking ban in effect — %LABEL%. Towing may begin.",
+            .spanish: "Prohibición de estacionar vigente — %LABEL%. Puede comenzar el remolque.",
+        ],
+        .notifTestTitle: [
+            .french: "Test d'alerte %APP%",
+            .english: "%APP% alert test",
+            .spanish: "Prueba de alerta %APP%",
+        ],
+        .notifTestBody: [
+            .french: "Voici le son qui retentira lors d'une opération de déneigement — %LABEL%.",
+            .english: "This is the sound you'll hear during a snow clearing operation — %LABEL%.",
+            .spanish: "Este es el sonido que oirás durante una operación de remoción de nieve — %LABEL%.",
+        ],
+        .notifActionMoved: [
+            .french: "J'ai déplacé ma voiture",
+            .english: "I moved my car",
+            .spanish: "Moví mi auto",
+        ],
+        .notifActionSnooze: [
+            .french: "Rappelle-moi dans 10 min",
+            .english: "Remind me in 10 min",
+            .spanish: "Recuérdamelo en 10 min",
+        ],
+        .settingsSimulateBan: [
+            .french: "Simuler une opération de déneigement (test)",
+            .english: "Simulate a snow clearing operation (test)",
+            .spanish: "Simular una operación de remoción de nieve (prueba)",
+        ],
+        .settingsSimulateBanHint: [
+            .french: "Toutes les rues passent au rouge et tes alertes sonnent, comme lors d'une vraie opération.",
+            .english: "Every street turns red and your alerts ring, like during a real operation.",
+            .spanish: "Todas las calles se ponen en rojo y tus alertas suenan, como en una operación real.",
+        ],
     ]
 
     static func text(for key: LocKey, language: AppLanguage) -> String {
-        table[key]?[language] ?? table[key]?[.english] ?? ""
+        translation(for: key, language: language) ?? translation(for: key, language: .english) ?? ""
+    }
+
+    /// The exact entry, without the English fallback.
+    static func translation(for key: LocKey, language: AppLanguage) -> String? {
+        table[key]?[language]
     }
 }

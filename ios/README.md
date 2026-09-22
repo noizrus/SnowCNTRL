@@ -1,6 +1,41 @@
 # SnowCNTRL — app iOS (MVP)
 
-## Couleurs lisibles, jour/nuit, premium (dernière itération)
+## Alertes par témoin + son de déneigeuse (dernière itération)
+
+- **Toucher une rue = placer une alerte** : sur la carte principale, toucher un côté de
+  rue affiche un témoin « + » le long du trottoir et une carte « Ajouter une alerte
+  ici ? ». Une fois ajoutée, l'alerte est un témoin voiture ; le toucher ouvre sa fiche
+  (Tester le son / Retirer). Les alertes se retirent aussi d'un ✕ dans la liste.
+- **Gratuit : 1 alerte, Premium : illimité** (`AlertPolicy`). En gratuit, placer une
+  nouvelle alerte propose de remplacer l'ancienne.
+- **Sonnerie** (`Services/AlertNotifier.swift`) : son de déneigeuse (`Resources/snowplow.wav`,
+  12 s, synthétisé : moteur de camion qui passe, klaxon d'avertissement, bips de recul,
+  lame qui racle), niveau **Time Sensitive** pour passer à travers le mode Ne pas
+  déranger / Concentration (entitlement dans `project.yml`), répété à 0, 10 et 20 min
+  jusqu'à « J'ai déplacé ma voiture » (bouton dans la notification), avec
+  « Rappelle-moi dans 10 min ». Limite : l'interrupteur sonnerie/silencieux de l'iPhone
+  coupe quand même le son — seul l'entitlement Apple « Critical Alerts » (sur demande,
+  accordé au cas par cas) le contourne.
+- **Simulation** (builds Xcode seulement) : Réglages → « Simuler une opération de
+  déneigement » : toutes les rues passent au rouge et chaque alerte sonne tout de
+  suite, comme lors d'une vraie opération. « Tester le son » sur une alerte fait sonner
+  la vraie notification 5 s plus tard (le temps de verrouiller le téléphone).
+- **Ce qu'il manque pour de vraies alertes en production** : une vraie donnée de statut
+  (le `resource_id` de Montréal est toujours à brancher) et un petit serveur qui
+  surveille cette donnée et envoie des notifications push — iOS ne réveille une app en
+  arrière-plan que quand il le décide, ce qui ne suffit pas pour une alerte fiable à
+  l'heure près (c'est aussi comme ça que fonctionne Info-Neige).
+- **Interface** : colonne de boutons alignée en haut à droite (changer de ville, ma
+  position, jour/nuit, « i »). Le « i » ouvre la légende et « Comment ça marche ici ».
+  « Où stationner ? » retiré. Texte d'avertissement sous le statut rendu lisible.
+- **Tests** (`ios/Tests`, cible `SnowCNTRLTests`) : traductions FR/EN/ES complètes,
+  limite gratuit/premium, hors saison, simulation, choix du côté de rue et position
+  de la voiture, découpage des rues OpenStreetMap, contenu des notifications (son,
+  Time Sensitive, répétitions), présence et durée du son, contraste des couleurs de
+  tous les thèmes en jour et en nuit. À lancer dans Xcode avec **⌘U** (sur l'iPhone
+  branché).
+
+## Couleurs lisibles, jour/nuit, premium
 
 - **Boutons aux couleurs du thème, toujours lisibles** : `ThemePalette` distingue
   maintenant la couleur brute du thème (remplissages, halos), une variante lisible

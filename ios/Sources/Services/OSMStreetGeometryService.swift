@@ -163,11 +163,18 @@ enum OverpassClient {
 
             guard let (data, response) = try? await URLSession.shared.data(for: request),
                   (response as? HTTPURLResponse)?.statusCode == 200,
-                  let decoded = try? JSONDecoder().decode(Response.self, from: data)
+                  let blocks = parseBlocks(from: data)
             else { continue }
-            return buildBlocks(from: decoded.elements)
+            return blocks
         }
         return nil
+    }
+
+    /// Overpass JSON (`out body geom`) → street blocks. Separate from the
+    /// network call so it can be tested with a fixture.
+    static func parseBlocks(from data: Data) -> [StreetBlock]? {
+        guard let decoded = try? JSONDecoder().decode(Response.self, from: data) else { return nil }
+        return buildBlocks(from: decoded.elements)
     }
 
     /// Splits each OSM way into blocks at intersections (nodes shared with

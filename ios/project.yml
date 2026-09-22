@@ -63,6 +63,25 @@ targets:
       properties:
         com.apple.security.application-groups:
           - group.com.snowcntrl.app
+        # Lets snow alerts ring through Focus / Do Not Disturb.
+        com.apple.developer.usernotifications.time-sensitive: true
+    scheme:
+      testTargets:
+        - SnowCNTRLTests
+
+  SnowCNTRLTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: SnowCNTRL
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.snowcntrl.app.tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
 
   SnowCNTRLWidgetExtension:
     type: app-extension

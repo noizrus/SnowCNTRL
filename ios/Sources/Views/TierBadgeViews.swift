@@ -33,10 +33,12 @@ struct TierDisclaimerBanner: View {
                 .padding(.top, 6)
             Text(tier.disclaimer(cityName: cityName, language: localizer.language))
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.85))
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)
-        .background(tier.color.opacity(0.08))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground).opacity(0.85))
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }

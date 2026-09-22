@@ -43,16 +43,27 @@ enum BackgroundRefreshManager {
     /// best-effort background timing.
     static func checkNow(language: AppLanguage) async {
         let citiesByID = Dictionary(uniqueKeysWithValues: CitiesData.all.map { ($0.id, $0) })
+        var stateByCity: [String: ParkingBanState] = [:]
 
         for address in AddressStore.shared.addresses where address.alertsEnabled {
-            guard
-                let city = citiesByID[address.cityID],
-                city.liveProviderID != nil
-            else { continue }
+            guard let city = citiesByID[address.cityID] else { continue }
 
-            let result = await CityStatusService.shared.fetchStatus(for: city)
-            if result.state == .activeBanNow {
-                NotificationScheduler.notifyBanActive(addressLabel: address.label, language: language)
+            let state: ParkingBanState
+            if let cached = stateByCity[city.id] {
+                state = cached
+            } else {
+                state = await CityStatusService.shared.fetchStatus(for: city).state
+                stateByCity[city.id] = state
+            }
+
+            switch state {
+            case .activeBanNow:
+                AlertNotifier.handleBanActive(for: address, language: language)
+            case .noActiveBan:
+                AlertNotifier.handleBanCleared(for: address.id)
+            case .unknownNoData:
+                // A failed check must not cancel reminders for a real ban.
+                break
             }
         }
     }

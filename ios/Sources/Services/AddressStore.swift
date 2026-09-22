@@ -39,16 +39,6 @@ final class AddressStore: ObservableObject {
         addresses.removeAll { $0.id == address.id }
     }
 
-    func setAlertsEnabled(_ enabled: Bool, for address: SavedAddress) {
-        guard let index = addresses.firstIndex(where: { $0.id == address.id }) else { return }
-        addresses[index].alertsEnabled = enabled
-    }
-
-    func markVerified(_ address: SavedAddress) {
-        guard let index = addresses.firstIndex(where: { $0.id == address.id }) else { return }
-        addresses[index].lastVerifiedAt = Date()
-    }
-
     private func persist() {
         guard let data = try? JSONEncoder().encode(addresses) else { return }
         UserDefaults.standard.set(data, forKey: Self.storageKey)

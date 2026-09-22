@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var premiumManager: PremiumManager
     @AppStorage("snowcntrl.dailyReminder") private var dailyReminderEnabled = false
+    @AppStorage(CityStatusService.simulateBanKey) private var isSimulatingBan = false
     let selectedCity: City?
 
     var body: some View {
@@ -59,6 +60,18 @@ struct SettingsView: View {
                     Toggle(localizer.s(.settingsPremiumDebugToggle), isOn: $premiumManager.isPremium)
                     #endif
                 }
+
+                #if DEBUG
+                Section {
+                    Toggle(localizer.s(.settingsSimulateBan), isOn: $isSimulatingBan)
+                        .onChange(of: isSimulatingBan) { _ in
+                            Task { await BackgroundRefreshManager.checkNow(language: localizer.language) }
+                        }
+                    Text(localizer.s(.settingsSimulateBanHint))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                #endif
 
                 Section(localizer.s(.settingsAboutHeader)) {
                     Text(localizer.s(.settingsAboutBody))

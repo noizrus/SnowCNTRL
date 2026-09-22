@@ -1,5 +1,6 @@
 import SwiftUI
 import GoogleMobileAds
+import UserNotifications
 
 @main
 struct SnowCNTRLApp: App {
@@ -11,6 +12,9 @@ struct SnowCNTRLApp: App {
     init() {
         GADMobileAds.sharedInstance().start(completionHandler: nil)
         BackgroundRefreshManager.register()
+        // Must be set before launch finishes to receive notification actions.
+        UNUserNotificationCenter.current().delegate = NotificationCoordinator.shared
+        AlertNotifier.registerCategories(language: Localizer().language)
     }
 
     var body: some Scene {
@@ -22,10 +26,18 @@ struct SnowCNTRLApp: App {
                 .task {
                     await BackgroundRefreshManager.checkNow(language: localizer.language)
                 }
+                .onChange(of: localizer.language) { language in
+                    AlertNotifier.registerCategories(language: language)
+                }
         }
         .onChange(of: scenePhase) { newPhase in
-            if newPhase == .background {
+            switch newPhase {
+            case .active:
+                Task { await BackgroundRefreshManager.checkNow(language: localizer.language) }
+            case .background:
                 BackgroundRefreshManager.scheduleNext()
+            default:
+                break
             }
         }
     }

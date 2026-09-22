@@ -1,30 +1,41 @@
 import SwiftUI
 import MapKit
 
-/// Map-first dashboard in the spirit of Info-Neige: the street map fills
-/// the screen, a collapsible panel carries status and saved spots.
+/// Map-first dashboard in the spirit of Info-Neige: tap a street side to
+/// drop an alert marker there; each marker rings the phone when snow
+/// clearing reaches its street.
 struct DashboardView: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var premiumManager: PremiumManager
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(CityStatusService.simulateBanKey) private var isSimulatingBan = false
     @StateObject private var viewModel = DashboardViewModel()
     @StateObject private var locationManager = LocationManager()
     @ObservedObject private var addressStore = AddressStore.shared
-    @State private var isAddingAddress = false
-    @State private var addressBeingEdited: SavedAddress?
     @State private var segments: [StreetSegment] = []
     @State private var region: MKCoordinateRegion
     @State private var hasCenteredOnAddresses = false
-    @State private var isShowingNearbyParking = false
     @State private var isShowingCityRules = false
     @State private var isPanelCollapsed = false
-    @State private var isShowingLegend = false
+    @State private var isShowingInfo = false
     @State private var isZoomedOutTooFar = false
     @State private var isLoadingStreets = false
     @State private var isLocating = false
+    @State private var pendingAlert: PendingAlert?
+    @State private var selectedAlertID: UUID?
+    @State private var notificationsDenied = false
+    @State private var toast: String?
     let city: City
     var onChangeCity: () -> Void
+
+    /// A marker placed by tapping the map but not added yet.
+    private struct PendingAlert {
+        let id = UUID()
+        let coordinate: CLLocationCoordinate2D
+        let segmentID: String?
+        var label: String?
+    }
 
     init(city: City, onChangeCity: @escaping () -> Void) {
         self.city = city
@@ -39,9 +50,21 @@ struct DashboardView: View {
         addressStore.addresses.filter { $0.cityID == city.id }
     }
 
-    /// The street side each saved spot sits on, drawn highlighted.
-    private var savedSideIDs: Set<String> {
-        Set(myAddresses.compactMap { segments.nearestSide(to: $0.coordinate, within: 15)?.segment.id })
+    private var selectedAlert: SavedAddress? {
+        myAddresses.first { $0.id == selectedAlertID }
+    }
+
+    private var isAtAlertLimit: Bool {
+        AlertPolicy.isAtLimit(alertCount: addressStore.addresses.count, isPremium: premiumManager.isPremium)
+    }
+
+    /// Street sides with an alert (and the one being added), drawn highlighted.
+    private var highlightedSideIDs: Set<String> {
+        var ids = Set(myAddresses.compactMap { segments.nearestSide(to: $0.coordinate, within: 15)?.segment.id })
+        if let pendingID = pendingAlert?.segmentID {
+            ids.insert(pendingID)
+        }
+        return ids
     }
 
     private struct StreetRequest: Equatable {
@@ -65,11 +88,13 @@ struct DashboardView: View {
             ZStack(alignment: .bottom) {
                 TappableMapView(
                     region: $region,
-                    pinCoordinate: .constant(nil),
+                    pinCoordinate: .constant(pendingAlert?.coordinate),
                     accentColor: UIColor(themeManager.palette.primary),
                     segments: segments,
                     readOnlyPins: myAddresses,
-                    highlightedSegmentIDs: savedSideIDs
+                    highlightedSegmentIDs: highlightedSideIDs,
+                    onTap: handleMapTap,
+                    onSelectPin: selectAlert
                 )
                 .ignoresSafeArea(edges: .top)
 
@@ -83,14 +108,10 @@ struct DashboardView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     SnowCntrlBrandmark()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: onChangeCity) {
-                        Image(systemName: "mappin.and.ellipse")
-                    }
-                    .accessibilityLabel(localizer.s(.citySelectionChangeButton))
-                }
             }
-            .task { await viewModel.load(city: city, language: localizer.language) }
+            .task(id: isSimulatingBan) {
+                await viewModel.load(city: city, language: localizer.language)
+            }
             .task(id: myAddresses.map(\.id)) {
                 if !hasCenteredOnAddresses, !myAddresses.isEmpty {
                     region = fittingRegion(for: myAddresses)
@@ -106,16 +127,7 @@ struct DashboardView: View {
             .onReceive(locationManager.$lastLocation) { coordinate in
                 guard isLocating, let coordinate else { return }
                 isLocating = false
-                region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006))
-            }
-            .sheet(isPresented: $isAddingAddress) {
-                AddressMapView(city: city, existing: nil, onSave: saveAddress)
-            }
-            .sheet(item: $addressBeingEdited) { address in
-                AddressMapView(city: city, existing: address, onSave: saveAddress)
-            }
-            .sheet(isPresented: $isShowingNearbyParking) {
-                NearbyParkingView(coordinate: myAddresses.first?.coordinate ?? region.center)
+                region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
             }
             .sheet(isPresented: $isShowingCityRules) {
                 CityRulesView(city: city)
@@ -129,13 +141,22 @@ struct DashboardView: View {
     private var mapOverlay: some View {
         VStack {
             HStack(alignment: .top) {
-                if isZoomedOutTooFar {
-                    MapHintCapsule(text: localizer.s(.mapZoomInHint))
-                } else if isLoadingStreets {
-                    MapHintCapsule(text: localizer.s(.mapLoadingStreets), showsProgress: true)
+                VStack(alignment: .leading, spacing: 8) {
+                    if let toast {
+                        MapHintCapsule(text: toast)
+                            .transition(.opacity)
+                    }
+                    if isZoomedOutTooFar {
+                        MapHintCapsule(text: localizer.s(.mapZoomInHint))
+                    } else if isLoadingStreets {
+                        MapHintCapsule(text: localizer.s(.mapLoadingStreets), showsProgress: true)
+                    }
                 }
-                Spacer()
+                Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 10) {
+                    MapControlButton(systemImage: "mappin.and.ellipse", accessibilityText: localizer.s(.citySelectionChangeButton)) {
+                        onChangeCity()
+                    }
                     MapControlButton(systemImage: "location.fill", accessibilityText: localizer.s(.mapLocateMe)) {
                         isLocating = true
                         locationManager.requestLocation()
@@ -146,49 +167,124 @@ struct DashboardView: View {
                     ) {
                         themeManager.appearance = colorScheme == .dark ? .light : .dark
                     }
-                    MapControlButton(
-                        systemImage: "paintpalette.fill",
-                        isActive: isShowingLegend,
-                        accessibilityText: localizer.s(.mapLegendButton)
-                    ) {
-                        withAnimation(.easeInOut(duration: 0.2)) { isShowingLegend.toggle() }
+                    MapControlButton(systemImage: "info", isActive: isShowingInfo, accessibilityText: localizer.s(.infoButton)) {
+                        withAnimation(.easeInOut(duration: 0.2)) { isShowingInfo.toggle() }
                     }
-                    if isShowingLegend {
-                        MapLegendView()
-                            .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
+                    if isShowingInfo {
+                        MapLegendView {
+                            isShowingInfo = false
+                            isShowingCityRules = true
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
                     }
                 }
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 16)
             .padding(.top, 8)
             Spacer()
         }
     }
 
-    // MARK: - Actions
+    // MARK: - Alerts
 
-    private func isRecentlyVerified(_ address: SavedAddress) -> Bool {
-        guard let verifiedAt = address.lastVerifiedAt else { return false }
-        return Date().timeIntervalSince(verifiedAt) < 3 * 3600
+    private func handleMapTap(_ coordinate: CLLocationCoordinate2D) {
+        selectedAlertID = nil
+        guard !isZoomedOutTooFar else {
+            showToast(localizer.s(.mapZoomInHint))
+            return
+        }
+
+        // Roughly a finger's width on screen at the current zoom.
+        let threshold = max(25, region.span.latitudeDelta * 111_000 * 0.04)
+        if let match = segments.nearestSide(to: coordinate, within: threshold) {
+            let pending = PendingAlert(coordinate: match.curbPoint, segmentID: match.segment.id)
+            present(pending)
+            Task {
+                let label = await AddressGeocoder.alertLabel(for: match, language: localizer.language)
+                if pendingAlert?.id == pending.id { pendingAlert?.label = label }
+            }
+        } else if segments.isEmpty {
+            // No street geometry here: fall back to the exact tapped point.
+            let pending = PendingAlert(coordinate: coordinate, segmentID: nil)
+            present(pending)
+            Task {
+                let label = await AddressGeocoder.reverseGeocode(coordinate)
+                if pendingAlert?.id == pending.id { pendingAlert?.label = label }
+            }
+        } else {
+            // Tapped between streets: just dismiss any pending marker.
+            withAnimation { pendingAlert = nil }
+        }
     }
 
-    private func saveAddress(_ saved: SavedAddress) {
-        // Guards against two chips for the same spot.
-        for duplicate in myAddresses where duplicate.id != saved.id && duplicate.label == saved.label {
-            addressStore.remove(duplicate)
+    private func present(_ pending: PendingAlert) {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+            pendingAlert = pending
+            isPanelCollapsed = false
         }
-        addressStore.upsert(saved)
-        hasCenteredOnAddresses = false
-        if saved.alertsEnabled, city.liveProviderID == nil {
-            NotificationScheduler.scheduleDailyReminder(cityName: city.name, language: localizer.language)
+    }
+
+    private func confirmPendingAlert() {
+        guard let pending = pendingAlert, let label = pending.label else { return }
+        if isAtAlertLimit {
+            // Free version: the new alert replaces the existing one.
+            for existing in addressStore.addresses {
+                removeAlert(existing)
+            }
+        }
+        let alert = SavedAddress(label: label, coordinate: pending.coordinate, cityID: city.id)
+        addressStore.upsert(alert)
+        withAnimation {
+            pendingAlert = nil
+            selectedAlertID = alert.id
+        }
+        Task {
+            notificationsDenied = !(await NotificationScheduler.requestAuthorizationIfNeeded())
+            await BackgroundRefreshManager.checkNow(language: localizer.language)
+        }
+    }
+
+    private func selectAlert(_ id: UUID) {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+            pendingAlert = nil
+            selectedAlertID = id
+            isPanelCollapsed = false
+        }
+    }
+
+    private func removeAlert(_ address: SavedAddress) {
+        AlertNotifier.handleBanCleared(for: address.id)
+        withAnimation {
+            addressStore.remove(address)
+            if selectedAlertID == address.id { selectedAlertID = nil }
+        }
+    }
+
+    private func testAlert(_ address: SavedAddress) {
+        Task {
+            let granted = await NotificationScheduler.requestAuthorizationIfNeeded()
+            notificationsDenied = !granted
+            guard granted else { return }
+            AlertNotifier.sendTest(for: address, language: localizer.language)
+            showToast(localizer.s(.alertTestScheduled))
         }
     }
 
     private func focus(on address: SavedAddress) {
-        withAnimation {
-            region = MKCoordinateRegion(center: address.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.004, longitudeDelta: 0.004))
+        region = MKCoordinateRegion(center: address.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.004, longitudeDelta: 0.004))
+    }
+
+    private func showToast(_ text: String) {
+        withAnimation { toast = text }
+        Task {
+            try? await Task.sleep(nanoseconds: 3_500_000_000)
+            if toast == text {
+                withAnimation { toast = nil }
+            }
         }
     }
+
+    // MARK: - Data
 
     private func loadSegments() async {
         let overallStatus = (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus
@@ -206,12 +302,8 @@ struct DashboardView: View {
     }
 
     private func fittingRegion(for addresses: [SavedAddress]) -> MKCoordinateRegion {
-        let coordinates = addresses.map(\.coordinate)
-        guard !coordinates.isEmpty else {
-            return MKCoordinateRegion(center: city.approximateCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
-        }
-        let lats = coordinates.map(\.latitude)
-        let lons = coordinates.map(\.longitude)
+        let lats = addresses.map(\.latitude)
+        let lons = addresses.map(\.longitude)
         let center = CLLocationCoordinate2D(
             latitude: (lats.min()! + lats.max()!) / 2,
             longitude: (lons.min()! + lons.max()!) / 2
@@ -238,40 +330,24 @@ struct DashboardView: View {
             HStack(spacing: 10) {
                 statusPill
                 Spacer(minLength: 0)
-                Button {
+                roundIconButton(systemImage: "arrow.clockwise", accessibilityText: localizer.s(.dashboardRefreshButton)) {
                     Task { await viewModel.load(city: city, language: localizer.language) }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.body.weight(.semibold))
-                        .frame(width: 36, height: 36)
-                        .background(Circle().fill(Color(.tertiarySystemBackground)))
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(localizer.s(.dashboardRefreshButton))
-
-                Button(action: togglePanel) {
-                    Image(systemName: isPanelCollapsed ? "chevron.up" : "chevron.down")
-                        .font(.body.weight(.semibold))
-                        .frame(width: 36, height: 36)
-                        .background(Circle().fill(Color(.tertiarySystemBackground)))
+                roundIconButton(systemImage: isPanelCollapsed ? "chevron.up" : "chevron.down", accessibilityText: localizer.s(.panelToggle)) {
+                    togglePanel()
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(localizer.s(.panelToggle))
             }
 
             if !isPanelCollapsed {
                 TierDisclaimerBanner(tier: city.tier, cityName: city.name)
 
-                HStack(spacing: 8) {
-                    actionButton(title: localizer.s(.nearbyParkingButton), systemImage: "parkingsign.circle.fill") {
-                        isShowingNearbyParking = true
-                    }
-                    actionButton(title: localizer.s(.cityRulesButton), systemImage: "info.circle.fill") {
-                        isShowingCityRules = true
-                    }
+                if let pending = pendingAlert {
+                    pendingAlertCard(pending)
+                } else if let alert = selectedAlert {
+                    alertCard(alert)
+                } else {
+                    alertsList
                 }
-
-                addressChips
             }
 
             if !premiumManager.isPremium {
@@ -312,13 +388,161 @@ struct DashboardView: View {
         }
     }
 
-    private func actionButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+    private func roundIconButton(systemImage: String, accessibilityText: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(themeManager.palette.primaryText)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(Color(.tertiarySystemBackground)))
         }
-        .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette))
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private func pendingAlertCard(_ pending: PendingAlert) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(localizer.s(.alertAddTitle), systemImage: "bell.badge.fill")
+                .font(.headline)
+                .foregroundStyle(themeManager.palette.primaryText)
+            if let label = pending.label {
+                Text(label)
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                ProgressView().controlSize(.small)
+            }
+            if isAtAlertLimit {
+                Text(localizer.s(.alertFreeLimit))
+                    .font(.caption)
+                    .foregroundStyle(Color.primary.opacity(0.75))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 8) {
+                Button(localizer.s(.alertCancel)) {
+                    withAnimation { pendingAlert = nil }
+                }
+                .buttonStyle(NeutralButtonStyle())
+
+                Button(action: confirmPendingAlert) {
+                    Label(localizer.s(isAtAlertLimit ? LocKey.alertReplaceButton : LocKey.alertAddButton), systemImage: "bell.fill")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette))
+                .disabled(pending.label == nil)
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(.secondarySystemBackground).opacity(0.85)))
+    }
+
+    private func alertCard(_ alert: SavedAddress) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "car.fill")
+                    .foregroundStyle(themeManager.palette.primaryText)
+                Text(alert.label)
+                    .font(.subheadline.weight(.semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button {
+                    withAnimation { selectedAlertID = nil }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            Text(localizer.s(.alertCardDescription))
+                .font(.caption)
+                .foregroundStyle(Color.primary.opacity(0.75))
+                .fixedSize(horizontal: false, vertical: true)
+            if notificationsDenied {
+                Text(localizer.s(.alertNotificationsDenied))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 8) {
+                Button {
+                    removeAlert(alert)
+                } label: {
+                    Label(localizer.s(.alertRemove), systemImage: "trash")
+                }
+                .buttonStyle(NeutralButtonStyle(isDestructive: true))
+
+                Button {
+                    testAlert(alert)
+                } label: {
+                    Label(localizer.s(.alertTest), systemImage: "speaker.wave.3.fill")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette))
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(.secondarySystemBackground).opacity(0.85)))
+    }
+
+    @ViewBuilder
+    private var alertsList: some View {
+        if myAddresses.isEmpty {
+            Label(localizer.s(.alertsEmptyHint), systemImage: "hand.tap.fill")
+                .font(.subheadline)
+                .foregroundStyle(Color.primary.opacity(0.85))
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            VStack(alignment: .leading, spacing: 6) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(myAddresses) { alert in
+                            alertChip(alert)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                Text(localizer.s(.alertsListHint))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func alertChip(_ alert: SavedAddress) -> some View {
+        HStack(spacing: 6) {
+            Button {
+                focus(on: alert)
+                selectAlert(alert.id)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "bell.fill")
+                        .font(.caption)
+                        .foregroundStyle(themeManager.palette.primaryText)
+                    Text(alert.label)
+                        .font(.caption.weight(.medium))
+                        .lineLimit(1)
+                }
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                removeAlert(alert)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(localizer.s(.alertRemove))
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 8)
+        .padding(.vertical, 8)
+        .background(Capsule().fill(Color(.tertiarySystemBackground)))
+        .overlay(Capsule().strokeBorder(themeManager.palette.primary.opacity(0.35), lineWidth: 1))
     }
 
     @ViewBuilder
@@ -354,82 +578,6 @@ struct DashboardView: View {
             .background(Capsule().fill(color.opacity(0.16)))
             .overlay(Capsule().strokeBorder(color.opacity(0.5), lineWidth: 1))
             .shadow(color: color.opacity(0.35), radius: 6)
-        }
-    }
-
-    private var addressChips: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(myAddresses) { address in
-                        addressChip(address)
-                    }
-
-                    Button {
-                        isAddingAddress = true
-                    } label: {
-                        Label(
-                            myAddresses.isEmpty ? localizer.s(.myStreetPickPrompt) : localizer.s(.myStreetAddAnother),
-                            systemImage: "plus"
-                        )
-                    }
-                    .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette, cornerRadius: 100, fillsWidth: false))
-                }
-                .padding(.vertical, 2)
-            }
-
-            if !myAddresses.isEmpty {
-                Text(localizer.s(.addressChipsHint))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
-
-    private func addressChip(_ address: SavedAddress) -> some View {
-        Button {
-            focus(on: address)
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "car.fill")
-                    .font(.caption)
-                    .foregroundStyle(themeManager.palette.primaryText)
-                Text(address.label)
-                    .font(.caption.weight(.medium))
-                    .lineLimit(1)
-                if !address.alertsEnabled {
-                    Image(systemName: "bell.slash")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                if isRecentlyVerified(address) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.caption2)
-                        .foregroundStyle(SnowClearingStatus.cleared.neonColor)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Capsule().fill(Color(.tertiarySystemBackground)))
-            .overlay(Capsule().strokeBorder(themeManager.palette.primary.opacity(0.35), lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-        .contextMenu {
-            Button {
-                addressBeingEdited = address
-            } label: {
-                Label(localizer.s(.addressEdit), systemImage: "pencil")
-            }
-            Button {
-                addressStore.markVerified(address)
-            } label: {
-                Label(localizer.s(.verifiedButton), systemImage: "checkmark.seal")
-            }
-            Button(role: .destructive) {
-                addressStore.remove(address)
-            } label: {
-                Label(localizer.s(.addressDelete), systemImage: "trash")
-            }
         }
     }
 }
