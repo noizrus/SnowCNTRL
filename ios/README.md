@@ -10,22 +10,27 @@ Premier retour visuel après un build réussi sur iPhone 13 :
   bulle. Corrigé : police plus compacte (`SnowCntrlBrandmark.swift`) + le bouton
   "Changer de ville" est maintenant une simple icône (`mappin.and.ellipse`) au lieu
   d'un texte, ce qui libère la place.
-- **Lignes de rue "qui n'ont aucun sens"** : le générateur de démo assignait une
-  couleur différente à chaque rue de façon arbitraire (juste pour montrer le rendu
-  néon). Corrigé : toutes les rues démo utilisent maintenant le **même statut que le
-  statut global déjà affiché** (`Services/SnowSegmentProviding.swift`) — vert partout
-  quand il n'y a pas d'interdiction active, rouge partout quand il y en a une, etc.
-  Ce n'est toujours pas de la vraie donnée rue par rue (voir plus bas), mais au moins
-  c'est cohérent avec ce que dit le reste de l'app au lieu d'un arc-en-ciel arbitraire.
+- **Lignes de rue "qui n'ont aucun sens"** : d'abord corrigé pour utiliser une seule
+  couleur cohérente au lieu d'un arc-en-ciel arbitraire — mais le vrai problème était
+  plus profond : cette grille de rues était **entièrement fabriquée** (un quadrillage
+  généré autour de l'adresse), sans aucun rapport avec les vraies rues de Montréal. Une
+  fois la couleur uniformisée, le décalage avec la vraie carte devenait encore plus
+  visible/confus. `MontrealSnowSegmentProvider` ne génère donc plus cette grille du
+  tout — elle retourne une liste vide, comme les 113 autres villes, en attendant la
+  vraie géométrie (voir le TODO dans `Services/SnowSegmentProviding.swift`). Mieux vaut
+  une carte sans lignes qu'une carte avec de fausses lignes qui donnent l'impression
+  d'être des vraies rues.
 - **Favoris en double / pas d'espace dédié** : `DashboardView.saveAddress` retire
   maintenant tout doublon (même libellé, même ville) avant d'enregistrer. Les adresses
   enregistrées s'affichent sur la carte avec une icône de **voiture** (`car.fill`) au
   lieu du repère générique — c'est l'endroit où tu es garé, pas juste un point.
 - **Sélection au point plutôt qu'au côté de rue complet** : `AddressMapView` "aimante"
-  maintenant un tap près d'une ligne de rue (< 25 m) et sélectionne **tout ce côté**
-  (mis en évidence par un contour blanc), comme sur Info-Neige, au lieu de placer un
-  point à l'endroit exact du doigt. Sans ligne à proximité, ça retombe sur le pin
-  classique (les 113 villes sans données de rue démo, pour l'instant).
+  un tap près d'une ligne de rue (< 25 m) et sélectionne **tout ce côté** (contour
+  blanc), comme sur Info-Neige, au lieu de placer un point à l'endroit exact du doigt.
+  Le code est prêt et attend simplement qu'il y ait des lignes de rue à aimanter —
+  puisque `MontrealSnowSegmentProvider` ne fabrique plus de fausse grille (voir juste
+  au-dessus), ça retombe partout sur le pin classique pour l'instant. Ça s'activera
+  automatiquement dès que la vraie géométrie sera branchée.
 - **Bannière pub mal cadrée** : elle prenait toute la largeur du panneau alors que le
   format `GADAdSizeBanner` est fixe (320×50) — corrigé en la centrant avec une largeur
   explicite au lieu de l'étirer.
@@ -96,11 +101,13 @@ pour **les deux** (comme pour l'app seule avant) :
   gris (en attente), les mêmes codes que Info-Neige MTL. Rendu via un
   `MKOverlayRenderer` maison (`GlowPolylineRenderer`) avec halo flou + trait vif.
   **Important** : comme pour le statut général, aucune géométrie de rue réelle n'a pu
-  être obtenue (même blocage `donnees.montreal.ca`) — `MontrealSnowSegmentProvider`
-  affiche donc des rues d'exemple générées autour du point choisi, pas de vraies
-  données. Toutes les autres villes n'affichent aucune ligne (pas de donnée du tout).
-  Voir les commentaires dans `Sources/Services/SnowSegmentProviding.swift` pour brancher
-  les vraies données une fois le `resource_id` obtenu.
+  être obtenue (même blocage `donnees.montreal.ca`). Une première version affichait une
+  grille de rues d'exemple générée autour du point choisi, mais elle ne correspondait
+  pas aux vraies rues sur la carte (repéré lors du premier test sur iPhone) — donc
+  `MontrealSnowSegmentProvider` n'affiche plus rien pour l'instant, comme les 113
+  autres villes, plutôt que des lignes trompeuses. Voir les commentaires dans
+  `Sources/Services/SnowSegmentProviding.swift` pour brancher les vraies données une
+  fois le `resource_id` obtenu.
 - **Carte "mutedStandard"** : style de carte désaturé (au lieu du standard MapKit) pour
   que les lignes néon ressortent davantage — pas de service de tuiles personnalisé
   (Mapbox, etc.), donc aucun coût ni clé API supplémentaire pour l'instant.
@@ -187,10 +194,11 @@ simulateur : lance l'app, mets-la en arrière-plan, puis dans Xcode :
 7. `NSLocationWhenInUseUsageDescription` est déjà dans `project.yml` (nécessaire pour
    le bouton "utiliser ma position" sur la carte et la géolocalisation au lancement)
    — relis le texte avant publication.
-8. **Lignes de rue = données d'exemple, pas réelles** (voir plus haut) — c'est la limite
-   la plus visible actuellement : le rendu néon fonctionne, mais ce n'est pas encore un
-   vrai statut de déneigement rue par rue tant que le `resource_id` de Montréal n'est
-   pas branché.
+8. **Aucune ligne de rue affichée nulle part pour l'instant** (voir plus haut) — c'est
+   la limite la plus visible actuellement : le rendu néon (`GlowPolylineRenderer`)
+   fonctionne et est prêt, mais `MontrealSnowSegmentProvider` ne génère plus de fausse
+   grille (elle ne correspondait pas aux vraies rues) et retourne une liste vide tant
+   que le `resource_id` de Montréal n'est pas branché à de la vraie géométrie.
 9. Les couleurs de thème par province sont une interprétation approximative des
    drapeaux, pas une reproduction officielle — à ajuster si certaines ne plaisent pas.
 10. **Prochaine grosse étape : Widget (écran d'accueil/verrouillage), Apple Watch et

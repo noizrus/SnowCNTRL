@@ -33,55 +33,21 @@ struct GenericSnowSegmentProvider: SnowSegmentProviding {
 
 /// Real network plumbing is not wired yet — same blocker as
 /// MontrealOpenDataProvider (donnees.montreal.ca unreachable while writing
-/// this, resource id unconfirmed). Until then this draws an illustrative
-/// grid of streets around the requested region, both sides colored with
-/// the SAME `overallStatus` the dashboard already shows — not a fabricated
-/// per-street value, since we have no real per-street data to justify one.
+/// this, resource id unconfirmed). This used to draw a fabricated grid of
+/// streets to demo the glow rendering, but that grid has no relationship
+/// to Montreal's real street layout — it visibly doesn't line up with the
+/// base map's actual roads, which is actively misleading rather than
+/// illustrative. Returns nothing until real geometry is wired in, same as
+/// every other city.
 ///
-/// To go from demo to real: fetch the street-segment geometry + status
+/// To go from empty to real: fetch the street-segment geometry + status
 /// for `region` from Montreal's open data (the "Déneigement des rues en
 /// arrondissements" resource), map its status field to `SnowClearingStatus`,
-/// and replace the `demoSegments(near:overallStatus:)` call below with that
-/// real per-segment data.
+/// and build segments with `StreetSegmentBuilder.bothSides(centerline:...)`
+/// from that real per-segment data.
 struct MontrealSnowSegmentProvider: SnowSegmentProviding {
     func fetchSegments(near region: MKCoordinateRegion, overallStatus: SnowClearingStatus) async -> [StreetSegment] {
-        demoSegments(near: region.center, status: overallStatus)
-    }
-
-    private func demoSegments(near center: CLLocationCoordinate2D, status: SnowClearingStatus) -> [StreetSegment] {
-        var segments: [StreetSegment] = []
-
-        // A small grid of illustrative streets around the center point —
-        // NOT real Montreal geometry, just enough to demo the glow lines.
-        for row in -2...2 {
-            let latOffset = Double(row) * 0.0018
-            let centerline = [
-                CLLocationCoordinate2D(latitude: center.latitude + latOffset, longitude: center.longitude - 0.01),
-                CLLocationCoordinate2D(latitude: center.latitude + latOffset, longitude: center.longitude + 0.01),
-            ]
-            segments += StreetSegmentBuilder.bothSides(
-                centerline: centerline,
-                idPrefix: "demo-h-\(row)",
-                leftStatus: status,
-                rightStatus: status
-            )
-        }
-
-        for col in -2...2 {
-            let lonOffset = Double(col) * 0.0022
-            let centerline = [
-                CLLocationCoordinate2D(latitude: center.latitude - 0.006, longitude: center.longitude + lonOffset),
-                CLLocationCoordinate2D(latitude: center.latitude + 0.006, longitude: center.longitude + lonOffset),
-            ]
-            segments += StreetSegmentBuilder.bothSides(
-                centerline: centerline,
-                idPrefix: "demo-v-\(col)",
-                leftStatus: status,
-                rightStatus: status
-            )
-        }
-
-        return segments
+        []
     }
 }
 
