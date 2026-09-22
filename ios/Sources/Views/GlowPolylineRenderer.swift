@@ -1,67 +1,97 @@
 import MapKit
 import UIKit
 
-/// A polyline overlay carrying its own status/color, so the shared
-/// renderer below can draw each segment in the right color without a
-/// separate MKOverlayRenderer subclass per color.
-final class GlowPolyline: MKPolyline {
-    var status: SnowClearingStatus = .awaitingInfo
-    /// True for the street side the user has picked (Info-Neige style),
-    /// drawn with an extra white outline so it reads as "selected" at a
-    /// glance against the rest of the grid.
-    var isSelected: Bool = false
+/// A block centerline plus which curb to draw. The renderer shifts it
+/// sideways at draw time, so it lands on the edge of the road as MapKit
+/// draws it at the current zoom.
+final class SideLine: MKPolyline {
+    var sideSign: Double = 1
+    var curbOffsetMeters: Double = 4.5
 }
 
-/// Draws a "neon" line: a wide, soft, low-alpha halo underneath a thin,
-/// bright core stroke. Plain MKPolylineRenderer only draws one flat
-/// stroke, so this subclasses MKOverlayRenderer directly and builds the
-/// path by hand.
+/// All side lines sharing one status (and selection state) — one overlay
+/// per group instead of thousands keeps panning smooth.
+final class GlowMultiPolyline: MKMultiPolyline {
+    var status: SnowClearingStatus = .awaitingInfo
+    var isSelected = false
+}
+
+/// Neon look: soft translucent halo + bright thin core, plus a white
+/// outline for selected sides.
 final class GlowPolylineRenderer: MKOverlayRenderer {
-    private var glowPolyline: GlowPolyline? { overlay as? GlowPolyline }
+    /// Screen-point bounds for the curb offset: never so close that both
+    /// sides merge, never so far that they leave the drawn road.
+    private static let minOffsetPoints = 2.5
+    private static let maxOffsetPoints = 16.0
 
     override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {
-        guard let polyline = glowPolyline, polyline.pointCount > 1 else { return }
+        guard let group = overlay as? GlowMultiPolyline else { return }
+
+        let scale = Double(zoomScale)
+        let coreWidth = (group.isSelected ? 4.5 : 2.6) / scale
+        let margin = (Self.maxOffsetPoints + 12) / scale
+        let visible = mapRect.insetBy(dx: -margin, dy: -margin)
 
         let path = CGMutablePath()
-        let points = polyline.points()
-        let first = point(for: points[0])
-        path.move(to: first)
-        for i in 1..<polyline.pointCount {
-            path.addLine(to: point(for: points[i]))
+        for case let line as SideLine in group.polylines {
+            guard line.pointCount > 1, line.boundingMapRect.intersects(visible) else { continue }
+            let metersPerMapPoint = MKMetersPerMapPointAtLatitude(line.coordinate.latitude)
+            let offset = min(
+                max(line.curbOffsetMeters / metersPerMapPoint, Self.minOffsetPoints / scale),
+                Self.maxOffsetPoints / scale
+            ) * line.sideSign
+            appendOffsetPath(of: line, offset: offset, to: path)
         }
+        guard !path.isEmpty else { return }
 
-        let color = UIColor(polyline.status.neonColor)
-        let isSelected = polyline.isSelected
-        let baseLineWidth: CGFloat = (isSelected ? 5.5 : 3.5) / zoomScale
+        let color = UIColor(group.status.neonColor)
+        // Shadow blur is in device pixels regardless of the context's
+        // transform, hence contentScaleFactor rather than zoomScale.
+        let blur = (group.isSelected ? 9 : 6) * contentScaleFactor
 
         context.saveGState()
-        context.addPath(path)
         context.setLineJoin(.round)
         context.setLineCap(.round)
 
-        // Halo: wide, soft, translucent — brighter and wider when selected.
-        context.setStrokeColor(color.withAlphaComponent(isSelected ? 0.55 : 0.35).cgColor)
-        context.setLineWidth(baseLineWidth * (isSelected ? 6 : 5))
-        context.setShadow(offset: .zero, blur: baseLineWidth * 4, color: color.withAlphaComponent(0.9).cgColor)
+        context.addPath(path)
+        context.setStrokeColor(color.withAlphaComponent(group.isSelected ? 0.5 : 0.3).cgColor)
+        context.setLineWidth(coreWidth * 2.8)
+        context.setShadow(offset: .zero, blur: blur, color: color.withAlphaComponent(0.9).cgColor)
         context.strokePath()
+        context.setShadow(offset: .zero, blur: 0, color: nil)
 
-        if isSelected {
-            // A thin white outline so the selected side is unmistakable
-            // even against a same-colored neighboring line.
+        if group.isSelected {
             context.addPath(path)
-            context.setShadow(offset: .zero, blur: 0, color: nil)
             context.setStrokeColor(UIColor.white.cgColor)
-            context.setLineWidth(baseLineWidth * 1.6)
+            context.setLineWidth(coreWidth * 1.8)
             context.strokePath()
         }
 
-        // Core: thin and near-white-hot for the neon look.
         context.addPath(path)
-        context.setShadow(offset: .zero, blur: 0, color: nil)
         context.setStrokeColor(color.cgColor)
-        context.setLineWidth(baseLineWidth)
+        context.setLineWidth(coreWidth)
         context.strokePath()
 
         context.restoreGState()
+    }
+
+    private func appendOffsetPath(of line: SideLine, offset: Double, to path: CGMutablePath) {
+        let points = line.points()
+        let count = line.pointCount
+        for i in 0..<count {
+            let previous = points[max(0, i - 1)]
+            let next = points[min(count - 1, i + 1)]
+            let dx = next.x - previous.x
+            let dy = next.y - previous.y
+            let length = (dx * dx + dy * dy).squareRoot()
+            let normalX = length > 0 ? -dy / length : 0
+            let normalY = length > 0 ? dx / length : 0
+            let shifted = point(for: MKMapPoint(x: points[i].x + normalX * offset, y: points[i].y + normalY * offset))
+            if i == 0 {
+                path.move(to: shifted)
+            } else {
+                path.addLine(to: shifted)
+            }
+        }
     }
 }

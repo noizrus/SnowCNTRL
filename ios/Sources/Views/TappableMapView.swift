@@ -1,24 +1,19 @@
 import SwiftUI
 import MapKit
 
-/// A real MKMapView (not the SwiftUI-16 `Map` view) so tapping the map to
-/// drop a pin works reliably at the iOS 16 deployment target — SwiftUI's own
-/// tap-to-coordinate API only arrived in iOS 17. Also draws neon glow lines
-/// for street segments (see GlowPolylineRenderer) and uses the muted map
-/// style so those glow lines stand out against a calmer base map.
+/// A real MKMapView (SwiftUI's `Map` only gained tap-to-coordinate in
+/// iOS 17). Draws each street side as a neon line along its curb (see
+/// GlowPolylineRenderer) on a muted base map so the lines stand out.
 struct TappableMapView: UIViewRepresentable {
     @Binding var region: MKCoordinateRegion
     @Binding var pinCoordinate: CLLocationCoordinate2D?
     var accentColor: UIColor
     var segments: [StreetSegment] = []
-    /// Extra, non-draggable pins shown alongside `pinCoordinate` — used to
-    /// show every saved address for a city on one map (with a callout
-    /// title) instead of just the one being edited.
+    /// Saved spots, shown as car markers with their label as callout.
     var readOnlyPins: [SavedAddress] = []
     var isInteractive: Bool = true
-    /// The `StreetSegment.id` currently selected by the user (Info-Neige
-    /// style "pick a whole side"), drawn brighter/thicker than the rest.
-    var highlightedSegmentID: String? = nil
+    /// Street sides drawn highlighted (selected or saved).
+    var highlightedSegmentIDs: Set<String> = []
     var onTap: ((CLLocationCoordinate2D) -> Void)? = nil
 
     func makeUIView(context: Context) -> MKMapView {
@@ -26,11 +21,12 @@ struct TappableMapView: UIViewRepresentable {
         mapView.delegate = context.coordinator
         mapView.showsUserLocation = true
         mapView.mapType = .mutedStandard
+        mapView.pointOfInterestFilter = MKPointOfInterestFilter(including: [.publicTransport, .parking])
         mapView.setRegion(region, animated: false)
         mapView.isScrollEnabled = isInteractive
         mapView.isZoomEnabled = isInteractive
         mapView.isRotateEnabled = isInteractive
-        mapView.isPitchEnabled = isInteractive
+        mapView.isPitchEnabled = false
 
         if isInteractive {
             let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
@@ -40,33 +36,80 @@ struct TappableMapView: UIViewRepresentable {
     }
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
-        if !context.coordinator.isDraggingOrAnimating {
+        let coordinator = context.coordinator
+        coordinator.parent = self
+
+        if !coordinator.isDraggingOrAnimating, !region.isApproximatelyEqual(to: mapView.region) {
             mapView.setRegion(region, animated: true)
         }
 
-        mapView.removeAnnotations(mapView.annotations)
+        updateAnnotations(on: mapView, coordinator: coordinator)
+        updateOverlays(on: mapView, coordinator: coordinator)
+    }
+
+    /// Only touches annotations when they actually changed — re-adding them
+    /// on every update made the car markers re-animate while panning.
+    private func updateAnnotations(on mapView: MKMapView, coordinator: Coordinator) {
+        var hasher = Hasher()
+        hasher.combine(pinCoordinate?.latitude)
+        hasher.combine(pinCoordinate?.longitude)
+        for pin in readOnlyPins {
+            hasher.combine(pin.id)
+            hasher.combine(pin.latitude)
+            hasher.combine(pin.longitude)
+            hasher.combine(pin.label)
+        }
+        let signature = hasher.finalize()
+        guard signature != coordinator.annotationSignature else { return }
+        coordinator.annotationSignature = signature
+
+        mapView.removeAnnotations(mapView.annotations.filter { !($0 is MKUserLocation) })
         if let coordinate = pinCoordinate {
             let annotation = MKPointAnnotation()
             annotation.coordinate = coordinate
             mapView.addAnnotation(annotation)
         }
         for address in readOnlyPins {
-            let annotation = ReadOnlyPinAnnotation()
+            let annotation = SavedSpotAnnotation()
             annotation.coordinate = address.coordinate
             annotation.title = address.label
             mapView.addAnnotation(annotation)
         }
+    }
 
-        if context.coordinator.renderedSegmentIDs != segments.map(\.id) || context.coordinator.renderedHighlightID != highlightedSegmentID {
-            mapView.removeOverlays(mapView.overlays)
-            for segment in segments {
-                let line = GlowPolyline(coordinates: segment.coordinates, count: segment.coordinates.count)
-                line.status = segment.status
-                line.isSelected = segment.id == highlightedSegmentID
-                mapView.addOverlay(line)
-            }
-            context.coordinator.renderedSegmentIDs = segments.map(\.id)
-            context.coordinator.renderedHighlightID = highlightedSegmentID
+    private func updateOverlays(on mapView: MKMapView, coordinator: Coordinator) {
+        var hasher = Hasher()
+        for segment in segments {
+            hasher.combine(segment.id)
+            hasher.combine(segment.status)
+        }
+        for id in highlightedSegmentIDs.sorted() {
+            hasher.combine(id)
+        }
+        let signature = hasher.finalize()
+        guard signature != coordinator.overlaySignature else { return }
+        coordinator.overlaySignature = signature
+
+        struct GroupKey: Hashable {
+            let status: SnowClearingStatus
+            let isSelected: Bool
+        }
+        var groups: [GroupKey: [MKPolyline]] = [:]
+        for segment in segments {
+            let line = SideLine(coordinates: segment.block.centerline, count: segment.block.centerline.count)
+            line.sideSign = segment.sideSign
+            line.curbOffsetMeters = segment.block.curbOffsetMeters
+            let key = GroupKey(status: segment.status, isSelected: highlightedSegmentIDs.contains(segment.id))
+            groups[key, default: []].append(line)
+        }
+
+        mapView.removeOverlays(mapView.overlays)
+        // Selected groups last so they draw on top.
+        for (key, lines) in groups.sorted(by: { !$0.key.isSelected && $1.key.isSelected }) {
+            let overlay = GlowMultiPolyline(lines)
+            overlay.status = key.status
+            overlay.isSelected = key.isSelected
+            mapView.addOverlay(overlay)
         }
     }
 
@@ -74,13 +117,13 @@ struct TappableMapView: UIViewRepresentable {
         Coordinator(self)
     }
 
-    private final class ReadOnlyPinAnnotation: MKPointAnnotation {}
+    private final class SavedSpotAnnotation: MKPointAnnotation {}
 
     final class Coordinator: NSObject, MKMapViewDelegate {
-        private let parent: TappableMapView
+        var parent: TappableMapView
         var isDraggingOrAnimating = false
-        var renderedSegmentIDs: [String] = []
-        var renderedHighlightID: String?
+        var annotationSignature: Int?
+        var overlaySignature: Int?
 
         init(_ parent: TappableMapView) {
             self.parent = parent
@@ -99,36 +142,43 @@ struct TappableMapView: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             isDraggingOrAnimating = false
-            // setRegion(_:animated:) in updateUIView can invoke this
-            // delegate callback synchronously, so writing straight into the
-            // SwiftUI binding here triggers "Publishing changes from within
-            // view updates". Deferring one runloop tick avoids that.
+            // setRegion in updateUIView can call this synchronously; writing
+            // the binding right away would publish during a view update.
             let newRegion = mapView.region
-            DispatchQueue.main.async { [parent] in
-                parent.region = newRegion
+            let binding = parent.$region
+            DispatchQueue.main.async {
+                binding.wrappedValue = newRegion
             }
         }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             guard !(annotation is MKUserLocation) else { return nil }
-            let identifier = "snowcntrl.pin"
+            let identifier = "snowcntrl.car"
             let view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
                 ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
             view.annotation = annotation
             view.markerTintColor = parent.accentColor
-            // Saved addresses get a car glyph — this is where the user
-            // parks, not just a generic map pin.
-            view.glyphImage = UIImage(systemName: annotation is ReadOnlyPinAnnotation ? "car.fill" : "mappin.circle.fill")
+            view.glyphImage = UIImage(systemName: "car.fill")
             view.animatesWhenAdded = true
-            view.canShowCallout = annotation is ReadOnlyPinAnnotation
+            view.canShowCallout = annotation is SavedSpotAnnotation
+            view.displayPriority = .required
             return view
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            if let glow = overlay as? GlowPolyline {
-                return GlowPolylineRenderer(overlay: glow)
+            if overlay is GlowMultiPolyline {
+                return GlowPolylineRenderer(overlay: overlay)
             }
             return MKOverlayRenderer(overlay: overlay)
         }
+    }
+}
+
+private extension MKCoordinateRegion {
+    func isApproximatelyEqual(to other: MKCoordinateRegion) -> Bool {
+        abs(center.latitude - other.center.latitude) < 0.00001
+            && abs(center.longitude - other.center.longitude) < 0.00001
+            && abs(span.latitudeDelta - other.span.latitudeDelta) <= span.latitudeDelta * 0.02
+            && abs(span.longitudeDelta - other.span.longitudeDelta) <= span.longitudeDelta * 0.02
     }
 }

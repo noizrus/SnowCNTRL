@@ -14,7 +14,10 @@ final class CityStatusService {
         self.providers = providers
     }
 
-    func fetchStatus(for city: City) async -> CityStatusResult {
+    func fetchStatus(for city: City, now: Date = Date()) async -> CityStatusResult {
+        if city.tier != .notApplicable, Self.isOffSeason(for: city.province, on: now) {
+            return CityStatusResult(state: .noActiveBan, asOf: now, detail: nil, isOffSeason: true)
+        }
         if let id = city.liveProviderID, let provider = providers[id] {
             if let result = try? await provider.fetchStatus(for: city) {
                 return result
@@ -22,5 +25,18 @@ final class CityStatusService {
         }
         return (try? await generic.fetchStatus(for: city))
             ?? CityStatusResult(state: .unknownNoData, asOf: nil, detail: nil)
+    }
+
+    /// Conservative snow-free window: May–September in the provinces,
+    /// June–August in the territories, where snow can come earlier and
+    /// stay later.
+    static func isOffSeason(for province: ProvinceCode, on date: Date) -> Bool {
+        let month = Calendar.current.component(.month, from: date)
+        switch province {
+        case .yt, .nt, .nu:
+            return (6...8).contains(month)
+        default:
+            return (5...9).contains(month)
+        }
     }
 }

@@ -2,8 +2,8 @@ import SwiftUI
 import MapKit
 import Combine
 
-/// "Choisis ta rue" — search an address, drop/drag a pin, or use the
-/// current location, then save it as the street to watch for this city.
+/// "Choisis ta rue" — search an address or use your location, then tap the
+/// side of the street where you park; the car is placed along that curb.
 struct AddressMapView: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
@@ -11,6 +11,8 @@ struct AddressMapView: View {
     @StateObject private var viewModel: AddressMapViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var segments: [StreetSegment] = []
+    @State private var cityStatus: SnowClearingStatus?
+    @State private var isZoomedOutTooFar = false
 
     let city: City
     var onSave: (SavedAddress) -> Void
@@ -24,36 +26,55 @@ struct AddressMapView: View {
         ))
     }
 
+    private struct StreetRequest: Equatable {
+        let latitude: Int
+        let longitude: Int
+        let zoom: Int
+        let status: SnowClearingStatus?
+    }
+
+    private var streetRequest: StreetRequest {
+        StreetRequest(
+            latitude: Int((viewModel.region.center.latitude / 0.0015).rounded()),
+            longitude: Int((viewModel.region.center.longitude / 0.0015).rounded()),
+            zoom: Int((log2(viewModel.region.span.latitudeDelta) * 2).rounded()),
+            status: cityStatus
+        )
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 searchBar
 
-                ZStack(alignment: .bottomTrailing) {
+                ZStack(alignment: .top) {
                     TappableMapView(
                         region: $viewModel.region,
                         pinCoordinate: $viewModel.pinCoordinate,
-                        accentColor: UIColor(city.tier.color),
+                        accentColor: UIColor(themeManager.palette.primary),
                         segments: segments,
-                        highlightedSegmentID: viewModel.selectedSegment?.id,
+                        highlightedSegmentIDs: Set([viewModel.selectedSegment?.id].compactMap { $0 }),
                         onTap: { coordinate in
-                            Task { await viewModel.handleTap(at: coordinate, segments: segments) }
+                            Task {
+                                await viewModel.handleTap(at: coordinate, segments: segments, language: localizer.language)
+                            }
                         }
                     )
 
-                    Button {
-                        locationManager.requestLocation()
-                    } label: {
-                        Image(systemName: "location.fill")
-                            .padding(10)
-                            .background(.thinMaterial, in: Circle())
+                    HStack(alignment: .top) {
+                        MapHintCapsule(text: localizer.s(isZoomedOutTooFar ? LocKey.mapZoomInHint : LocKey.addressMapTapHint))
+                        Spacer()
+                        MapControlButton(systemImage: "location.fill", accessibilityText: localizer.s(.mapLocateMe)) {
+                            locationManager.requestLocation()
+                        }
                     }
-                    .padding()
+                    .padding(12)
                 }
 
                 pinSummary
             }
             .navigationTitle(city.name)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
@@ -76,30 +97,35 @@ struct AddressMapView: View {
                 guard let coordinate else { return }
                 viewModel.region = MKCoordinateRegion(
                     center: coordinate,
-                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    span: MKCoordinateSpan(latitudeDelta: 0.004, longitudeDelta: 0.004)
                 )
-                Task { await viewModel.dropPin(at: coordinate) }
             }
             .task {
-                let status = await CityStatusService.shared.fetchStatus(for: city)
-                segments = await SnowSegmentService.shared.fetchSegments(
-                    for: city,
-                    near: viewModel.region,
-                    overallStatus: status.state.asSnowClearingStatus
-                )
+                cityStatus = await CityStatusService.shared.fetchStatus(for: city).state.asSnowClearingStatus
+            }
+            .task(id: streetRequest) {
+                guard let cityStatus else { return }
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                guard !Task.isCancelled else { return }
+                let result = await SnowSegmentService.shared.segments(for: city, in: viewModel.region, overallStatus: cityStatus)
+                switch result {
+                case .zoomedOutTooFar:
+                    isZoomedOutTooFar = true
+                    segments = []
+                case .segments(let loaded):
+                    isZoomedOutTooFar = false
+                    segments = loaded
+                }
             }
         }
         .tint(themeManager.palette.primary)
     }
 
-    private var searchPlaceholder: String {
-        localizer.s(.citySelectionSearchPlaceholder)
-    }
-
     private var searchBar: some View {
         HStack {
-            TextField(searchPlaceholder, text: $viewModel.searchText)
+            TextField(localizer.s(.citySelectionSearchPlaceholder), text: $viewModel.searchText)
                 .textFieldStyle(.roundedBorder)
+                .submitLabel(.search)
                 .onSubmit { Task { await viewModel.search() } }
             Button {
                 Task { await viewModel.search() }
@@ -117,8 +143,8 @@ struct AddressMapView: View {
         } else if let label = viewModel.pinLabel {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Image(systemName: viewModel.selectedSegment != nil ? "road.lanes" : "mappin.circle.fill")
-                        .foregroundStyle(city.tier.color)
+                    Image(systemName: "car.fill")
+                        .foregroundStyle(themeManager.palette.primary)
                     Text(label)
                         .font(.subheadline.weight(.medium))
                     Spacer()

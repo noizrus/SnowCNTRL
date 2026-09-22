@@ -80,6 +80,19 @@ enum LocKey: Hashable {
     case siriNoAddressSaved
 
     case addressMapSideSelected
+    case addressMapTapHint
+
+    case dashboardStatusOffSeason
+    case legendTitle
+    case legendCityWideNote
+    case mapZoomInHint
+    case mapLoadingStreets
+    case mapLocateMe
+    case mapLegendButton
+    case panelToggle
+    case addressEdit
+    case addressDelete
+    case addressChipsHint
 }
 
 enum Strings {
@@ -426,9 +439,69 @@ enum Strings {
             .spanish: "Abre SnowCNTRL y elige una dirección para activar este acceso directo.",
         ],
         .addressMapSideSelected: [
-            .french: "Côté de rue sélectionné (comme sur Info-Neige) — pas juste un point.",
-            .english: "Whole street side selected (like Info-Neige) — not just a point.",
-            .spanish: "Lado de la calle seleccionado (como Info-Neige) — no solo un punto.",
+            .french: "Côté de rue sélectionné — ta voiture est placée le long de ce trottoir.",
+            .english: "Street side selected — your car is placed along this curb.",
+            .spanish: "Lado de la calle seleccionado — tu auto queda junto a esta acera.",
+        ],
+        .addressMapTapHint: [
+            .french: "Zoome puis touche le côté de la rue où tu te gares.",
+            .english: "Zoom in, then tap the side of the street where you park.",
+            .spanish: "Acerca el mapa y toca el lado de la calle donde estacionas.",
+        ],
+        .dashboardStatusOffSeason: [
+            .french: "Hors saison — aucune opération de déneigement",
+            .english: "Off season — no snow clearing operations",
+            .spanish: "Fuera de temporada — sin operaciones de remoción de nieve",
+        ],
+        .legendTitle: [
+            .french: "Légende",
+            .english: "Legend",
+            .spanish: "Leyenda",
+        ],
+        .legendCityWideNote: [
+            .french: "Pour l'instant, chaque rue affiche le statut général de la ville — le détail côté par côté viendra avec les données officielles.",
+            .english: "For now every street shows the city-wide status — side-by-side detail will come with official data.",
+            .spanish: "Por ahora cada calle muestra el estado general de la ciudad — el detalle por lado llegará con los datos oficiales.",
+        ],
+        .mapZoomInHint: [
+            .french: "Zoome pour voir l'état des rues",
+            .english: "Zoom in to see street status",
+            .spanish: "Acerca el mapa para ver el estado de las calles",
+        ],
+        .mapLoadingStreets: [
+            .french: "Chargement des rues…",
+            .english: "Loading streets…",
+            .spanish: "Cargando calles…",
+        ],
+        .mapLocateMe: [
+            .french: "Ma position",
+            .english: "My location",
+            .spanish: "Mi ubicación",
+        ],
+        .mapLegendButton: [
+            .french: "Légende des couleurs",
+            .english: "Color legend",
+            .spanish: "Leyenda de colores",
+        ],
+        .panelToggle: [
+            .french: "Afficher ou réduire le panneau",
+            .english: "Show or collapse the panel",
+            .spanish: "Mostrar u ocultar el panel",
+        ],
+        .addressEdit: [
+            .french: "Modifier",
+            .english: "Edit",
+            .spanish: "Editar",
+        ],
+        .addressDelete: [
+            .french: "Supprimer",
+            .english: "Delete",
+            .spanish: "Eliminar",
+        ],
+        .addressChipsHint: [
+            .french: "Touche pour centrer · maintiens pour modifier ou supprimer",
+            .english: "Tap to center · long-press to edit or delete",
+            .spanish: "Toca para centrar · mantén pulsado para editar o eliminar",
         ],
     ]
 

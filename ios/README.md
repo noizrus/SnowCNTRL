@@ -1,5 +1,36 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Vraies rues + ergonomie (dernière itération)
+
+- **Les lignes suivent les vrais trottoirs** : la géométrie des rues vient maintenant
+  d'OpenStreetMap (API Overpass, sans clé), chargée **sur le téléphone** par tuiles
+  selon la zone visible (`Services/OSMStreetGeometryService.swift`). Chaque rue est
+  découpée **îlot par îlot** aux intersections (comme Info-Neige), et chaque côté est
+  dessiné le long de sa bordure : le décalage est calculé à l'affichage en points
+  écran (`GlowPolylineRenderer`), donc les deux lignes restent sur les bords de la
+  route dessinée à tous les niveaux de zoom. Au-delà d'un certain dézoom, un message
+  invite à zoomer (trop dense et trop lourd à charger).
+- **Couleur des lignes** : pour l'instant, chaque côté prend le statut général de la
+  ville (aucun flux officiel par côté de rue n'est branché — c'est le point d'entrée
+  pour Planif-Neige, voir `SnowSegmentService`). La légende le dit explicitement.
+- **Hors saison** : de mai à septembre (juin à août dans les territoires), aucune
+  ville ne fait d'opération de déneigement — le statut affiche « Hors saison » et
+  toutes les rues sont vertes (`CityStatusService.isOffSeason`).
+- **Choisir son côté de rue** : dans « Choisir ma rue », on zoome puis on touche le
+  côté où l'on se gare ; la voiture est placée le long de ce trottoir et le libellé
+  indique le côté (« Rue Saint-Denis — côté est »). Les côtés enregistrés sont
+  surlignés en blanc sur la carte principale.
+- **Panneau abaissable** : poignée, chevron ou glissement vers le bas pour réduire le
+  panneau au seul statut (et à la pub), vers le haut pour le rouvrir.
+- **Ergonomie de la carte** : bouton « ma position », bouton légende des couleurs,
+  points d'intérêt réduits (transports, stationnements) pour une carte plus lisible,
+  marqueurs voiture qui ne se réaniment plus à chaque déplacement.
+- **Favoris** : toucher un favori centre la carte dessus ; appui long → Modifier,
+  J'ai vérifié, Supprimer. Les doublons déjà enregistrés sont nettoyés au lancement.
+- **À faire avant un lancement à grande échelle** : les serveurs Overpass publics sont
+  limités ; pointer `OverpassClient.endpoints` vers une instance auto-hébergée ou un
+  fournisseur payant.
+
 ## Corrections suite au premier vrai test sur iPhone
 
 Premier retour visuel après un build réussi sur iPhone 13 :

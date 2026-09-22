@@ -61,24 +61,31 @@ final class AddressMapViewModel: ObservableObject {
         isBusy = false
     }
 
-    /// Tries to snap the tap to the nearest street side within
-    /// `snapDistanceMeters`; falls back to a plain dropped pin when no
-    /// segment is close enough (or none exist for this city yet).
-    func handleTap(at coordinate: CLLocationCoordinate2D, segments: [StreetSegment]) async {
-        let nearest = segments
-            .map { ($0, $0.distance(to: coordinate)) }
-            .min { $0.1 < $1.1 }
-
-        guard let (segment, distance) = nearest, distance <= snapDistanceMeters else {
+    /// Snaps a tap to the side of the street it landed on (Info-Neige
+    /// style) and parks the car along that curb; falls back to a plain pin
+    /// when no street line is close enough (zoomed out, no geometry).
+    func handleTap(at coordinate: CLLocationCoordinate2D, segments: [StreetSegment], language: AppLanguage) async {
+        // Roughly a finger's width on screen at the current zoom.
+        let threshold = max(snapDistanceMeters, region.span.latitudeDelta * 111_000 * 0.04)
+        guard let match = segments.nearestSide(to: coordinate, within: threshold) else {
             await dropPin(at: coordinate)
             return
         }
 
-        selectedSegment = segment
-        pinCoordinate = segment.midpoint
+        selectedSegment = match.segment
+        pinCoordinate = match.curbPoint
         pinLabel = nil
         isBusy = true
-        pinLabel = await AddressGeocoder.reverseGeocode(segment.midpoint)
+        let address = await AddressGeocoder.reverseGeocode(match.curbPoint)
+        let side = match.segment.compassSide.label(language: language)
+        // Near corners reverse geocoding can name the cross street; the
+        // OSM name of the tapped block is the one the user meant.
+        if let streetName = match.segment.block.streetName,
+           !address.localizedCaseInsensitiveContains(streetName) {
+            pinLabel = "\(streetName) — \(side)"
+        } else {
+            pinLabel = "\(address) — \(side)"
+        }
         isBusy = false
     }
 

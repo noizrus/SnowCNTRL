@@ -17,7 +17,9 @@ final class AddressStore: ObservableObject {
             let data = UserDefaults.standard.data(forKey: Self.storageKey),
             let decoded = try? JSONDecoder().decode([SavedAddress].self, from: data)
         {
-            addresses = decoded
+            // Drops duplicates saved before saving deduplicated them.
+            var seen = Set<String>()
+            addresses = decoded.filter { seen.insert("\($0.cityID)|\($0.label)").inserted }
         } else {
             addresses = []
         }
