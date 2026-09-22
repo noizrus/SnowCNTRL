@@ -1,8 +1,9 @@
 import Foundation
 
-/// Bridges the last known status from the main app to the widget extension
-/// via the shared App Group container. Deliberately tiny and dependency-free
-/// (no MapKit/UIKit) so it can compile unchanged in both targets.
+/// What the main app hands to the widget extension through the shared App
+/// Group container. Deliberately tiny and dependency-free (no MapKit/UIKit)
+/// so it compiles unchanged in both targets. New fields are optional so an
+/// entry saved by an older build still decodes.
 public struct WidgetSharedStatus: Codable {
     public static let appGroupID = "group.com.snowcntrl.app"
     private static let key = "snowcntrl.widget.status"
@@ -12,21 +13,31 @@ public struct WidgetSharedStatus: Codable {
     public let stateRawValue: String
     public let languageRawValue: String
     public let updatedAt: Date
+    /// Label of the first alert in this city, if any.
+    public let alertLabel: String?
+    public let isOffSeason: Bool?
+    /// Theme primary color as sRGB components (0...1).
+    public let accentRGB: [Double]?
 
-    public init(cityName: String, stateRawValue: String, languageRawValue: String, updatedAt: Date) {
+    public init(
+        cityName: String,
+        stateRawValue: String,
+        languageRawValue: String,
+        updatedAt: Date,
+        alertLabel: String? = nil,
+        isOffSeason: Bool? = nil,
+        accentRGB: [Double]? = nil
+    ) {
         self.cityName = cityName
         self.stateRawValue = stateRawValue
         self.languageRawValue = languageRawValue
         self.updatedAt = updatedAt
+        self.alertLabel = alertLabel
+        self.isOffSeason = isOffSeason
+        self.accentRGB = accentRGB
     }
 
-    public static func save(cityName: String, stateRawValue: String, languageRawValue: String) {
-        let entry = WidgetSharedStatus(
-            cityName: cityName,
-            stateRawValue: stateRawValue,
-            languageRawValue: languageRawValue,
-            updatedAt: Date()
-        )
+    public static func save(_ entry: WidgetSharedStatus) {
         guard
             let defaults = UserDefaults(suiteName: appGroupID),
             let data = try? JSONEncoder().encode(entry)

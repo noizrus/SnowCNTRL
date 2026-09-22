@@ -237,6 +237,34 @@ final class AlertNotificationTests: XCTestCase {
     }
 }
 
+final class WidgetDataTests: XCTestCase {
+    func testWidgetEntryRoundTripsWithAlertAndOffSeason() throws {
+        let entry = WidgetSharedStatus(
+            cityName: "Montreal",
+            stateRawValue: "noActiveBan",
+            languageRawValue: "fr",
+            updatedAt: Date(timeIntervalSinceReferenceDate: 0),
+            alertLabel: "Rue Saint-Denis — côté est",
+            isOffSeason: true,
+            accentRGB: [0.1, 0.2, 0.3]
+        )
+        let decoded = try JSONDecoder().decode(WidgetSharedStatus.self, from: JSONEncoder().encode(entry))
+        XCTAssertEqual(decoded.alertLabel, "Rue Saint-Denis — côté est")
+        XCTAssertEqual(decoded.isOffSeason, true)
+        XCTAssertEqual(decoded.accentRGB, [0.1, 0.2, 0.3])
+    }
+
+    func testEntrySavedByAnOlderBuildStillDecodes() throws {
+        let legacy = Data("""
+        {"cityName": "Montreal", "stateRawValue": "unknownNoData", "languageRawValue": "en", "updatedAt": 0}
+        """.utf8)
+        let decoded = try JSONDecoder().decode(WidgetSharedStatus.self, from: legacy)
+        XCTAssertEqual(decoded.cityName, "Montreal")
+        XCTAssertNil(decoded.alertLabel)
+        XCTAssertNil(decoded.isOffSeason)
+    }
+}
+
 final class ThemeContrastTests: XCTestCase {
     private func luminance(_ color: UIColor) -> CGFloat {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0

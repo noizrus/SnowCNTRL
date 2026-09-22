@@ -17,6 +17,10 @@ packages:
 targets:
   SnowCNTRL:
     type: application
+    attributes:
+      SystemCapabilities:
+        com.apple.ApplicationGroups.iOS:
+          enabled: 1
     platform: iOS
     sources:
       - path: Sources
@@ -85,6 +89,10 @@ targets:
 
   SnowCNTRLWidgetExtension:
     type: app-extension
+    attributes:
+      SystemCapabilities:
+        com.apple.ApplicationGroups.iOS:
+          enabled: 1
     platform: iOS
     sources:
       - path: Widget/Sources

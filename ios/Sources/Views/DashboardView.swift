@@ -68,6 +68,28 @@ struct DashboardView: View {
         return ids
     }
 
+    /// Everything the home/lock screen widget displays; it's republished
+    /// whenever any of it changes.
+    private struct WidgetSignature: Equatable {
+        let state: ParkingBanState?
+        let isOffSeason: Bool?
+        let alertLabel: String?
+        let theme: AppTheme
+        let province: ProvinceCode?
+        let language: AppLanguage
+    }
+
+    private var widgetSignature: WidgetSignature {
+        WidgetSignature(
+            state: viewModel.result?.state,
+            isOffSeason: viewModel.result?.isOffSeason,
+            alertLabel: myAddresses.first?.label,
+            theme: themeManager.selectedTheme,
+            province: themeManager.province,
+            language: localizer.language
+        )
+    }
+
     private struct StreetRequest: Equatable {
         let latitude: Int
         let longitude: Int
@@ -95,7 +117,10 @@ struct DashboardView: View {
                     readOnlyPins: myAddresses,
                     highlightedSegmentIDs: highlightedSideIDs,
                     onTap: handleMapTap,
-                    onSelectPin: selectAlert
+                    onSelectPin: selectAlert,
+                    // Below the map buttons column: 8 pt top padding + four
+                    // 44 pt buttons + three 10 pt gaps + 12 pt spacing.
+                    compassTopInset: 8 + 4 * 44 + 3 * 10 + 12
                 )
                 .ignoresSafeArea(edges: .top)
 
@@ -110,14 +135,19 @@ struct DashboardView: View {
                 // the wordmark above the city name instead of squeezing it
                 // into a corner.
                 ToolbarItem(placement: .principal) {
-                    VStack(spacing: 0) {
-                        Text(localizer.language.appName)
-                            .font(.system(.caption2, design: .rounded).weight(.heavy))
-                            .tracking(0.6)
-                            .foregroundStyle(themeManager.palette.accentText)
-                        Text(city.name)
-                            .font(.headline)
+                    HStack(spacing: 8) {
+                        AppLogoImage(size: 30)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(localizer.language.appName)
+                                .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                .tracking(0.6)
+                                .foregroundStyle(themeManager.palette.accentText)
+                            Text(city.name)
+                                .font(.headline)
+                                .lineLimit(1)
+                        }
                     }
+                    .accessibilityElement(children: .combine)
                 }
                 // Info-Neige puts its favorites list top-left — same spot,
                 // same idea: every alert in one place.
@@ -140,6 +170,10 @@ struct DashboardView: View {
             }
             .task(id: isSimulatingBan) {
                 await viewModel.load(city: city, language: localizer.language)
+            }
+            .task(id: widgetSignature) {
+                guard let result = viewModel.result else { return }
+                WidgetBridge.publish(city: city, result: result, language: localizer.language, accent: themeManager.palette.primary)
             }
             .task(id: myAddresses.map(\.id)) {
                 if !hasCenteredOnAddresses, !myAddresses.isEmpty {

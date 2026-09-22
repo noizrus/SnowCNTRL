@@ -1,5 +1,21 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Logo permanent, widget refait, boussole (dernière itération)
+
+- **Logo de l'app** (`Assets.xcassets/AppLogo.imageset`, découpé de l'icône sans le cadre
+  métallique) : affiché en permanence en haut de la carte (logo + NEIGE CNTRL + ville),
+  dans le bandeau des autres écrans (`SnowCntrlBrandmark`) et sur l'écran de chargement.
+- **Widget refait** : fond sombre néon avec la couleur du thème, logo, statut dans les
+  mêmes couleurs que la carte, « Hors saison », rue de ta première alerte, heure de mise
+  à jour (moyen). Corrigé : double marge sur iOS 17+ qui tronquait le texte, galerie de
+  widgets vide sans données, widget jamais mis à jour quand on ajoute/retire une alerte
+  ou change de thème (`WidgetBridge`, republié dès que l'un d'eux change).
+- **App Groups déclarés comme capacité** dans `project.yml` (`SystemCapabilities`) pour
+  que la signature automatique enregistre vraiment `group.com.snowcntrl.app` — sans ce
+  groupe, le widget ne reçoit aucune donnée (erreur `CFPrefsPlistSource` dans la console).
+- **Boussole toujours visible** sous la colonne de boutons de la carte (celle du système
+  n'apparaissait qu'une fois la carte tournée, et cachée sous la barre du haut).
+
 ## Panneau réduit par défaut, logo, durée de sonnerie (dernière itération)
 
 - **Panneau du bas réduit par défaut** : seule la pastille de statut (ex. « Hors

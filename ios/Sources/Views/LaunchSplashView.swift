@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Branded splash shown for ~1s on cold start. There's no static launch
-/// image asset to keep in sync with the theme system, so this is a real
-/// SwiftUI screen (pulsing neon snowflake + wordmark) shown as an overlay
-/// by `RootView` before the real content appears.
+/// Branded splash shown for ~1s on cold start: the app logo pulsing in a
+/// neon glow of the theme color, plus the wordmark. Shown as an overlay by
+/// `RootView` before the real content appears.
 struct LaunchSplashView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var localizer: Localizer
@@ -12,12 +11,10 @@ struct LaunchSplashView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            VStack(spacing: 18) {
-                Image(systemName: "snowflake")
-                    .font(.system(size: 54, weight: .bold))
-                    .foregroundStyle(themeManager.palette.primaryText)
-                    .neonGlow(themeManager.palette.primary, radius: isPulsing ? 14 : 6)
-                    .scaleEffect(isPulsing ? 1.08 : 0.92)
+            VStack(spacing: 22) {
+                AppLogoImage(size: 132)
+                    .neonGlow(themeManager.palette.primary, radius: isPulsing ? 16 : 7)
+                    .scaleEffect(isPulsing ? 1.04 : 0.96)
 
                 Text(localizer.language.appName)
                     .font(.system(.title2, design: .rounded).weight(.heavy))

@@ -1,20 +1,39 @@
 import SwiftUI
 
-/// The permanent wordmark shown top-left across the main screens — "SNOW
-/// CNTRL", or "NEIGE CNTRL" when the app's language is French — glowing in
-/// the current theme's accent color.
+/// The app's logo (moose / snowflake / maple leaf) as a small rounded badge.
+struct AppLogoImage: View {
+    var size: CGFloat = 26
+
+    var body: some View {
+        Image("AppLogo")
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+            .shadow(color: .black.opacity(0.25), radius: 1.5, y: 0.5)
+            .accessibilityHidden(true)
+    }
+}
+
+/// The permanent brand shown at the top of every main screen: the logo plus
+/// "NEIGE CNTRL" (French) or "SNOW CNTRL", glowing in the theme's accent.
 struct SnowCntrlBrandmark: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var localizer: Localizer
 
     var body: some View {
-        Text(localizer.language.appName)
-            .font(.system(.caption2, design: .rounded).weight(.heavy))
-            .tracking(0.6)
-            .lineLimit(1)
-            .fixedSize()
-            .foregroundStyle(themeManager.palette.accentText)
-            .neonGlow(themeManager.palette.accent, radius: 3)
+        HStack(spacing: 6) {
+            AppLogoImage(size: 24)
+            Text(localizer.language.appName)
+                .font(.system(.caption2, design: .rounded).weight(.heavy))
+                .tracking(0.6)
+                .lineLimit(1)
+                .fixedSize()
+                .foregroundStyle(themeManager.palette.accentText)
+                .neonGlow(themeManager.palette.accent, radius: 3)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

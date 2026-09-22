@@ -16,6 +16,10 @@ struct TappableMapView: UIViewRepresentable {
     var highlightedSegmentIDs: Set<String> = []
     var onTap: ((CLLocationCoordinate2D) -> Void)? = nil
     var onSelectPin: ((UUID) -> Void)? = nil
+    /// Distance from the top of the safe area to an always-visible compass
+    /// on the trailing edge. The system compass only shows once the map is
+    /// rotated and sits under the navigation bar, where it can't be seen.
+    var compassTopInset: CGFloat = 12
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
@@ -28,6 +32,17 @@ struct TappableMapView: UIViewRepresentable {
         mapView.isZoomEnabled = isInteractive
         mapView.isRotateEnabled = isInteractive
         mapView.isPitchEnabled = false
+
+        mapView.showsCompass = false
+        let compass = MKCompassButton(mapView: mapView)
+        compass.compassVisibility = .visible
+        compass.translatesAutoresizingMaskIntoConstraints = false
+        mapView.addSubview(compass)
+        NSLayoutConstraint.activate([
+            // Centered under the 44 pt map buttons, which sit 16 pt from the edge.
+            compass.centerXAnchor.constraint(equalTo: mapView.safeAreaLayoutGuide.trailingAnchor, constant: -38),
+            compass.topAnchor.constraint(equalTo: mapView.safeAreaLayoutGuide.topAnchor, constant: compassTopInset),
+        ])
 
         if isInteractive {
             let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
