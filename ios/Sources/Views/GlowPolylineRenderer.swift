@@ -6,6 +6,10 @@ import UIKit
 /// separate MKOverlayRenderer subclass per color.
 final class GlowPolyline: MKPolyline {
     var status: SnowClearingStatus = .awaitingInfo
+    /// True for the street side the user has picked (Info-Neige style),
+    /// drawn with an extra white outline so it reads as "selected" at a
+    /// glance against the rest of the grid.
+    var isSelected: Bool = false
 }
 
 /// Draws a "neon" line: a wide, soft, low-alpha halo underneath a thin,
@@ -27,18 +31,29 @@ final class GlowPolylineRenderer: MKOverlayRenderer {
         }
 
         let color = UIColor(polyline.status.neonColor)
-        let baseLineWidth: CGFloat = 3.5 / zoomScale
+        let isSelected = polyline.isSelected
+        let baseLineWidth: CGFloat = (isSelected ? 5.5 : 3.5) / zoomScale
 
         context.saveGState()
         context.addPath(path)
         context.setLineJoin(.round)
         context.setLineCap(.round)
 
-        // Halo: wide, soft, translucent.
-        context.setStrokeColor(color.withAlphaComponent(0.35).cgColor)
-        context.setLineWidth(baseLineWidth * 5)
+        // Halo: wide, soft, translucent — brighter and wider when selected.
+        context.setStrokeColor(color.withAlphaComponent(isSelected ? 0.55 : 0.35).cgColor)
+        context.setLineWidth(baseLineWidth * (isSelected ? 6 : 5))
         context.setShadow(offset: .zero, blur: baseLineWidth * 4, color: color.withAlphaComponent(0.9).cgColor)
         context.strokePath()
+
+        if isSelected {
+            // A thin white outline so the selected side is unmistakable
+            // even against a same-colored neighboring line.
+            context.addPath(path)
+            context.setShadow(offset: .zero, blur: 0, color: nil)
+            context.setStrokeColor(UIColor.white.cgColor)
+            context.setLineWidth(baseLineWidth * 1.6)
+            context.strokePath()
+        }
 
         // Core: thin and near-white-hot for the neon look.
         context.addPath(path)

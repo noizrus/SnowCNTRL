@@ -6,8 +6,28 @@ struct RootView: View {
     @StateObject private var onboarding = OnboardingViewModel()
     @StateObject private var citySelection = CitySelectionViewModel()
     @State private var skippedGeolocation = false
+    @State private var showSplash = true
 
     var body: some View {
+        ZStack {
+            content
+
+            if showSplash {
+                LaunchSplashView()
+                    .transition(.opacity)
+            }
+        }
+        .tint(themeManager.palette.primary)
+        .task {
+            try? await Task.sleep(nanoseconds: 1_100_000_000)
+            withAnimation(.easeOut(duration: 0.4)) {
+                showSplash = false
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         Group {
             if !onboarding.hasAccepted {
                 OnboardingView { onboarding.accept() }

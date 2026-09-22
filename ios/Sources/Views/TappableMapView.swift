@@ -16,6 +16,9 @@ struct TappableMapView: UIViewRepresentable {
     /// title) instead of just the one being edited.
     var readOnlyPins: [SavedAddress] = []
     var isInteractive: Bool = true
+    /// The `StreetSegment.id` currently selected by the user (Info-Neige
+    /// style "pick a whole side"), drawn brighter/thicker than the rest.
+    var highlightedSegmentID: String? = nil
     var onTap: ((CLLocationCoordinate2D) -> Void)? = nil
 
     func makeUIView(context: Context) -> MKMapView {
@@ -54,14 +57,16 @@ struct TappableMapView: UIViewRepresentable {
             mapView.addAnnotation(annotation)
         }
 
-        if context.coordinator.renderedSegmentIDs != segments.map(\.id) {
+        if context.coordinator.renderedSegmentIDs != segments.map(\.id) || context.coordinator.renderedHighlightID != highlightedSegmentID {
             mapView.removeOverlays(mapView.overlays)
             for segment in segments {
                 let line = GlowPolyline(coordinates: segment.coordinates, count: segment.coordinates.count)
                 line.status = segment.status
+                line.isSelected = segment.id == highlightedSegmentID
                 mapView.addOverlay(line)
             }
             context.coordinator.renderedSegmentIDs = segments.map(\.id)
+            context.coordinator.renderedHighlightID = highlightedSegmentID
         }
     }
 
@@ -75,6 +80,7 @@ struct TappableMapView: UIViewRepresentable {
         private let parent: TappableMapView
         var isDraggingOrAnimating = false
         var renderedSegmentIDs: [String] = []
+        var renderedHighlightID: String?
 
         init(_ parent: TappableMapView) {
             self.parent = parent
@@ -110,7 +116,9 @@ struct TappableMapView: UIViewRepresentable {
                 ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
             view.annotation = annotation
             view.markerTintColor = parent.accentColor
-            view.glyphImage = UIImage(systemName: "snowflake")
+            // Saved addresses get a car glyph — this is where the user
+            // parks, not just a generic map pin.
+            view.glyphImage = UIImage(systemName: annotation is ReadOnlyPinAnnotation ? "car.fill" : "mappin.circle.fill")
             view.animatesWhenAdded = true
             view.canShowCallout = annotation is ReadOnlyPinAnnotation
             return view

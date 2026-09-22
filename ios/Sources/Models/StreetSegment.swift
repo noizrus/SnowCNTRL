@@ -14,6 +14,45 @@ struct StreetSegment: Identifiable {
         var coords = coordinates
         return MKPolyline(coordinates: &coords, count: coords.count)
     }
+
+    var midpoint: CLLocationCoordinate2D {
+        coordinates[coordinates.count / 2]
+    }
+
+    /// Shortest distance (meters) from `coordinate` to this segment's line
+    /// — used to let a tap near a street side "snap" to that whole side,
+    /// matching how Info-Neige lets you pick a side of the street rather
+    /// than an arbitrary point.
+    func distance(to coordinate: CLLocationCoordinate2D) -> Double {
+        guard coordinates.count >= 2 else {
+            guard let first = coordinates.first else { return .greatestFiniteMagnitude }
+            return CLLocation(latitude: first.latitude, longitude: first.longitude)
+                .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+        }
+        let tapPoint = MKMapPoint(coordinate)
+        var minDistance = Double.greatestFiniteMagnitude
+        for i in 0..<(coordinates.count - 1) {
+            let a = MKMapPoint(coordinates[i])
+            let b = MKMapPoint(coordinates[i + 1])
+            minDistance = min(minDistance, tapPoint.distanceToSegment(from: a, to: b))
+        }
+        return minDistance
+    }
+}
+
+private extension MKMapPoint {
+    func distanceToSegment(from a: MKMapPoint, to b: MKMapPoint) -> Double {
+        let dx = b.x - a.x
+        let dy = b.y - a.y
+        let lengthSquared = dx * dx + dy * dy
+        guard lengthSquared > 0 else {
+            return MKMetersBetweenMapPoints(self, a)
+        }
+        var t = ((x - a.x) * dx + (y - a.y) * dy) / lengthSquared
+        t = max(0, min(1, t))
+        let projected = MKMapPoint(x: a.x + t * dx, y: a.y + t * dy)
+        return MKMetersBetweenMapPoints(self, projected)
+    }
 }
 
 enum StreetSegmentBuilder {

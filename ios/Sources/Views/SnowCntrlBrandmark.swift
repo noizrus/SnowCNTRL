@@ -7,10 +7,12 @@ struct SnowCntrlBrandmark: View {
 
     var body: some View {
         Text("SNOW CNTRL")
-            .font(.system(.footnote, design: .rounded).weight(.heavy))
-            .tracking(1.2)
+            .font(.system(.caption2, design: .rounded).weight(.heavy))
+            .tracking(0.6)
+            .lineLimit(1)
+            .fixedSize()
             .foregroundStyle(themeManager.palette.accent)
-            .neonGlow(themeManager.palette.accent, radius: 5)
+            .neonGlow(themeManager.palette.accent, radius: 3)
     }
 }
 

@@ -78,6 +78,8 @@ enum LocKey: Hashable {
     case siriNoActiveBan
     case siriUnknown
     case siriNoAddressSaved
+
+    case addressMapSideSelected
 }
 
 enum Strings {
@@ -422,6 +424,11 @@ enum Strings {
             .french: "Ouvre SnowCNTRL et choisis une adresse pour activer cette commande.",
             .english: "Open SnowCNTRL and pick an address to enable this shortcut.",
             .spanish: "Abre SnowCNTRL y elige una dirección para activar este acceso directo.",
+        ],
+        .addressMapSideSelected: [
+            .french: "Côté de rue sélectionné (comme sur Info-Neige) — pas juste un point.",
+            .english: "Whole street side selected (like Info-Neige) — not just a point.",
+            .spanish: "Lado de la calle seleccionado (como Info-Neige) — no solo un punto.",
         ],
     ]
 

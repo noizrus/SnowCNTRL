@@ -11,8 +11,13 @@ final class AddressMapViewModel: ObservableObject {
     @Published private(set) var isBusy = false
     @Published var errorMessage: String?
     @Published var alertsEnabled: Bool
+    /// The street side the user tapped near, if any — when set, the pin
+    /// represents "this whole side of this street" (Info-Neige style)
+    /// rather than an arbitrary dropped point.
+    @Published private(set) var selectedSegment: StreetSegment?
 
     private let existingID: UUID?
+    private let snapDistanceMeters: Double = 25
 
     init(fallbackCoordinate: CLLocationCoordinate2D, existing: SavedAddress? = nil) {
         let center = existing?.coordinate ?? fallbackCoordinate
@@ -48,10 +53,32 @@ final class AddressMapViewModel: ObservableObject {
     }
 
     func dropPin(at coordinate: CLLocationCoordinate2D) async {
+        selectedSegment = nil
         pinCoordinate = coordinate
         pinLabel = nil
         isBusy = true
         pinLabel = await AddressGeocoder.reverseGeocode(coordinate)
+        isBusy = false
+    }
+
+    /// Tries to snap the tap to the nearest street side within
+    /// `snapDistanceMeters`; falls back to a plain dropped pin when no
+    /// segment is close enough (or none exist for this city yet).
+    func handleTap(at coordinate: CLLocationCoordinate2D, segments: [StreetSegment]) async {
+        let nearest = segments
+            .map { ($0, $0.distance(to: coordinate)) }
+            .min { $0.1 < $1.1 }
+
+        guard let (segment, distance) = nearest, distance <= snapDistanceMeters else {
+            await dropPin(at: coordinate)
+            return
+        }
+
+        selectedSegment = segment
+        pinCoordinate = segment.midpoint
+        pinLabel = nil
+        isBusy = true
+        pinLabel = await AddressGeocoder.reverseGeocode(segment.midpoint)
         isBusy = false
     }
 

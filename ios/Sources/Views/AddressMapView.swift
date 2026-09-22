@@ -35,8 +35,9 @@ struct AddressMapView: View {
                         pinCoordinate: $viewModel.pinCoordinate,
                         accentColor: UIColor(city.tier.color),
                         segments: segments,
+                        highlightedSegmentID: viewModel.selectedSegment?.id,
                         onTap: { coordinate in
-                            Task { await viewModel.dropPin(at: coordinate) }
+                            Task { await viewModel.handleTap(at: coordinate, segments: segments) }
                         }
                     )
 
@@ -80,7 +81,12 @@ struct AddressMapView: View {
                 Task { await viewModel.dropPin(at: coordinate) }
             }
             .task {
-                segments = await SnowSegmentService.shared.fetchSegments(for: city, near: viewModel.region)
+                let status = await CityStatusService.shared.fetchStatus(for: city)
+                segments = await SnowSegmentService.shared.fetchSegments(
+                    for: city,
+                    near: viewModel.region,
+                    overallStatus: status.state.asSnowClearingStatus
+                )
             }
         }
         .tint(themeManager.palette.primary)
@@ -109,14 +115,21 @@ struct AddressMapView: View {
         if viewModel.isBusy {
             ProgressView().padding()
         } else if let label = viewModel.pinLabel {
-            HStack {
-                Image(systemName: "mappin.circle.fill")
-                    .foregroundStyle(city.tier.color)
-                Text(label)
-                    .font(.subheadline.weight(.medium))
-                Spacer()
-                Toggle(localizer.s(.myStreetAlertsCaption), isOn: $viewModel.alertsEnabled)
-                    .labelsHidden()
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Image(systemName: viewModel.selectedSegment != nil ? "road.lanes" : "mappin.circle.fill")
+                        .foregroundStyle(city.tier.color)
+                    Text(label)
+                        .font(.subheadline.weight(.medium))
+                    Spacer()
+                    Toggle(localizer.s(.myStreetAlertsCaption), isOn: $viewModel.alertsEnabled)
+                        .labelsHidden()
+                }
+                if viewModel.selectedSegment != nil {
+                    Text(localizer.s(.addressMapSideSelected))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding()
         } else if let error = viewModel.errorMessage {

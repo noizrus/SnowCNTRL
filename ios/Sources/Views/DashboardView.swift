@@ -53,7 +53,10 @@ struct DashboardView: View {
                     SnowCntrlBrandmark()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(localizer.s(.citySelectionChangeButton), action: onChangeCity)
+                    Button(action: onChangeCity) {
+                        Image(systemName: "mappin.and.ellipse")
+                    }
+                    .accessibilityLabel(localizer.s(.citySelectionChangeButton))
                 }
             }
             .task { await viewModel.load(city: city, language: localizer.language) }
@@ -63,6 +66,9 @@ struct DashboardView: View {
                     region = fittingRegion(for: myAddresses)
                     hasCenteredOnAddresses = true
                 }
+            }
+            .task(id: viewModel.result?.state) {
+                await loadSegments()
             }
             .sheet(isPresented: $isAddingAddress) {
                 AddressMapView(city: city, existing: nil, onSave: saveAddress)
@@ -86,6 +92,11 @@ struct DashboardView: View {
     }
 
     private func saveAddress(_ saved: SavedAddress) {
+        // Guards against ending up with two chips for the same spot (e.g.
+        // tapping "Ajouter" twice on the same reverse-geocoded address).
+        for duplicate in myAddresses where duplicate.id != saved.id && duplicate.label == saved.label {
+            addressStore.remove(duplicate)
+        }
         addressStore.upsert(saved)
         hasCenteredOnAddresses = false
         if saved.alertsEnabled, city.liveProviderID == nil {
@@ -102,7 +113,8 @@ struct DashboardView: View {
             center: first.coordinate,
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         )
-        segments = await SnowSegmentService.shared.fetchSegments(for: city, near: segmentRegion)
+        let overallStatus = (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus
+        segments = await SnowSegmentService.shared.fetchSegments(for: city, near: segmentRegion, overallStatus: overallStatus)
     }
 
     private func fittingRegion(for addresses: [SavedAddress]) -> MKCoordinateRegion {
@@ -162,8 +174,12 @@ struct DashboardView: View {
 
             addressChips
 
-            AdBannerView()
-                .frame(height: 50)
+            HStack {
+                Spacer(minLength: 0)
+                AdBannerView()
+                    .frame(width: 320, height: 50)
+                Spacer(minLength: 0)
+            }
         }
         .padding()
         .background(.regularMaterial)

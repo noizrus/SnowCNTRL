@@ -1,5 +1,38 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Corrections suite au premier vrai test sur iPhone
+
+Premier retour visuel après un build réussi sur iPhone 13 :
+
+- **Bandeau "SNOW CNTRL" moche/tronqué** : la police était trop grande pour l'espace
+  du bandeau de navigation, partagé avec le titre de ville + le bouton "Changer de
+  ville" — d'où le "SN…" tronqué qui, avec le glow empilé dessus, ressemblait à une
+  bulle. Corrigé : police plus compacte (`SnowCntrlBrandmark.swift`) + le bouton
+  "Changer de ville" est maintenant une simple icône (`mappin.and.ellipse`) au lieu
+  d'un texte, ce qui libère la place.
+- **Lignes de rue "qui n'ont aucun sens"** : le générateur de démo assignait une
+  couleur différente à chaque rue de façon arbitraire (juste pour montrer le rendu
+  néon). Corrigé : toutes les rues démo utilisent maintenant le **même statut que le
+  statut global déjà affiché** (`Services/SnowSegmentProviding.swift`) — vert partout
+  quand il n'y a pas d'interdiction active, rouge partout quand il y en a une, etc.
+  Ce n'est toujours pas de la vraie donnée rue par rue (voir plus bas), mais au moins
+  c'est cohérent avec ce que dit le reste de l'app au lieu d'un arc-en-ciel arbitraire.
+- **Favoris en double / pas d'espace dédié** : `DashboardView.saveAddress` retire
+  maintenant tout doublon (même libellé, même ville) avant d'enregistrer. Les adresses
+  enregistrées s'affichent sur la carte avec une icône de **voiture** (`car.fill`) au
+  lieu du repère générique — c'est l'endroit où tu es garé, pas juste un point.
+- **Sélection au point plutôt qu'au côté de rue complet** : `AddressMapView` "aimante"
+  maintenant un tap près d'une ligne de rue (< 25 m) et sélectionne **tout ce côté**
+  (mis en évidence par un contour blanc), comme sur Info-Neige, au lieu de placer un
+  point à l'endroit exact du doigt. Sans ligne à proximité, ça retombe sur le pin
+  classique (les 113 villes sans données de rue démo, pour l'instant).
+- **Bannière pub mal cadrée** : elle prenait toute la largeur du panneau alors que le
+  format `GADAdSizeBanner` est fixe (320×50) — corrigé en la centrant avec une largeur
+  explicite au lieu de l'étirer.
+- **Écran de chargement avec logo** : `LaunchSplashView.swift`, affiché ~1s au
+  lancement (flocon + "SNOW CNTRL" qui pulsent dans le thème actif), avant le vrai
+  contenu — géré dans `RootView.swift`.
+
 ## Générer et ouvrir le projet
 
 Sur un Mac avec Xcode installé :
