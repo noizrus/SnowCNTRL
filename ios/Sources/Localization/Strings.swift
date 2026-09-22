@@ -91,12 +91,12 @@ enum Strings {
             .spanish: "Bienvenido",
         ],
         .onboardingIndependentDevNotice: [
-            .french: "SnowCNTRL est développée par un développeur indépendant — pas une grande entreprise avec une équipe de support. Je fais de mon mieux pour que les alertes soient exactes et à jour, mais la fiabilité varie selon la ville. Il peut arriver qu'une alerte soit en retard, incomplète ou qu'un bug survienne.\n\nUn problème ? Écris-moi à %EMAIL% — je lis tous les messages personnellement.",
+            .french: "NEIGE CNTRL est développée par un développeur indépendant — pas une grande entreprise avec une équipe de support. Je fais de mon mieux pour que les alertes soient exactes et à jour, mais la fiabilité varie selon la ville. Il peut arriver qu'une alerte soit en retard, incomplète ou qu'un bug survienne.\n\nUn problème ? Écris-moi à %EMAIL% — je lis tous les messages personnellement.",
             .english: "SnowCNTRL is built by an independent developer — not a large company with a support team. I do my best to keep alerts accurate and up to date, but reliability varies by city. An alert may sometimes be late, incomplete, or a bug may occur.\n\nRan into a problem? Email me at %EMAIL% — I read every message personally.",
             .spanish: "SnowCNTRL está desarrollada por un desarrollador independiente, no por una gran empresa con equipo de soporte. Hago lo posible para que las alertas sean precisas y estén actualizadas, pero la fiabilidad varía según la ciudad. Puede ocurrir que una alerta llegue tarde, esté incompleta o que haya un error.\n\n¿Algún problema? Escríbeme a %EMAIL% — leo todos los mensajes personalmente.",
         ],
         .onboardingLegalDisclaimer: [
-            .french: "Cette application fournit des alertes à titre indicatif seulement et ne remplace pas la vérification de la signalisation officielle. SnowCNTRL ne peut être tenue responsable des contraventions, remorquages ou autres conséquences liées à une information erronée, absente ou périmée.",
+            .french: "Cette application fournit des alertes à titre indicatif seulement et ne remplace pas la vérification de la signalisation officielle. NEIGE CNTRL ne peut être tenue responsable des contraventions, remorquages ou autres conséquences liées à une information erronée, absente ou périmée.",
             .english: "This app provides alerts for informational purposes only and does not replace checking official signage. SnowCNTRL cannot be held responsible for tickets, towing, or other consequences linked to incorrect, missing, or outdated information.",
             .spanish: "Esta aplicación ofrece alertas únicamente a título informativo y no reemplaza la verificación de la señalización oficial. SnowCNTRL no puede ser responsable de multas, remolques u otras consecuencias derivadas de información errónea, ausente o desactualizada.",
         ],
@@ -311,7 +311,7 @@ enum Strings {
             .spanish: "Acerca de",
         ],
         .settingsAboutBody: [
-            .french: "SnowCNTRL est développée par un développeur indépendant. Merci de ta patience si une ville n'est pas encore bien couverte.",
+            .french: "NEIGE CNTRL est développée par un développeur indépendant. Merci de ta patience si une ville n'est pas encore bien couverte.",
             .english: "SnowCNTRL is built by an independent developer. Thanks for your patience if a city isn't fully covered yet.",
             .spanish: "SnowCNTRL está desarrollada por un desarrollador independiente. Gracias por tu paciencia si una ciudad aún no está bien cubierta.",
         ],
@@ -421,7 +421,7 @@ enum Strings {
             .spanish: "Estado desconocido para %CITY% — no hay datos oficiales disponibles.",
         ],
         .siriNoAddressSaved: [
-            .french: "Ouvre SnowCNTRL et choisis une adresse pour activer cette commande.",
+            .french: "Ouvre NEIGE CNTRL et choisis une adresse pour activer cette commande.",
             .english: "Open SnowCNTRL and pick an address to enable this shortcut.",
             .spanish: "Abre SnowCNTRL y elige una dirección para activar este acceso directo.",
         ],

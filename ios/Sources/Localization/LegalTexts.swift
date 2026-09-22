@@ -13,7 +13,7 @@ enum LegalTexts {
             return """
             Dernière mise à jour : 2026.
 
-            SnowCNTRL est développée par un développeur indépendant. Cette politique explique \
+            NEIGE CNTRL est développée par un développeur indépendant. Cette politique explique \
             quelles informations l'application utilise et pourquoi.
 
             **Ce que l'app stocke sur ton appareil (jamais envoyé à un serveur)**
@@ -149,16 +149,16 @@ enum LegalTexts {
             return """
             Dernière mise à jour : 2026.
 
-            En utilisant SnowCNTRL, tu acceptes les conditions suivantes.
+            En utilisant NEIGE CNTRL, tu acceptes les conditions suivantes.
 
             **Nature du service**
-            SnowCNTRL fournit des alertes indicatives sur les interdictions de stationnement \
+            NEIGE CNTRL fournit des alertes indicatives sur les interdictions de stationnement \
             liées au déneigement. La fiabilité de ces alertes varie selon la ville — voir le \
             niveau de couverture affiché pour chaque ville dans l'app.
 
             **Ce n'est pas une garantie**
             Cette application ne remplace pas la vérification de la signalisation officielle sur \
-            place. SnowCNTRL ne peut être tenue responsable des contraventions, remorquages ou \
+            place. NEIGE CNTRL ne peut être tenue responsable des contraventions, remorquages ou \
             autres conséquences liées à une information erronée, absente ou périmée, quelle \
             qu'en soit la cause (donnée municipale incorrecte, retard de notification, bogue, \
             etc.).
