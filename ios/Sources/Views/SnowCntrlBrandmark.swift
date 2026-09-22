@@ -1,12 +1,14 @@
 import SwiftUI
 
-/// The permanent "SNOW CNTRL" wordmark shown top-left across the main
-/// screens — glows in the current theme's accent color.
+/// The permanent wordmark shown top-left across the main screens — "SNOW
+/// CNTRL", or "NEIGE CNTRL" when the app's language is French — glowing in
+/// the current theme's accent color.
 struct SnowCntrlBrandmark: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var localizer: Localizer
 
     var body: some View {
-        Text("SNOW CNTRL")
+        Text(localizer.language.appName)
             .font(.system(.caption2, design: .rounded).weight(.heavy))
             .tracking(0.6)
             .lineLimit(1)
@@ -22,5 +24,6 @@ struct SnowCntrlBrandmark_Previews: PreviewProvider {
             .padding()
             .background(Color.black)
             .environmentObject(ThemeManager())
+            .environmentObject(Localizer())
     }
 }

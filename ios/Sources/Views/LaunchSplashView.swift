@@ -6,6 +6,7 @@ import SwiftUI
 /// by `RootView` before the real content appears.
 struct LaunchSplashView: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var localizer: Localizer
     @State private var isPulsing = false
 
     var body: some View {
@@ -18,7 +19,7 @@ struct LaunchSplashView: View {
                     .neonGlow(themeManager.palette.primary, radius: isPulsing ? 14 : 6)
                     .scaleEffect(isPulsing ? 1.08 : 0.92)
 
-                Text("SNOW CNTRL")
+                Text(localizer.language.appName)
                     .font(.system(.title2, design: .rounded).weight(.heavy))
                     .tracking(2)
                     .foregroundStyle(themeManager.palette.accent)
@@ -37,5 +38,6 @@ struct LaunchSplashView_Previews: PreviewProvider {
     static var previews: some View {
         LaunchSplashView()
             .environmentObject(ThemeManager())
+            .environmentObject(Localizer())
     }
 }

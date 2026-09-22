@@ -33,6 +33,12 @@ enum WidgetText {
         default: return .gray
         }
     }
+
+    /// Mirrors `AppLanguage.appName` in the main app target — "NEIGE CNTRL"
+    /// in French, "SNOW CNTRL" otherwise.
+    static func appName(language: String) -> String {
+        language == "fr" ? "NEIGE CNTRL" : "SNOW CNTRL"
+    }
 }
 
 struct SnowCNTRLWidgetEntryView: View {
@@ -77,7 +83,7 @@ struct SnowCNTRLWidgetEntryView: View {
 
     private var homeScreenView: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("SNOW CNTRL")
+            Text(WidgetText.appName(language: entry.languageRawValue))
                 .font(.caption2.weight(.bold))
                 .foregroundStyle(.secondary)
             Spacer(minLength: 0)
