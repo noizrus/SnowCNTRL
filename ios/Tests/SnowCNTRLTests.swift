@@ -237,6 +237,83 @@ final class AlertNotificationTests: XCTestCase {
     }
 }
 
+final class CityChoiceTests: XCTestCase {
+    private let keys = ["snowcntrl.favoriteCityID", "snowcntrl.selectedCityID"]
+    private var saved: [String: Any] = [:]
+
+    override func setUp() {
+        super.setUp()
+        // Runs inside the app: keep the user's real choices intact.
+        for key in keys {
+            saved[key] = UserDefaults.standard.object(forKey: key)
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+    }
+
+    override func tearDown() {
+        for key in keys {
+            UserDefaults.standard.set(saved[key], forKey: key)
+        }
+        super.tearDown()
+    }
+
+    func testCitiesAreSortedFromNearestToFarthest() {
+        let montrealDowntown = CLLocationCoordinate2D(latitude: 45.5019, longitude: -73.5674)
+        let sorted = CityResolver.sortedByDistance(CitiesData.all, from: montrealDowntown)
+        XCTAssertEqual(sorted.first?.id, "montreal")
+        let distances = sorted.map { CityResolver.distance(from: montrealDowntown, to: $0) }
+        XCTAssertEqual(distances, distances.sorted())
+    }
+
+    func testWithoutPositionCitiesAreAlphabetical() {
+        let names = CityResolver.sortedByDistance(CitiesData.all, from: nil).map(\.name)
+        XCTAssertEqual(names, names.sorted { $0.localizedCompare($1) == .orderedAscending })
+    }
+
+    func testAppOpensOnTheDefaultCityRatherThanTheLastOne() {
+        UserDefaults.standard.set("toronto", forKey: "snowcntrl.selectedCityID")
+        UserDefaults.standard.set("quebec-city", forKey: "snowcntrl.favoriteCityID")
+        XCTAssertEqual(CitySelectionViewModel().selectedCity?.id, "quebec-city")
+    }
+
+    func testWithoutDefaultCityTheLastCityReopens() {
+        UserDefaults.standard.set("toronto", forKey: "snowcntrl.selectedCityID")
+        XCTAssertEqual(CitySelectionViewModel().selectedCity?.id, "toronto")
+    }
+
+    func testStarTogglesTheDefaultCity() {
+        let model = CitySelectionViewModel()
+        let ottawa = CitiesData.all.first { $0.id == "ottawa" }!
+        model.toggleFavorite(ottawa)
+        XCTAssertEqual(model.favoriteCity?.id, "ottawa")
+        model.toggleFavorite(ottawa)
+        XCTAssertNil(model.favoriteCity)
+    }
+}
+
+final class CityHelpTests: XCTestCase {
+    func testEveryHelpEntryPointsToAKnownCityWithValidLinks() throws {
+        let ids = ["montreal", "quebec-city", "laval", "longueuil", "trois-rivieres", "toronto", "ottawa", "halifax", "dartmouth", "calgary", "edmonton", "winnipeg"]
+        for id in ids {
+            let city = try XCTUnwrap(CitiesData.all.first { $0.id == id }, "\(id) not in CitiesData")
+            let entry = try XCTUnwrap(CityHelp.entry(for: city), "\(id) has no help entry")
+            XCTAssertEqual(entry.towedVehicleURL?.scheme, "https", id)
+            XCTAssertFalse(entry.contacts.isEmpty, id)
+            for contact in entry.contacts {
+                let dial = try XCTUnwrap(contact.dialURL, "\(id) \(contact.number)")
+                XCTAssertEqual(dial.scheme, "tel")
+                XCTAssertTrue(dial.absoluteString.dropFirst(4).allSatisfy(\.isNumber), "\(dial)")
+            }
+        }
+    }
+
+    func testMontrealTowingLineDialsCorrectly() throws {
+        let montreal = try XCTUnwrap(CitiesData.all.first { $0.id == "montreal" })
+        let towing = try XCTUnwrap(CityHelp.entry(for: montreal)?.contacts.first { $0.kind == .towingInfo })
+        XCTAssertEqual(towing.dialURL?.absoluteString, "tel:5148683737")
+    }
+}
+
 final class WidgetDataTests: XCTestCase {
     func testWidgetEntryRoundTripsWithAlertAndOffSeason() throws {
         let entry = WidgetSharedStatus(

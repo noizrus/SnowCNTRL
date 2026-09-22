@@ -1,5 +1,23 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Voiture remorquée, ville par défaut, villes par distance (dernière itération)
+
+- **« Voiture remorquée ? »** (`CityHelpView`, données dans `Data/CityHelp.swift`) :
+  accessible depuis le panneau du bas et la carte « i ». Pour la ville affichée : bouton
+  vers la page officielle pour retrouver son véhicule, numéros à appeler (touche = appel),
+  911 pour les urgences seulement, et le rappel que les voitures sont souvent juste
+  déplacées dans une rue voisine. Numéros et liens vérifiés sur les sites officiels pour
+  Montréal (Info-remorquage 514 868-3737, 311), Québec (418 641-6666, 311), Laval,
+  Longueuil, Trois-Rivières (police 819 691-2929), Toronto (police 416-808-2222, 311),
+  Ottawa, Halifax/Dartmouth (police 902-490-5020, 311), Calgary, Edmonton, Winnipeg.
+  Les autres villes renvoient vers leur site officiel, sans numéro inventé.
+- **Ville par défaut** : l'étoile dans la liste des villes, ou Réglages › Ville par
+  défaut. L'app s'ouvre directement dessus ; sans ville par défaut, elle rouvre la
+  dernière ville consultée.
+- **Liste des villes triée par distance** (`CityListView`) : la ville par défaut en haut,
+  puis de la plus proche à la plus loin avec la distance affichée (ordre alphabétique
+  tant que la position n'est pas connue).
+
 ## Logo permanent, widget refait, boussole (dernière itération)
 
 - **Logo de l'app** (`Assets.xcassets/AppLogo.imageset`, découpé de l'icône sans le cadre

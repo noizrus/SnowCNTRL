@@ -4,36 +4,12 @@ struct CitySelectionView: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
     @ObservedObject var viewModel: CitySelectionViewModel
-    var onSelect: (City) -> Void
 
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.filteredCities.isEmpty {
-                    ContentUnavailableFallback(text: localizer.s(.citySelectionEmptyState))
-                } else {
-                    List(viewModel.filteredCities) { city in
-                        Button {
-                            viewModel.select(city)
-                            onSelect(city)
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(city.name)
-                                        .foregroundStyle(.primary)
-                                    Text(localizer.provinceName(city.province))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                TierBadge(tier: city.tier)
-                            }
-                        }
-                    }
-                    .listStyle(.plain)
-                }
+            CityListView(viewModel: viewModel) { city in
+                viewModel.select(city)
             }
-            .searchable(text: $viewModel.searchText, prompt: localizer.s(.citySelectionSearchPlaceholder))
             .navigationTitle(localizer.s(.citySelectionTitle))
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -45,25 +21,36 @@ struct CitySelectionView: View {
     }
 }
 
-/// `ContentUnavailableView` needs iOS 17; this keeps the app buildable
-/// against the iOS 16 deployment target set in project.yml.
-private struct ContentUnavailableFallback: View {
-    let text: String
+/// Settings › default city: same list, a tap makes the city the one the
+/// app opens on.
+struct DefaultCityPickerView: View {
+    @EnvironmentObject private var localizer: Localizer
+    @ObservedObject var viewModel: CitySelectionViewModel
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text(text)
-                .foregroundStyle(.secondary)
+        CityListView(viewModel: viewModel, checkedCityID: viewModel.favoriteCityID) { city in
+            viewModel.setFavorite(city)
+            dismiss()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationTitle(localizer.s(.settingsDefaultCity))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if viewModel.favoriteCityID != nil {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(localizer.s(.settingsDefaultCityNone)) {
+                        viewModel.setFavorite(nil)
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 
 struct CitySelectionView_Previews: PreviewProvider {
     static var previews: some View {
-        CitySelectionView(viewModel: CitySelectionViewModel(), onSelect: { _ in })
+        CitySelectionView(viewModel: CitySelectionViewModel())
             .environmentObject(Localizer())
             .environmentObject(ThemeManager())
     }

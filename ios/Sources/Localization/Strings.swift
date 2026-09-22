@@ -97,6 +97,25 @@ enum LocKey: Hashable, CaseIterable {
     case alertsListTitle
     case settingsAlertDuration
     case settingsAlertDurationHint
+
+    case cityListFavorite
+    case cityListNearest
+    case cityListAll
+    case cityListSetFavorite
+    case settingsDefaultCity
+    case settingsDefaultCityNone
+    case settingsDefaultCityHint
+    case helpTitle
+    case helpMovedNearbyTip
+    case helpFindMyCar
+    case helpCityWebsite
+    case helpContactsTitle
+    case helpTowingLine
+    case helpCityServices
+    case helpPoliceNonEmergency
+    case helpEmergency
+    case helpNoVerifiedNumber
+    case helpSourceNote
 }
 
 enum Strings {
@@ -536,6 +555,96 @@ enum Strings {
             .french: "Combien de temps le son du déneigement sonne quand une alerte se déclenche.",
             .english: "How long the snow-clearing sound rings when an alert fires.",
             .spanish: "Cuánto tiempo suena el sonido de remoción de nieve cuando se activa una alerta.",
+        ],
+        .cityListFavorite: [
+            .french: "Ville par défaut",
+            .english: "Default city",
+            .spanish: "Ciudad predeterminada",
+        ],
+        .cityListNearest: [
+            .french: "Les plus proches de toi",
+            .english: "Nearest to you",
+            .spanish: "Las más cercanas a ti",
+        ],
+        .cityListAll: [
+            .french: "Toutes les villes",
+            .english: "All cities",
+            .spanish: "Todas las ciudades",
+        ],
+        .cityListSetFavorite: [
+            .french: "Définir comme ville par défaut",
+            .english: "Set as default city",
+            .spanish: "Definir como ciudad predeterminada",
+        ],
+        .settingsDefaultCity: [
+            .french: "Ville par défaut",
+            .english: "Default city",
+            .spanish: "Ciudad predeterminada",
+        ],
+        .settingsDefaultCityNone: [
+            .french: "Aucune",
+            .english: "None",
+            .spanish: "Ninguna",
+        ],
+        .settingsDefaultCityHint: [
+            .french: "L'app s'ouvre directement sur cette ville. Sans ville par défaut, elle rouvre la dernière ville consultée. Tu peux aussi toucher l'étoile dans la liste des villes.",
+            .english: "The app opens straight on this city. Without a default city, it reopens the last city viewed. You can also tap the star in the city list.",
+            .spanish: "La app se abre directamente en esta ciudad. Sin ciudad predeterminada, reabre la última ciudad consultada. También puedes tocar la estrella en la lista de ciudades.",
+        ],
+        .helpTitle: [
+            .french: "Voiture remorquée ?",
+            .english: "Car towed?",
+            .spanish: "¿Auto remolcado?",
+        ],
+        .helpMovedNearbyTip: [
+            .french: "Pendant le déneigement, les voitures sont souvent simplement déplacées dans une rue voisine : regarde d'abord autour, puis utilise le service de ta ville.",
+            .english: "During snow clearing, cars are often just moved to a nearby street: look around first, then use your city's service.",
+            .spanish: "Durante la remoción de nieve, los autos a menudo solo se mueven a una calle cercana: mira primero alrededor y luego usa el servicio de tu ciudad.",
+        ],
+        .helpFindMyCar: [
+            .french: "Retrouver mon véhicule",
+            .english: "Find my car",
+            .spanish: "Encontrar mi vehículo",
+        ],
+        .helpCityWebsite: [
+            .french: "Site officiel de la ville",
+            .english: "City's official website",
+            .spanish: "Sitio oficial de la ciudad",
+        ],
+        .helpContactsTitle: [
+            .french: "Numéros utiles",
+            .english: "Useful numbers",
+            .spanish: "Números útiles",
+        ],
+        .helpTowingLine: [
+            .french: "Info-remorquage",
+            .english: "Towing info line",
+            .spanish: "Información de remolque",
+        ],
+        .helpCityServices: [
+            .french: "Services municipaux",
+            .english: "City services",
+            .spanish: "Servicios municipales",
+        ],
+        .helpPoliceNonEmergency: [
+            .french: "Police (non urgent)",
+            .english: "Police (non-emergency)",
+            .spanish: "Policía (no urgente)",
+        ],
+        .helpEmergency: [
+            .french: "Urgence seulement",
+            .english: "Emergencies only",
+            .spanish: "Solo emergencias",
+        ],
+        .helpNoVerifiedNumber: [
+            .french: "Pas encore de numéro vérifié pour cette ville : contacte ta municipalité ou la police locale (ligne non urgente).",
+            .english: "No verified number yet for this city: contact your municipality or the local police (non-emergency line).",
+            .spanish: "Aún no hay un número verificado para esta ciudad: contacta a tu municipio o a la policía local (línea no urgente).",
+        ],
+        .helpSourceNote: [
+            .french: "Liens et numéros tirés des sites officiels des villes. En cas de doute, vérifie auprès de ta ville.",
+            .english: "Links and numbers come from the cities' official websites. When in doubt, check with your city.",
+            .spanish: "Los enlaces y números provienen de los sitios oficiales de las ciudades. En caso de duda, consulta con tu ciudad.",
         ],
     ]
 

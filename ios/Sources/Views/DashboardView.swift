@@ -17,6 +17,7 @@ struct DashboardView: View {
     @State private var region: MKCoordinateRegion
     @State private var hasCenteredOnAddresses = false
     @State private var isShowingCityRules = false
+    @State private var isShowingCityHelp = false
     @State private var isPanelCollapsed = true
     @State private var isShowingInfo = false
     @State private var isZoomedOutTooFar = false
@@ -192,6 +193,9 @@ struct DashboardView: View {
                 isLocating = false
                 region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
             }
+            .sheet(isPresented: $isShowingCityHelp) {
+                CityHelpView(city: city)
+            }
             .sheet(isPresented: $isShowingCityRules) {
                 CityRulesView(city: city)
             }
@@ -245,10 +249,16 @@ struct DashboardView: View {
                         withAnimation(.easeInOut(duration: 0.2)) { isShowingInfo.toggle() }
                     }
                     if isShowingInfo {
-                        MapLegendView {
-                            isShowingInfo = false
-                            isShowingCityRules = true
-                        }
+                        MapLegendView(
+                            onShowCityRules: {
+                                isShowingInfo = false
+                                isShowingCityRules = true
+                            },
+                            onShowCityHelp: {
+                                isShowingInfo = false
+                                isShowingCityHelp = true
+                            }
+                        )
                         .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
                     }
                 }
@@ -424,6 +434,13 @@ struct DashboardView: View {
                 } else {
                     alertsList
                 }
+
+                Button {
+                    isShowingCityHelp = true
+                } label: {
+                    Label(localizer.s(.helpTitle), systemImage: "car.fill")
+                }
+                .buttonStyle(NeutralButtonStyle())
             }
 
             if !premiumManager.isPremium {

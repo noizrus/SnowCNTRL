@@ -8,10 +8,26 @@ struct SettingsView: View {
     @AppStorage(CityStatusService.simulateBanKey) private var isSimulatingBan = false
     @AppStorage(AlertRingDuration.storageKey) private var alertRingDurationSeconds = AlertRingDuration.default.rawValue
     let selectedCity: City?
+    @ObservedObject var citySelection: CitySelectionViewModel
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    NavigationLink {
+                        DefaultCityPickerView(viewModel: citySelection)
+                    } label: {
+                        HStack {
+                            Label(localizer.s(.settingsDefaultCity), systemImage: "star.fill")
+                            Spacer()
+                            Text(citySelection.favoriteCity?.name ?? localizer.s(.settingsDefaultCityNone))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } footer: {
+                    Text(localizer.s(.settingsDefaultCityHint))
+                }
+
                 Section(localizer.s(.settingsLanguage)) {
                     Picker(localizer.s(.settingsLanguage), selection: $localizer.language) {
                         ForEach(AppLanguage.allCases) { lang in
@@ -143,7 +159,7 @@ struct SettingsView: View {
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView(selectedCity: CitiesData.all.first { $0.id == "montreal" })
+        SettingsView(selectedCity: CitiesData.all.first { $0.id == "montreal" }, citySelection: CitySelectionViewModel())
             .environmentObject(Localizer())
             .environmentObject(ThemeManager())
             .environmentObject(PremiumManager())

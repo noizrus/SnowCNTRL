@@ -56,7 +56,7 @@ struct RootView: View {
                     }
                     .tabItem { Label(localizer.s(.tabDashboard), systemImage: "snowflake") }
 
-                    SettingsView(selectedCity: city)
+                    SettingsView(selectedCity: city, citySelection: citySelection)
                         .tabItem { Label(localizer.s(.tabSettings), systemImage: "gearshape") }
                 }
             } else if !skippedGeolocation {
@@ -65,7 +65,7 @@ struct RootView: View {
                     onManualFallback: { skippedGeolocation = true }
                 )
             } else {
-                CitySelectionView(viewModel: citySelection) { _ in }
+                CitySelectionView(viewModel: citySelection)
             }
         }
     }

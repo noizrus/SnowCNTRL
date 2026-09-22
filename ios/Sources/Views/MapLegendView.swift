@@ -6,6 +6,7 @@ struct MapLegendView: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
     var onShowCityRules: () -> Void
+    var onShowCityHelp: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -31,6 +32,11 @@ struct MapLegendView: View {
             }
             .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette, cornerRadius: 10))
             .padding(.top, 2)
+            Button(action: onShowCityHelp) {
+                Label(localizer.s(.helpTitle), systemImage: "car.fill")
+                    .font(.caption.weight(.semibold))
+            }
+            .buttonStyle(NeutralButtonStyle())
         }
         .padding(12)
         .frame(width: 240, alignment: .leading)

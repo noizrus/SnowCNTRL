@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CoreLocation
 
 final class CitySelectionViewModel: ObservableObject {
     @Published var searchText: String = ""
@@ -8,22 +9,43 @@ final class CitySelectionViewModel: ObservableObject {
             UserDefaults.standard.set(selectedCity?.id, forKey: Self.storageKey)
         }
     }
-
-    private static let storageKey = "snowcntrl.selectedCityID"
-    private let allCities = CitiesData.all.sorted { $0.name < $1.name }
-
-    init() {
-        if let id = UserDefaults.standard.string(forKey: Self.storageKey) {
-            selectedCity = allCities.first { $0.id == id }
+    /// The city the app opens on at launch (set with the star in the city
+    /// list or in Settings). Without one, the app reopens the last city.
+    @Published private(set) var favoriteCityID: String? {
+        didSet {
+            UserDefaults.standard.set(favoriteCityID, forKey: Self.favoriteKey)
         }
     }
 
-    var filteredCities: [City] {
-        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return allCities }
-        let needle = searchText.folding(options: .diacriticInsensitive, locale: .current).lowercased()
-        return allCities.filter {
-            $0.name.folding(options: .diacriticInsensitive, locale: .current).lowercased().contains(needle)
+    private static let storageKey = "snowcntrl.selectedCityID"
+    private static let favoriteKey = "snowcntrl.favoriteCityID"
+    private let allCities = CitiesData.all
+
+    init() {
+        favoriteCityID = UserDefaults.standard.string(forKey: Self.favoriteKey)
+        let startID = favoriteCityID ?? UserDefaults.standard.string(forKey: Self.storageKey)
+        if let startID {
+            selectedCity = allCities.first { $0.id == startID }
         }
+    }
+
+    var favoriteCity: City? {
+        allCities.first { $0.id == favoriteCityID }
+    }
+
+    /// Cities matching the search, nearest to `location` first.
+    func cities(sortedFrom location: CLLocationCoordinate2D?) -> [City] {
+        let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+        let matching: [City]
+        if trimmed.isEmpty {
+            matching = allCities
+        } else {
+            let needle = trimmed.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+            matching = allCities.filter {
+                $0.name.folding(options: .diacriticInsensitive, locale: .current).lowercased().contains(needle)
+            }
+        }
+        return CityResolver.sortedByDistance(matching, from: location)
     }
 
     func select(_ city: City) {
@@ -32,5 +54,13 @@ final class CitySelectionViewModel: ObservableObject {
 
     func clearSelection() {
         selectedCity = nil
+    }
+
+    func setFavorite(_ city: City?) {
+        favoriteCityID = city?.id
+    }
+
+    func toggleFavorite(_ city: City) {
+        favoriteCityID = favoriteCityID == city.id ? nil : city.id
     }
 }
