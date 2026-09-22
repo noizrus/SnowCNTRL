@@ -26,6 +26,7 @@ struct DashboardView: View {
     @State private var selectedAlertID: UUID?
     @State private var notificationsDenied = false
     @State private var toast: String?
+    @State private var isShowingAlertsList = false
     let city: City
     var onChangeCity: () -> Void
 
@@ -105,8 +106,23 @@ struct DashboardView: View {
             .navigationTitle(city.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Info-Neige puts its favorites list top-left — same spot,
+                // same idea: every alert in one place.
                 ToolbarItem(placement: .navigationBarLeading) {
-                    SnowCntrlBrandmark()
+                    Button {
+                        isShowingAlertsList = true
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "list.bullet")
+                            if !myAddresses.isEmpty {
+                                Circle()
+                                    .fill(themeManager.palette.primary)
+                                    .frame(width: 8, height: 8)
+                                    .offset(x: 6, y: -4)
+                            }
+                        }
+                    }
+                    .accessibilityLabel(localizer.s(.alertsListTitle))
                 }
             }
             .task(id: isSimulatingBan) {
@@ -131,6 +147,17 @@ struct DashboardView: View {
             }
             .sheet(isPresented: $isShowingCityRules) {
                 CityRulesView(city: city)
+            }
+            .sheet(isPresented: $isShowingAlertsList) {
+                AlertsListView(
+                    alerts: myAddresses,
+                    currentStatus: (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus,
+                    onSelect: { alert in
+                        focus(on: alert)
+                        selectAlert(alert.id)
+                    },
+                    onRemove: removeAlert
+                )
             }
         }
         .tint(themeManager.palette.primaryText)
@@ -562,7 +589,7 @@ struct DashboardView: View {
                 case .noActiveBan:
                     return ("checkmark.circle.fill", localizer.s(.dashboardStatusInactive), SnowClearingStatus.cleared.neonColor)
                 case .unknownNoData:
-                    return ("questionmark.circle.fill", localizer.s(.dashboardStatusUnknown), SnowClearingStatus.awaitingInfo.neonColor)
+                    return ("questionmark.circle.fill", localizer.s(.dashboardStatusUnknown), SnowClearingStatus.noOperation.neonColor)
                 }
             }()
             HStack(spacing: 8) {

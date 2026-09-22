@@ -12,7 +12,7 @@ final class SideLine: MKPolyline {
 /// All side lines sharing one status (and selection state) — one overlay
 /// per group instead of thousands keeps panning smooth.
 final class GlowMultiPolyline: MKMultiPolyline {
-    var status: SnowClearingStatus = .awaitingInfo
+    var status: SnowClearingStatus = .noOperation
     var isSelected = false
 }
 

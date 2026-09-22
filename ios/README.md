@@ -1,6 +1,25 @@
 # SnowCNTRL — app iOS (MVP)
 
-## Alertes par témoin + son de déneigeuse (dernière itération)
+## Alignement sur Info-Neige : couleurs et favoris (dernière itération)
+
+D'après des captures de l'app Info-Neige envoyées par l'utilisateur :
+
+- **Légende à 7 couleurs, identique à Info-Neige** (`SnowClearingStatus.swift`, en
+  version néon) : Enneigée (bleu), Planifié (orange), Stationnement interdit (rouge),
+  En cours (mauve), **En attente de confirmation (vert pâle — nouveau)**, Déneigée
+  (vert vif), Aucune opération en cours (gris). L'ancien statut unique « en attente
+  d'info » (gris) est renommé `noOperation` ; `awaitingConfirmation` (vert pâle) est
+  nouveau et suit exactement la légende d'Info-Neige, distincte du vert de « Déneigée ».
+- **Mes alertes en haut à gauche** (`AlertsListView.swift`), comme la liste de favoris
+  d'Info-Neige : bouton avec un point si des alertes existent, ouvre la liste complète
+  (glisser pour retirer, toucher pour centrer la carte et rouvrir la fiche). Sur cet
+  écran, ce bouton remplace le bandeau « NEIGE CNTRL »/« SNOW CNTRL » (qui reste affiché
+  sur les autres écrans : onboarding, réglages, sélection de ville, géolocalisation) —
+  Info-Neige n'a pas de logo dans sa barre du haut, seulement sa liste de favoris.
+- Pas encore repris d'Info-Neige : barre de recherche d'adresse et bouton bascule
+  stationnements gratuits/payants — à ajouter si tu les veux.
+
+## Alertes par témoin + son de déneigeuse
 
 - **Toucher une rue = placer une alerte** : sur la carte principale, toucher un côté de
   rue affiche un témoin « + » le long du trottoir et une carte « Ajouter une alerte

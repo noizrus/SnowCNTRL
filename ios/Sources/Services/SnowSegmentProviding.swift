@@ -8,7 +8,7 @@ extension ParkingBanState {
         switch self {
         case .activeBanNow: return .noParkingActive
         case .noActiveBan: return .cleared
-        case .unknownNoData: return .awaitingInfo
+        case .unknownNoData: return .noOperation
         }
     }
 }

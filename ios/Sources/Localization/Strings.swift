@@ -94,6 +94,7 @@ enum LocKey: Hashable, CaseIterable {
     case notifActionSnooze
     case settingsSimulateBan
     case settingsSimulateBanHint
+    case alertsListTitle
 }
 
 enum Strings {
@@ -518,6 +519,11 @@ enum Strings {
             .french: "Toutes les rues passent au rouge et tes alertes sonnent, comme lors d'une vraie opération.",
             .english: "Every street turns red and your alerts ring, like during a real operation.",
             .spanish: "Todas las calles se ponen en rojo y tus alertas suenan, como en una operación real.",
+        ],
+        .alertsListTitle: [
+            .french: "Mes alertes",
+            .english: "My alerts",
+            .spanish: "Mis alertas",
         ],
     ]
 
