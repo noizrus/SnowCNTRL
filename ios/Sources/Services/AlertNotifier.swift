@@ -1,6 +1,27 @@
 import Foundation
 import UserNotifications
 
+/// How long the snow-truck sound rings for, in seconds — a pre-rendered
+/// file exists for each option (`snowplow-<n>s.wav`) since iOS plays a
+/// notification sound to completion and gives no API to cut it short.
+enum AlertRingDuration: Int, CaseIterable, Identifiable {
+    case short = 5
+    case medium = 10
+    case long = 15
+    case extended = 20
+
+    static let storageKey = "snowcntrl.alertRingDurationSeconds"
+    static let `default`: AlertRingDuration = .medium
+
+    var id: Int { rawValue }
+    var soundFileName: String { "snowplow-\(rawValue)s.wav" }
+
+    static var current: AlertRingDuration {
+        let stored = UserDefaults.standard.integer(forKey: storageKey)
+        return AlertRingDuration(rawValue: stored) ?? .default
+    }
+}
+
 /// Rings the phone for an alert marker when snow clearing reaches its
 /// street: snow-truck sound, Time Sensitive so it gets through Focus / Do
 /// Not Disturb (moon mode), and repeated until "I moved my car".
@@ -11,7 +32,9 @@ enum AlertNotifier {
     static let categoryIdentifier = "snowcntrl.ban-alert"
     static let movedActionIdentifier = "snowcntrl.moved"
     static let snoozeActionIdentifier = "snowcntrl.snooze"
-    static let soundName = UNNotificationSoundName("snowplow.wav")
+    static var soundName: UNNotificationSoundName {
+        UNNotificationSoundName(AlertRingDuration.current.soundFileName)
+    }
     /// Seconds after detection: now, then two reminders if nobody reacts.
     static let repeatOffsets: [TimeInterval] = [1, 10 * 60, 20 * 60]
     static let snoozeDelay: TimeInterval = 10 * 60

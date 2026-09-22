@@ -1,6 +1,23 @@
 # SnowCNTRL — app iOS (MVP)
 
-## Alignement sur Info-Neige : couleurs et favoris (dernière itération)
+## Panneau réduit par défaut, logo, durée de sonnerie (dernière itération)
+
+- **Panneau du bas réduit par défaut** : seule la pastille de statut (ex. « Hors
+  saison ») est visible à l'ouverture. La toucher (ou le chevron, ou glisser)
+  déplie le reste — un petit chevron dans la pastille indique que c'est tapable.
+  S'ouvre aussi automatiquement dès qu'on ajoute ou sélectionne une alerte.
+- **Logo NEIGE CNTRL / SNOW CNTRL** : affiché en haut, centré au-dessus du nom de
+  la ville (remplace le simple titre de navigation). Le bouton favoris ayant pris
+  le coin supérieur gauche, le centre — libéré par des boutons devenus des icônes
+  seules — avait la place pour ça sans se faire tronquer.
+- **Durée de la sonnerie configurable** (`AlertRingDuration` + Réglages) : 5, 10
+  (par défaut), 15 ou 20 secondes. Comme iOS joue un son de notification jusqu'au
+  bout sans API pour l'interrompre, chaque durée a son propre fichier
+  (`Resources/snowplow-5s.wav` … `snowplow-20s.wav`), généré à partir du vrai
+  enregistrement fourni par l'utilisateur (tronqué avec fondu pour les durées
+  courtes, bouclé avec fondu enchaîné pour les plus longues).
+
+## Alignement sur Info-Neige : couleurs et favoris
 
 D'après des captures de l'app Info-Neige envoyées par l'utilisateur :
 

@@ -17,7 +17,7 @@ struct DashboardView: View {
     @State private var region: MKCoordinateRegion
     @State private var hasCenteredOnAddresses = false
     @State private var isShowingCityRules = false
-    @State private var isPanelCollapsed = false
+    @State private var isPanelCollapsed = true
     @State private var isShowingInfo = false
     @State private var isZoomedOutTooFar = false
     @State private var isLoadingStreets = false
@@ -106,6 +106,19 @@ struct DashboardView: View {
             .navigationTitle(city.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Leading/trailing are icon-only now, so there's room for
+                // the wordmark above the city name instead of squeezing it
+                // into a corner.
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 0) {
+                        Text(localizer.language.appName)
+                            .font(.system(.caption2, design: .rounded).weight(.heavy))
+                            .tracking(0.6)
+                            .foregroundStyle(themeManager.palette.accentText)
+                        Text(city.name)
+                            .font(.headline)
+                    }
+                }
                 // Info-Neige puts its favorites list top-left — same spot,
                 // same idea: every alert in one place.
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -356,6 +369,8 @@ struct DashboardView: View {
 
             HStack(spacing: 10) {
                 statusPill
+                    .contentShape(Rectangle())
+                    .onTapGesture { togglePanel() }
                 Spacer(minLength: 0)
                 roundIconButton(systemImage: "arrow.clockwise", accessibilityText: localizer.s(.dashboardRefreshButton)) {
                     Task { await viewModel.load(city: city, language: localizer.language) }
@@ -599,6 +614,9 @@ struct DashboardView: View {
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
+                Image(systemName: isPanelCollapsed ? "chevron.down" : "chevron.up")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(color.opacity(0.8))
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

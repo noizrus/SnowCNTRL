@@ -95,6 +95,8 @@ enum LocKey: Hashable, CaseIterable {
     case settingsSimulateBan
     case settingsSimulateBanHint
     case alertsListTitle
+    case settingsAlertDuration
+    case settingsAlertDurationHint
 }
 
 enum Strings {
@@ -524,6 +526,16 @@ enum Strings {
             .french: "Mes alertes",
             .english: "My alerts",
             .spanish: "Mis alertas",
+        ],
+        .settingsAlertDuration: [
+            .french: "Durée de la sonnerie",
+            .english: "Ring duration",
+            .spanish: "Duración del timbre",
+        ],
+        .settingsAlertDurationHint: [
+            .french: "Combien de temps le son du déneigement sonne quand une alerte se déclenche.",
+            .english: "How long the snow-clearing sound rings when an alert fires.",
+            .spanish: "Cuánto tiempo suena el sonido de remoción de nieve cuando se activa una alerta.",
         ],
     ]
 

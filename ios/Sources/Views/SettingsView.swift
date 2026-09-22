@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject private var premiumManager: PremiumManager
     @AppStorage("snowcntrl.dailyReminder") private var dailyReminderEnabled = false
     @AppStorage(CityStatusService.simulateBanKey) private var isSimulatingBan = false
+    @AppStorage(AlertRingDuration.storageKey) private var alertRingDurationSeconds = AlertRingDuration.default.rawValue
     let selectedCity: City?
 
     var body: some View {
@@ -40,6 +41,18 @@ struct SettingsView: View {
                             handleReminderToggle(enabled)
                         }
                     Text(localizer.s(.settingsNotificationsSubtitle))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section(localizer.s(.settingsAlertDuration)) {
+                    Picker(localizer.s(.settingsAlertDuration), selection: $alertRingDurationSeconds) {
+                        ForEach(AlertRingDuration.allCases) { duration in
+                            Text("\(duration.rawValue) s").tag(duration.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    Text(localizer.s(.settingsAlertDurationHint))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

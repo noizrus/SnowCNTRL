@@ -180,10 +180,29 @@ final class AlertNotificationTests: XCTestCase {
         cityID: "montreal"
     )
 
+    override func tearDown() {
+        UserDefaults.standard.removeObject(forKey: AlertRingDuration.storageKey)
+        super.tearDown()
+    }
+
+    func testRingDurationDefaultsToTenSeconds() {
+        UserDefaults.standard.removeObject(forKey: AlertRingDuration.storageKey)
+        XCTAssertEqual(AlertRingDuration.current, .medium)
+        XCTAssertEqual(AlertRingDuration.current.rawValue, 10)
+    }
+
+    func testChangingTheSettingChangesTheSoundFile() {
+        UserDefaults.standard.set(AlertRingDuration.extended.rawValue, forKey: AlertRingDuration.storageKey)
+        XCTAssertEqual(AlertNotifier.soundName.rawValue, "snowplow-20s.wav")
+        UserDefaults.standard.set(AlertRingDuration.short.rawValue, forKey: AlertRingDuration.storageKey)
+        XCTAssertEqual(AlertNotifier.soundName.rawValue, "snowplow-5s.wav")
+    }
+
     func testBanAlertRingsWithTheSnowTruckSoundThroughFocus() {
+        UserDefaults.standard.removeObject(forKey: AlertRingDuration.storageKey)
         let content = AlertNotifier.makeContent(for: alert, language: .french, isTest: false)
         XCTAssertNotNil(content.sound)
-        XCTAssertEqual(AlertNotifier.soundName.rawValue, "snowplow.wav")
+        XCTAssertEqual(AlertNotifier.soundName.rawValue, "snowplow-10s.wav")
         XCTAssertEqual(content.interruptionLevel, .timeSensitive, "must get through Do Not Disturb / Focus")
         XCTAssertEqual(content.categoryIdentifier, AlertNotifier.categoryIdentifier)
         XCTAssertTrue(content.body.contains(alert.label))
@@ -203,12 +222,18 @@ final class AlertNotificationTests: XCTestCase {
         XCTAssertEqual(Set(AlertNotifier.requestIDs(for: alert.id)).count, AlertNotifier.repeatOffsets.count + 1)
     }
 
-    func testSnowTruckSoundIsBundledAndPlayableAsANotification() throws {
-        let url = try XCTUnwrap(Bundle.main.url(forResource: "snowplow", withExtension: "wav"), "snowplow.wav missing from the app bundle")
-        let file = try AVAudioFile(forReading: url)
-        let seconds = Double(file.length) / file.processingFormat.sampleRate
-        XCTAssertGreaterThan(seconds, 5)
-        XCTAssertLessThan(seconds, 30, "iOS ignores notification sounds of 30 s or more")
+    func testEveryRingDurationHasABundledPlayableSoundOfTheRightLength() throws {
+        for duration in AlertRingDuration.allCases {
+            let name = duration.soundFileName
+            let url = try XCTUnwrap(
+                Bundle.main.url(forResource: (name as NSString).deletingPathExtension, withExtension: "wav"),
+                "\(name) missing from the app bundle"
+            )
+            let file = try AVAudioFile(forReading: url)
+            let seconds = Double(file.length) / file.processingFormat.sampleRate
+            XCTAssertEqual(seconds, Double(duration.rawValue), accuracy: 0.2, name)
+            XCTAssertLessThan(seconds, 30, "iOS ignores notification sounds of 30 s or more")
+        }
     }
 }
 
