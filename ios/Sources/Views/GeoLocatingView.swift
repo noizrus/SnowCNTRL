@@ -28,7 +28,7 @@ struct GeoLocatingView: View {
             SnowCntrlBrandmark()
                 .padding()
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
         .onAppear { locationManager.requestLocation() }
         .onReceive(locationManager.$lastLocation) { coordinate in
             guard let coordinate, let city = CityResolver.nearestCity(to: coordinate) else { return }

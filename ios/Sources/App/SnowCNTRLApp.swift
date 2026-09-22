@@ -5,6 +5,7 @@ import GoogleMobileAds
 struct SnowCNTRLApp: App {
     @StateObject private var localizer = Localizer()
     @StateObject private var themeManager = ThemeManager()
+    @StateObject private var premiumManager = PremiumManager()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -17,6 +18,7 @@ struct SnowCNTRLApp: App {
             RootView()
                 .environmentObject(localizer)
                 .environmentObject(themeManager)
+                .environmentObject(premiumManager)
                 .task {
                     await BackgroundRefreshManager.checkNow(language: localizer.language)
                 }

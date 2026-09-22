@@ -19,7 +19,10 @@ struct ThemeGridPicker: View {
                     selection = theme
                 } label: {
                     HStack(spacing: 6) {
-                        if theme == .automatic {
+                        if isSelected {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption)
+                        } else if theme == .automatic {
                             Image(systemName: "location.fill")
                                 .font(.caption)
                         }
@@ -28,17 +31,20 @@ struct ThemeGridPicker: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(ThemePalette.contrastingText(on: color))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(color)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
-                            .strokeBorder(isSelected ? .white : .clear, lineWidth: 2)
+                            .strokeBorder(isSelected ? Color.primary : .clear, lineWidth: 3)
                     )
                     .neonGlow(color, radius: isSelected ? 8 : 0)
                 }
+                // Without this, a Form row holding several buttons fires
+                // all of them on any tap.
+                .buttonStyle(.plain)
             }
         }
     }

@@ -118,7 +118,7 @@ struct AddressMapView: View {
                 }
             }
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
     }
 
     private var searchBar: some View {
@@ -144,7 +144,7 @@ struct AddressMapView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: "car.fill")
-                        .foregroundStyle(themeManager.palette.primary)
+                        .foregroundStyle(themeManager.palette.primaryText)
                     Text(label)
                         .font(.subheadline.weight(.medium))
                     Spacer()

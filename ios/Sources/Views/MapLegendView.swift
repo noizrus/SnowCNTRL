@@ -29,7 +29,9 @@ struct MapLegendView: View {
     }
 }
 
-/// Round floating button used over the map (locate me, legend…).
+/// Round floating button used over the map (locate me, legend…): solid
+/// theme color so it stands out on any map, in day or night mode; the
+/// accent color marks it as toggled on.
 struct MapControlButton: View {
     @EnvironmentObject private var themeManager: ThemeManager
     let systemImage: String
@@ -38,16 +40,17 @@ struct MapControlButton: View {
     let action: () -> Void
 
     var body: some View {
+        let palette = themeManager.palette
+        let fill = isActive ? palette.accent : palette.primary
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(isActive ? Color.black : themeManager.palette.primary)
+                .foregroundStyle(isActive ? palette.onAccent : palette.onPrimary)
                 .frame(width: 44, height: 44)
-                .background(
-                    Circle().fill(isActive ? AnyShapeStyle(themeManager.palette.primary) : AnyShapeStyle(.ultraThinMaterial))
-                )
-                .overlay(Circle().strokeBorder(themeManager.palette.primary.opacity(0.45), lineWidth: 1))
-                .shadow(color: themeManager.palette.primary.opacity(0.35), radius: 6)
+                .background(Circle().fill(fill))
+                .overlay(Circle().strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
+                .shadow(color: fill.opacity(0.55), radius: 8)
+                .shadow(color: .black.opacity(0.25), radius: 3, y: 1)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(accessibilityText)

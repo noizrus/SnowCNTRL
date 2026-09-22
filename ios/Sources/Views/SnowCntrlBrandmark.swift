@@ -13,7 +13,7 @@ struct SnowCntrlBrandmark: View {
             .tracking(0.6)
             .lineLimit(1)
             .fixedSize()
-            .foregroundStyle(themeManager.palette.accent)
+            .foregroundStyle(themeManager.palette.accentText)
             .neonGlow(themeManager.palette.accent, radius: 3)
     }
 }

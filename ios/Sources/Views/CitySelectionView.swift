@@ -41,7 +41,7 @@ struct CitySelectionView: View {
                 }
             }
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
     }
 }
 

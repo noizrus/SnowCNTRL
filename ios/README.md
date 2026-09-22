@@ -1,6 +1,25 @@
 # SnowCNTRL — app iOS (MVP)
 
-## Vraies rues + ergonomie (dernière itération)
+## Couleurs lisibles, jour/nuit, premium (dernière itération)
+
+- **Boutons aux couleurs du thème, toujours lisibles** : `ThemePalette` distingue
+  maintenant la couleur brute du thème (remplissages, halos), une variante lisible
+  sur fond jour/nuit (`primaryText`/`accentText`, ajustée automatiquement jusqu'à un
+  contraste 4.5:1) et la couleur du contenu posé dessus (`onPrimary`, noir ou blanc
+  selon le contraste). Les boutons principaux et ceux de la carte sont pleins, dans la
+  couleur du thème (`ThemedFillButtonStyle`, `MapControlButton`).
+- **Mode jour / nuit** : Réglages → Auto / Jour / Nuit, plus un bouton soleil/lune sur
+  la carte. Appliqué aux fenêtres elles-mêmes, donc la carte et les feuilles suivent.
+- **Province retirée des Réglages** : elle suit automatiquement la ville affichée
+  (géolocalisée ou choisie) et ne sert qu'au thème « Automatique ».
+- **Boutons des Réglages** : la grille des thèmes déclenchait tous ses boutons d'un
+  coup (bug SwiftUI des boutons multiples dans une ligne de formulaire) — corrigé.
+- **Premium** : `PremiumManager` retire la pub quand il est actif. Pas encore d'achat
+  intégré (StoreKit) : dans les builds lancés depuis Xcode, un interrupteur « Mode
+  premium (test développeur) » existe dans Réglages et il est activé par défaut. Il
+  n'existe pas dans les builds App Store.
+
+## Vraies rues + ergonomie
 
 - **Les lignes suivent les vrais trottoirs** : la géométrie des rues vient maintenant
   d'OpenStreetMap (API Overpass, sans clé), chargée **sur le téléphone** par tuiles

@@ -15,17 +15,19 @@ struct LaunchSplashView: View {
             VStack(spacing: 18) {
                 Image(systemName: "snowflake")
                     .font(.system(size: 54, weight: .bold))
-                    .foregroundStyle(themeManager.palette.primary)
+                    .foregroundStyle(themeManager.palette.primaryText)
                     .neonGlow(themeManager.palette.primary, radius: isPulsing ? 14 : 6)
                     .scaleEffect(isPulsing ? 1.08 : 0.92)
 
                 Text(localizer.language.appName)
                     .font(.system(.title2, design: .rounded).weight(.heavy))
                     .tracking(2)
-                    .foregroundStyle(themeManager.palette.accent)
+                    .foregroundStyle(themeManager.palette.accentText)
                     .neonGlow(themeManager.palette.accent, radius: isPulsing ? 8 : 4)
             }
         }
+        // Always on black, so theme colors resolve to their night variants.
+        .environment(\.colorScheme, .dark)
         .onAppear {
             withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
                 isPulsing = true

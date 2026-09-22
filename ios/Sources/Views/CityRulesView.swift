@@ -49,7 +49,7 @@ struct CityRulesView: View {
                 }
             }
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
     }
 }
 

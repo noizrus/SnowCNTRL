@@ -46,7 +46,7 @@ struct NearbyParkingView: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "parkingsign.circle.fill")
-                                        .foregroundStyle(themeManager.palette.primary)
+                                        .foregroundStyle(themeManager.palette.primaryText)
                                         .font(.title2)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(lot.name)
@@ -77,7 +77,7 @@ struct NearbyParkingView: View {
                 }
             }
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
         .task {
             lots = await NearbyParkingFinder.search(near: coordinate)
             isSearching = false

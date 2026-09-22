@@ -17,20 +17,26 @@ struct ProvinceGridPicker: View {
                 Button {
                     selection = code
                 } label: {
-                    Text(code.displayName(for: localizer.language))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(palette.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .strokeBorder(isSelected ? palette.accent : .clear, lineWidth: 3)
-                        )
+                    HStack(spacing: 4) {
+                        if isSelected {
+                            Image(systemName: "checkmark.circle.fill")
+                        }
+                        Text(code.displayName(for: localizer.language))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(palette.onPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(palette.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(isSelected ? Color.primary : .clear, lineWidth: 3)
+                    )
                 }
+                .buttonStyle(.plain)
             }
         }
     }

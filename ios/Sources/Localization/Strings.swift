@@ -93,6 +93,10 @@ enum LocKey: Hashable {
     case addressEdit
     case addressDelete
     case addressChipsHint
+    case settingsAppearance
+    case mapToggleDayNight
+    case settingsPremiumActive
+    case settingsPremiumDebugToggle
 }
 
 enum Strings {
@@ -502,6 +506,26 @@ enum Strings {
             .french: "Touche pour centrer · maintiens pour modifier ou supprimer",
             .english: "Tap to center · long-press to edit or delete",
             .spanish: "Toca para centrar · mantén pulsado para editar o eliminar",
+        ],
+        .settingsAppearance: [
+            .french: "Mode jour / nuit",
+            .english: "Day / night mode",
+            .spanish: "Modo día / noche",
+        ],
+        .mapToggleDayNight: [
+            .french: "Basculer jour / nuit",
+            .english: "Switch day / night",
+            .spanish: "Cambiar día / noche",
+        ],
+        .settingsPremiumActive: [
+            .french: "Premium actif — sans publicité",
+            .english: "Premium active — no ads",
+            .spanish: "Premium activo — sin anuncios",
+        ],
+        .settingsPremiumDebugToggle: [
+            .french: "Mode premium (test développeur)",
+            .english: "Premium mode (developer test)",
+            .spanish: "Modo premium (prueba de desarrollador)",
         ],
     ]
 

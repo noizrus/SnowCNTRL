@@ -158,6 +158,7 @@ struct TappableMapView: UIViewRepresentable {
                 ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
             view.annotation = annotation
             view.markerTintColor = parent.accentColor
+            view.glyphTintColor = UIColor(ThemePalette.contrastingText(on: Color(uiColor: parent.accentColor)))
             view.glyphImage = UIImage(systemName: "car.fill")
             view.animatesWhenAdded = true
             view.canShowCallout = annotation is SavedSpotAnnotation

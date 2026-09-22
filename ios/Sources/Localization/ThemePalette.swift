@@ -1,9 +1,108 @@
 import SwiftUI
+import UIKit
 
+/// `primary`/`accent` are the raw brand colors — used as fills and glows.
+/// Anything drawn *on* a neutral background (icons, text, tints) must use
+/// `primaryText`/`accentText`, and anything drawn *on* a theme fill must use
+/// `onPrimary`/`onAccent`: some flag colors (Québec's dark blue, its white
+/// accent) are otherwise invisible in day or night mode.
 struct ThemePalette {
     let name: String
     let primary: Color
     let accent: Color
+
+    var onPrimary: Color { Self.contrastingText(on: primary) }
+    var onAccent: Color { Self.contrastingText(on: accent) }
+    var primaryText: Color { Self.readable(primary) }
+    var accentText: Color { Self.readable(accent) }
+
+    /// Black or white, whichever contrasts more with `color`.
+    static func contrastingText(on color: Color) -> Color {
+        let luminance = relativeLuminance(UIColor(color))
+        let contrastWithWhite = 1.05 / (luminance + 0.05)
+        let contrastWithBlack = (luminance + 0.05) / 0.05
+        return contrastWithBlack >= contrastWithWhite ? .black : .white
+    }
+
+    /// `color` lightened in night mode / darkened in day mode just enough to
+    /// reach text contrast (4.5:1) against the system background.
+    static func readable(_ color: Color) -> Color {
+        let base = UIColor(color)
+        return Color(UIColor { traits in
+            let isDark = traits.userInterfaceStyle == .dark
+            let background = isDark ? UIColor(white: 0.11, alpha: 1) : UIColor.white
+            let target: UIColor = isDark ? .white : .black
+            var candidate = base
+            var fraction: CGFloat = 0
+            while contrastRatio(candidate, background) < 4.5, fraction < 1 {
+                fraction += 0.1
+                candidate = mix(base, target, fraction)
+            }
+            return candidate
+        })
+    }
+
+    private static func components(_ color: UIColor) -> (r: CGFloat, g: CGFloat, b: CGFloat) {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (min(max(r, 0), 1), min(max(g, 0), 1), min(max(b, 0), 1))
+    }
+
+    private static func relativeLuminance(_ color: UIColor) -> CGFloat {
+        let c = components(color)
+        func linear(_ v: CGFloat) -> CGFloat {
+            v <= 0.03928 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(c.r) + 0.7152 * linear(c.g) + 0.0722 * linear(c.b)
+    }
+
+    private static func contrastRatio(_ a: UIColor, _ b: UIColor) -> CGFloat {
+        let la = relativeLuminance(a)
+        let lb = relativeLuminance(b)
+        return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+    }
+
+    private static func mix(_ a: UIColor, _ b: UIColor, _ fraction: CGFloat) -> UIColor {
+        let ca = components(a)
+        let cb = components(b)
+        return UIColor(
+            red: ca.r + (cb.r - ca.r) * fraction,
+            green: ca.g + (cb.g - ca.g) * fraction,
+            blue: ca.b + (cb.b - ca.b) * fraction,
+            alpha: 1
+        )
+    }
+}
+
+/// Day / night, chosen in Settings (or following the iPhone).
+enum AppearanceMode: String, CaseIterable, Identifiable, Hashable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var interfaceStyle: UIUserInterfaceStyle {
+        switch self {
+        case .system: return .unspecified
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
+    func label(language: AppLanguage) -> String {
+        switch (self, language) {
+        case (.system, .french): return "Auto"
+        case (.system, .english): return "Auto"
+        case (.system, .spanish): return "Auto"
+        case (.light, .french): return "Jour"
+        case (.light, .english): return "Day"
+        case (.light, .spanish): return "Día"
+        case (.dark, .french): return "Nuit"
+        case (.dark, .english): return "Night"
+        case (.dark, .spanish): return "Noche"
+        }
+    }
 }
 
 extension ProvinceCode {

@@ -6,6 +6,8 @@ import MapKit
 struct DashboardView: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var premiumManager: PremiumManager
+    @Environment(\.colorScheme) private var colorScheme
     @StateObject private var viewModel = DashboardViewModel()
     @StateObject private var locationManager = LocationManager()
     @ObservedObject private var addressStore = AddressStore.shared
@@ -119,7 +121,7 @@ struct DashboardView: View {
                 CityRulesView(city: city)
             }
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
     }
 
     // MARK: - Map overlay
@@ -137,6 +139,12 @@ struct DashboardView: View {
                     MapControlButton(systemImage: "location.fill", accessibilityText: localizer.s(.mapLocateMe)) {
                         isLocating = true
                         locationManager.requestLocation()
+                    }
+                    MapControlButton(
+                        systemImage: colorScheme == .dark ? "sun.max.fill" : "moon.stars.fill",
+                        accessibilityText: localizer.s(.mapToggleDayNight)
+                    ) {
+                        themeManager.appearance = colorScheme == .dark ? .light : .dark
                     }
                     MapControlButton(
                         systemImage: "paintpalette.fill",
@@ -266,11 +274,13 @@ struct DashboardView: View {
                 addressChips
             }
 
-            HStack {
-                Spacer(minLength: 0)
-                AdBannerView()
-                    .frame(width: 320, height: 50)
-                Spacer(minLength: 0)
+            if !premiumManager.isPremium {
+                HStack {
+                    Spacer(minLength: 0)
+                    AdBannerView()
+                        .frame(width: 320, height: 50)
+                    Spacer(minLength: 0)
+                }
             }
         }
         .padding(.horizontal, 16)
@@ -305,22 +315,10 @@ struct DashboardView: View {
     private func actionButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Label(title, systemImage: systemImage)
-                .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(themeManager.palette.accent.opacity(0.18))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(themeManager.palette.accent.opacity(0.45), lineWidth: 1)
-                )
-                .foregroundStyle(themeManager.palette.accent)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette))
     }
 
     @ViewBuilder
@@ -374,13 +372,8 @@ struct DashboardView: View {
                             myAddresses.isEmpty ? localizer.s(.myStreetPickPrompt) : localizer.s(.myStreetAddAnother),
                             systemImage: "plus"
                         )
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill(themeManager.palette.primary))
-                        .foregroundStyle(Color.black)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette, cornerRadius: 100, fillsWidth: false))
                 }
                 .padding(.vertical, 2)
             }
@@ -400,7 +393,7 @@ struct DashboardView: View {
             HStack(spacing: 6) {
                 Image(systemName: "car.fill")
                     .font(.caption)
-                    .foregroundStyle(themeManager.palette.primary)
+                    .foregroundStyle(themeManager.palette.primaryText)
                 Text(address.label)
                     .font(.caption.weight(.medium))
                     .lineLimit(1)
@@ -447,5 +440,6 @@ struct DashboardView_Previews: PreviewProvider {
         DashboardView(city: montreal, onChangeCity: {})
             .environmentObject(Localizer())
             .environmentObject(ThemeManager())
+            .environmentObject(PremiumManager())
     }
 }

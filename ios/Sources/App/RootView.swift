@@ -17,13 +17,27 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
+        .onAppear {
+            themeManager.applyAppearance()
+            syncProvince(with: citySelection.selectedCity)
+        }
+        .onChange(of: citySelection.selectedCity) { city in
+            syncProvince(with: city)
+        }
         .task {
             try? await Task.sleep(nanoseconds: 1_100_000_000)
             withAnimation(.easeOut(duration: 0.4)) {
                 showSplash = false
             }
         }
+    }
+
+    /// The flag theme follows the city actually shown, so there's no
+    /// separate province setting to keep in sync.
+    private func syncProvince(with city: City?) {
+        guard let city, themeManager.province != city.province else { return }
+        themeManager.province = city.province
     }
 
     @ViewBuilder
@@ -54,6 +68,5 @@ struct RootView: View {
                 CitySelectionView(viewModel: citySelection) { _ in }
             }
         }
-        .tint(themeManager.palette.primary)
     }
 }

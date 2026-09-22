@@ -3,12 +3,9 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var premiumManager: PremiumManager
     @AppStorage("snowcntrl.dailyReminder") private var dailyReminderEnabled = false
     let selectedCity: City?
-
-    private var provinceBinding: Binding<ProvinceCode?> {
-        Binding(get: { themeManager.province }, set: { themeManager.province = $0 })
-    }
 
     var body: some View {
         NavigationStack {
@@ -22,9 +19,13 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
 
-                Section(localizer.s(.provincePickerTitle)) {
-                    ProvinceGridPicker(selection: provinceBinding)
-                        .padding(.vertical, 4)
+                Section(localizer.s(.settingsAppearance)) {
+                    Picker(localizer.s(.settingsAppearance), selection: $themeManager.appearance) {
+                        ForEach(AppearanceMode.allCases) { mode in
+                            Text(mode.label(language: localizer.language)).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
                 }
 
                 Section(localizer.s(.settingsTheme)) {
@@ -43,14 +44,21 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    HStack {
-                        Text(localizer.s(.settingsPremiumComingSoonTitle))
-                        Spacer()
-                        Text(localizer.s(.settingsPremiumComingSoonSubtitle))
-                            .foregroundStyle(.secondary)
+                    if premiumManager.isPremium {
+                        Label(localizer.s(.settingsPremiumActive), systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(themeManager.palette.primaryText)
+                    } else {
+                        HStack {
+                            Text(localizer.s(.settingsPremiumComingSoonTitle))
+                            Spacer()
+                            Text(localizer.s(.settingsPremiumComingSoonSubtitle))
+                                .foregroundStyle(.secondary)
+                        }
                     }
+                    #if DEBUG
+                    Toggle(localizer.s(.settingsPremiumDebugToggle), isOn: $premiumManager.isPremium)
+                    #endif
                 }
-                .disabled(true)
 
                 Section(localizer.s(.settingsAboutHeader)) {
                     Text(localizer.s(.settingsAboutBody))
@@ -88,7 +96,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
     }
 
     private func handleReminderToggle(_ enabled: Bool) {
@@ -112,5 +120,6 @@ struct SettingsView_Previews: PreviewProvider {
         SettingsView(selectedCity: CitiesData.all.first { $0.id == "montreal" })
             .environmentObject(Localizer())
             .environmentObject(ThemeManager())
+            .environmentObject(PremiumManager())
     }
 }

@@ -61,17 +61,16 @@ struct OnboardingView: View {
                         onFinished()
                     } label: {
                         Text(localizer.s(.onboardingAcceptButton))
-                            .frame(maxWidth: .infinity)
+                            .font(.headline)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                    .buttonStyle(ThemedFillButtonStyle(palette: themeManager.palette))
                     .disabled(themeManager.province == nil)
                 }
                 .padding()
                 .background(.ultraThinMaterial)
             }
         }
-        .tint(themeManager.palette.primary)
+        .tint(themeManager.palette.primaryText)
     }
 
     /// Shown right after picking a province: which of its cities have
