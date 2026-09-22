@@ -46,12 +46,12 @@ private extension MKMapPoint {
         let dy = b.y - a.y
         let lengthSquared = dx * dx + dy * dy
         guard lengthSquared > 0 else {
-            return MKMetersBetweenMapPoints(self, a)
+            return self.distance(to: a)
         }
         var t = ((x - a.x) * dx + (y - a.y) * dy) / lengthSquared
         t = max(0, min(1, t))
         let projected = MKMapPoint(x: a.x + t * dx, y: a.y + t * dy)
-        return MKMetersBetweenMapPoints(self, projected)
+        return self.distance(to: projected)
     }
 }
 
