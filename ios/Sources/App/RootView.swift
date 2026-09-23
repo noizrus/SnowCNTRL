@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct RootView: View {
+    /// How long the splash stays up — shared with `LaunchSplashView` so its
+    /// loading bar finishes filling exactly as the splash dismisses.
+    static let splashDuration: TimeInterval = 3
+
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
     @StateObject private var onboarding = OnboardingViewModel()
@@ -28,7 +32,7 @@ struct RootView: View {
             syncProvince(with: city)
         }
         .task {
-            try? await Task.sleep(nanoseconds: 1_100_000_000)
+            try? await Task.sleep(nanoseconds: UInt64(Self.splashDuration * 1_000_000_000))
             withAnimation(.easeOut(duration: 0.4)) {
                 showSplash = false
             }

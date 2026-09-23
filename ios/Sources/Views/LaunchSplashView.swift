@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// Branded splash shown for ~1s on cold start: the app logo pulsing in a
-/// neon glow of the theme color, plus the wordmark. Shown as an overlay by
-/// `RootView` before the real content appears. A loading bar makes clear
-/// something is happening on a slow first launch (fresh install: location
-/// permission prompt, GPS fix, first network fetch) rather than looking
-/// stuck on the logo.
+/// Branded splash shown for ~3s on cold start (matching `RootView`'s splash
+/// timer): the app logo pulsing in a neon glow of the theme color, the
+/// wordmark, and a bar that fills over that same ~3s so it reads as an
+/// actual loading step rather than a decorative pause — useful on a slow
+/// first launch (fresh install: location permission prompt, GPS fix, first
+/// network fetch). Shown as an overlay by `RootView` before the real
+/// content appears.
 struct LaunchSplashView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var localizer: Localizer
@@ -25,7 +26,7 @@ struct LaunchSplashView: View {
                     .foregroundStyle(themeManager.palette.accentText)
                     .neonGlow(themeManager.palette.accent, radius: isPulsing ? 8 : 4)
 
-                LoadingBar(color: themeManager.palette.primary)
+                LoadingBar(color: themeManager.palette.primary, duration: RootView.splashDuration)
                     .frame(width: 160, height: 4)
                     .padding(.top, 4)
             }
@@ -40,30 +41,27 @@ struct LaunchSplashView: View {
     }
 }
 
-/// A `ProgressView` in `.linear` style renders as a static, unmoving track
-/// when it has no fraction to show — `UIProgressView` (what it wraps on
-/// iOS) has no indeterminate mode, unlike the default spinner. This draws
-/// the animation by hand: a short highlight sliding back and forth along
-/// the track, the standard look for "working, no known duration".
+/// Fills left to right once over `duration` — a `ProgressView` in `.linear`
+/// style has no indeterminate mode on iOS (unlike the default spinner), it
+/// just sits static, so this is drawn by hand instead.
 private struct LoadingBar: View {
     let color: Color
-    @State private var slideRight = false
+    let duration: Double
+    @State private var progress: CGFloat = 0
 
     var body: some View {
         GeometryReader { geometry in
-            let runnerWidth = geometry.size.width * 0.4
             ZStack(alignment: .leading) {
                 Capsule().fill(color.opacity(0.2))
                 Capsule()
                     .fill(color)
-                    .frame(width: runnerWidth)
-                    .offset(x: slideRight ? geometry.size.width - runnerWidth : 0)
+                    .frame(width: geometry.size.width * progress)
             }
         }
         .clipShape(Capsule())
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
-                slideRight = true
+            withAnimation(.linear(duration: duration)) {
+                progress = 1
             }
         }
     }

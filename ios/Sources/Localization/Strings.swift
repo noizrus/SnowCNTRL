@@ -116,6 +116,7 @@ enum LocKey: Hashable, CaseIterable {
     case helpPoliceNonEmergency
     case helpEmergency
     case helpNoVerifiedNumber
+    case helpReportSignageIssue
     case helpSourceNote
 }
 
@@ -646,6 +647,11 @@ enum Strings {
             .french: "Pas encore de numéro vérifié pour cette ville : contacte ta municipalité ou la police locale (ligne non urgente).",
             .english: "No verified number yet for this city: contact your municipality or the local police (non-emergency line).",
             .spanish: "Aún no hay un número verificado para esta ciudad: contacta a tu municipio o a la policía local (línea no urgente).",
+        ],
+        .helpReportSignageIssue: [
+            .french: "Signaler un problème de signalisation à la ville",
+            .english: "Report a signage issue to the city",
+            .spanish: "Reportar un problema de señalización a la ciudad",
         ],
         .helpSourceNote: [
             .french: "Liens et numéros tirés des sites officiels des villes. En cas de doute, vérifie auprès de ta ville.",

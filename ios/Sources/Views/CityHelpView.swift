@@ -44,6 +44,12 @@ struct CityHelpView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
+                        if let url = city.sourceURL {
+                            Link(destination: url) {
+                                Label(localizer.s(.helpReportSignageIssue), systemImage: "exclamationmark.bubble.fill")
+                            }
+                            .font(.subheadline)
+                        }
                     }
                     callRow(title: localizer.s(.helpEmergency), number: "911", url: URL(string: "tel:911"), isEmergency: true)
                 }

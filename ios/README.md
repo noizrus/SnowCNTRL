@@ -1,5 +1,19 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Barre de chargement qui se remplit (3 s), signaler un problème de signalisation (dernière itération)
+
+- **La barre de chargement se remplit maintenant réellement**, de vide à
+  plein sur ~3 secondes, au lieu du segment qui glissait en boucle sans fin
+  perceptible — `RootView.splashDuration` (3 s) est la seule source de
+  vérité pour la durée de l'écran de démarrage ET de l'animation de la
+  barre, pour qu'elles finissent exactement ensemble.
+- **« Signaler un problème de signalisation à la ville »** (`CityHelpView`) :
+  pour les villes sans numéro vérifié (la plupart des 114 villes, en dehors
+  des 11 déjà documentées dans `CityHelp.swift`), un lien vers le site
+  officiel de la ville apparaît maintenant à côté du message « pas de
+  numéro vérifié », pour signaler directement à la municipalité un problème
+  de signalisation plutôt que de rester bloqué sans rien à faire.
+
 ## Correction : la barre de chargement ne s'animait pas (dernière itération)
 
 - **`ProgressView` en style `.linear` ne s'anime pas sans valeur précise** —
