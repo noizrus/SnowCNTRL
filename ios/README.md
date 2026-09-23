@@ -1,5 +1,19 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Statut visible même très dézoomé (dernière itération)
+
+- **Teinte de couleur sur toute la carte quand c'est trop dézoomé pour les
+  lignes de rue** (`DashboardView.zoomedOutStatusTint`) : au-delà du seuil de
+  zoom où charger/afficher chaque rue individuellement serait trop lourd
+  (`OSMStreetGeometryService.maxSpanDegrees`), la carte affichait juste un
+  message « zoome pour voir » sans aucune couleur. Comme chaque côté de rue
+  reprend de toute façon le statut général de la ville pour l'instant (aucun
+  flux par côté de rue n'est branché, voir `SnowSegmentProviding`), une
+  teinte de cette même couleur sur toute la carte donne exactement la même
+  information d'un coup d'œil, à n'importe quel niveau de zoom, sans rien
+  charger. Le message devient « Zoome pour voir le détail rue par rue »
+  (plus seulement l'état général, qui est maintenant visible tout de suite).
+
 ## Alerte répétée sans limite tant que la voiture n'est pas déplacée (dernière itération)
 
 - **Sonne toutes les 15 min sans s'arrêter** (`AlertNotifier.swift`), tant que
