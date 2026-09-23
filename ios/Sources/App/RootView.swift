@@ -12,7 +12,6 @@ struct RootView: View {
     @State private var skippedGeolocation = false
     @State private var showSplash = true
     @State private var selectedTab: MainTab = .dashboard
-    @State private var isShowingTowedHelp = false
 
     var body: some View {
         ZStack {
@@ -67,25 +66,20 @@ struct RootView: View {
     }
 
     /// Dashboard and Settings behind a custom bottom bar (not the system
-    /// tab bar — its icons can't glow neon), plus the towed-car help sheet
-    /// the bar's third button opens from anywhere. `TabView` (rather than a
-    /// plain switch on `selectedTab`) keeps both screens alive across tab
+    /// tab bar — its icons can't glow neon). `TabView` (rather than a plain
+    /// switch on `selectedTab`) keeps both screens alive across tab
     /// switches, so Dashboard doesn't lose its map position and loaded
     /// streets every time Settings is opened.
     ///
-    /// Each screen declares its own `.safeAreaInset` for the bar (inside its
-    /// own `NavigationStack`) instead of this view declaring one shared
-    /// inset on the `TabView` — an inset added here wasn't reliably
-    /// reaching content nested inside each tab's `NavigationStack`, so
-    /// Dashboard's collapsed panel rendered partly behind the bar.
+    /// Each screen declares its own `.safeAreaInset` for the bar, and its
+    /// own pushed destination for "Aide" (instead of this view declaring
+    /// one shared sheet) — inside its own `NavigationStack` so the bar
+    /// stays visible underneath rather than being covered the way a sheet
+    /// would. An inset/destination added here at the `TabView` level wasn't
+    /// reliably reaching content nested inside each tab's `NavigationStack`.
     private func mainTabs(for city: City) -> some View {
         TabView(selection: $selectedTab) {
-            DashboardView(
-                city: city,
-                selectedTab: $selectedTab,
-                citySelection: citySelection,
-                onShowTowedHelp: { isShowingTowedHelp = true }
-            )
+            DashboardView(city: city, selectedTab: $selectedTab, citySelection: citySelection)
             // "Changer de ville" picks the new city in place (see
             // DashboardView's own pushed city picker) rather than clearing
             // the selection and dropping back to the mandatory first-launch
@@ -96,17 +90,9 @@ struct RootView: View {
             .tag(MainTab.dashboard)
             .toolbar(.hidden, for: .tabBar)
 
-            SettingsView(
-                selectedCity: city,
-                citySelection: citySelection,
-                selectedTab: $selectedTab,
-                onShowTowedHelp: { isShowingTowedHelp = true }
-            )
-            .tag(MainTab.settings)
-            .toolbar(.hidden, for: .tabBar)
-        }
-        .sheet(isPresented: $isShowingTowedHelp) {
-            CityHelpView(city: city)
+            SettingsView(selectedCity: city, citySelection: citySelection, selectedTab: $selectedTab)
+                .tag(MainTab.settings)
+                .toolbar(.hidden, for: .tabBar)
         }
     }
 }

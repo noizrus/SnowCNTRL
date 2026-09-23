@@ -32,7 +32,6 @@ struct DashboardView: View {
     @Binding var selectedTab: MainTab
     @ObservedObject var citySelection: CitySelectionViewModel
     let city: City
-    var onShowTowedHelp: () -> Void
 
     /// A marker placed by tapping the map but not added yet.
     private struct PendingAlert {
@@ -42,11 +41,10 @@ struct DashboardView: View {
         var label: String?
     }
 
-    init(city: City, selectedTab: Binding<MainTab>, citySelection: CitySelectionViewModel, onShowTowedHelp: @escaping () -> Void) {
+    init(city: City, selectedTab: Binding<MainTab>, citySelection: CitySelectionViewModel) {
         self.city = city
         self._selectedTab = selectedTab
         self.citySelection = citySelection
-        self.onShowTowedHelp = onShowTowedHelp
         _region = State(initialValue: MKCoordinateRegion(
             center: city.approximateCoordinate,
             span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
@@ -132,9 +130,6 @@ struct DashboardView: View {
             .onReceive(locationManager.$lastLocation) { coordinate in
                 handleLocationUpdate(coordinate)
             }
-            .sheet(isPresented: $isShowingCityHelp) {
-                CityHelpView(city: city)
-            }
             .sheet(isPresented: $isShowingCityRules) {
                 CityRulesView(city: city)
             }
@@ -157,7 +152,7 @@ struct DashboardView: View {
                 // inside here, which the collapsed panel (just the status
                 // pill) then rendered partly behind the bottom bar.
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    MainBottomBar(selectedTab: $selectedTab, onShowTowedHelp: onShowTowedHelp)
+                    MainBottomBar(selectedTab: $selectedTab, onShowTowedHelp: { isShowingCityHelp = true })
                 }
                 // Pushed into this same stack (not a sheet) so "Changer de
                 // ville" gets a normal back button and keeps the bottom bar
@@ -167,6 +162,13 @@ struct DashboardView: View {
                         citySelection.select(newCity)
                         isShowingCityPicker = false
                     }
+                }
+                // Same reasoning as "Changer de ville" above: pushed, not
+                // sheeted, so the bottom bar stays visible when "Aide" is
+                // opened (from the bar itself, the panel button, or the map
+                // legend — all three share this state).
+                .navigationDestination(isPresented: $isShowingCityHelp) {
+                    CityHelpView(city: city)
                 }
         }
     }
@@ -795,7 +797,7 @@ struct DashboardView: View {
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
         let montreal = CitiesData.all.first { $0.id == "montreal" }!
-        DashboardView(city: montreal, selectedTab: .constant(.dashboard), citySelection: CitySelectionViewModel(), onShowTowedHelp: {})
+        DashboardView(city: montreal, selectedTab: .constant(.dashboard), citySelection: CitySelectionViewModel())
             .environmentObject(Localizer())
             .environmentObject(ThemeManager())
             .environmentObject(PremiumManager())

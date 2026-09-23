@@ -7,10 +7,10 @@ struct SettingsView: View {
     @AppStorage("snowcntrl.dailyReminder") private var dailyReminderEnabled = false
     @AppStorage(CityStatusService.simulateBanKey) private var isSimulatingBan = false
     @AppStorage(AlertRingDuration.storageKey) private var alertRingDurationSeconds = AlertRingDuration.default.rawValue
+    @State private var isShowingCityHelp = false
     let selectedCity: City?
     @ObservedObject var citySelection: CitySelectionViewModel
     @Binding var selectedTab: MainTab
-    var onShowTowedHelp: () -> Void
 
     var body: some View {
         NavigationStack {
@@ -142,7 +142,14 @@ struct SettingsView: View {
             }
             .themedNavigationBar(themeManager.palette)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                MainBottomBar(selectedTab: $selectedTab, onShowTowedHelp: onShowTowedHelp)
+                MainBottomBar(selectedTab: $selectedTab, onShowTowedHelp: { isShowingCityHelp = true })
+            }
+            // Pushed (not sheeted) so the bottom bar stays visible
+            // underneath, same reasoning as Dashboard's own "Aide".
+            .navigationDestination(isPresented: $isShowingCityHelp) {
+                if let selectedCity {
+                    CityHelpView(city: selectedCity)
+                }
             }
         }
         .tint(themeManager.palette.primaryText)
@@ -166,7 +173,7 @@ struct SettingsView: View {
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView(selectedCity: CitiesData.all.first { $0.id == "montreal" }, citySelection: CitySelectionViewModel(), selectedTab: .constant(.settings), onShowTowedHelp: {})
+        SettingsView(selectedCity: CitiesData.all.first { $0.id == "montreal" }, citySelection: CitySelectionViewModel(), selectedTab: .constant(.settings))
             .environmentObject(Localizer())
             .environmentObject(ThemeManager())
             .environmentObject(PremiumManager())

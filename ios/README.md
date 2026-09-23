@@ -1,5 +1,19 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Barre du bas visible en ouvrant Aide (dernière itération)
+
+- **« Aide » ne cache plus la barre du bas** (`CityHelpView`) : elle
+  s'affichait en plein écran par-dessus tout, barre du bas comprise, comme
+  n'importe quelle feuille modale. `CityHelpView` a perdu son propre
+  `NavigationStack` et devient un écran poussé dans la pile de navigation de
+  l'écran qui l'ouvre (Tableau de bord ou Réglages) — même principe que
+  « Changer de ville » : bouton retour standard, et la barre du bas reste
+  visible en dessous puisqu'on ne quitte jamais cet écran. Les trois points
+  d'entrée du Tableau de bord (bouton du panneau, légende de la carte, barre
+  du bas) partagent maintenant le même état plutôt que d'utiliser deux
+  mécanismes différents (l'ancien passait par une feuille au niveau du
+  `TabView` dans `RootView`, retirée).
+
 ## Retour en arrière : uniquement les rues avec leur couleur, rien d'autre (dernière itération)
 
 - **Retiré le cercle de statut affiché en dézoomant** (`CityStatusCircle`,
