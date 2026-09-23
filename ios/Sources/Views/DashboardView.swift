@@ -148,13 +148,13 @@ struct DashboardView: View {
         }
     }
 
-    /// Fixed default, spelled out as a stored constant rather than an
-    /// inline arithmetic expression — one less thing for the type-checker
-    /// to resolve as part of the TappableMapView call below.
-    private var compassTopInset: CGFloat {
-        // 8 pt top padding + four 44 pt buttons + three 10 pt gaps + 12 pt.
-        8 + 4 * 44 + 3 * 10 + 12
-    }
+    /// 8 pt top padding + four 44 pt buttons + three 10 pt gaps + 12 pt
+    /// spacing = 226. Written as a single literal, not the arithmetic
+    /// expression it comes from — mixing `+` and `*` across several
+    /// integer literals made the type-checker time out (too many numeric
+    /// operator overloads to resolve in one constraint system, a known
+    /// Swift pitfall with SwiftUI/MapKit imported).
+    private var compassTopInset: CGFloat { 226 }
 
     private var mapStack: some View {
         ZStack(alignment: .bottom) {
