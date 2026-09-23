@@ -17,21 +17,25 @@ struct AppLogoImage: View {
 }
 
 /// The permanent brand shown at the top of every main screen: the logo plus
-/// "NEIGE CNTRL" (French) or "SNOW CNTRL", glowing in the theme's accent.
+/// "NEIGE CNTRL" (French) or "SNOW CNTRL", glowing in the theme's primary
+/// color. Always sits on the navigation bar's own accent-colored background
+/// (see `themedNavigationBar`), so its text uses `onAccent` — the color
+/// that contrasts with that exact background — rather than a variant tuned
+/// for the plain system background.
 struct SnowCntrlBrandmark: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var localizer: Localizer
 
     var body: some View {
-        HStack(spacing: 6) {
-            AppLogoImage(size: 24)
+        HStack(spacing: 8) {
+            AppLogoImage(size: 32)
             Text(localizer.language.appName)
                 .font(.system(.caption2, design: .rounded).weight(.heavy))
                 .tracking(0.6)
                 .lineLimit(1)
                 .fixedSize()
-                .foregroundStyle(themeManager.palette.accentText)
-                .neonGlow(themeManager.palette.accent, radius: 3)
+                .foregroundStyle(themeManager.palette.onAccent)
+                .neonGlow(themeManager.palette.primary, radius: 3)
         }
         .accessibilityElement(children: .combine)
     }

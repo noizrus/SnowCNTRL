@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LegalDocumentView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
     let title: String
     let body_: String
 
@@ -13,6 +14,7 @@ struct LegalDocumentView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .themedNavigationBar(themeManager.palette)
     }
 }
 
@@ -24,5 +26,6 @@ struct LegalDocumentView_Previews: PreviewProvider {
                 body_: LegalTexts.privacyPolicy(language: .french, contactEmail: SupportConfig.contactEmail)
             )
         }
+        .environmentObject(ThemeManager())
     }
 }

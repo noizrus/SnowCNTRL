@@ -60,8 +60,12 @@ struct CityHelpView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 0) {
-                        Text(localizer.s(.helpTitle)).font(.headline)
-                        Text(city.name).font(.caption).foregroundStyle(.secondary)
+                        Text(localizer.s(.helpTitle))
+                            .font(.headline)
+                            .foregroundStyle(themeManager.palette.onAccent)
+                        Text(city.name)
+                            .font(.caption)
+                            .foregroundStyle(themeManager.palette.onAccent.opacity(0.75))
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -69,9 +73,11 @@ struct CityHelpView: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
+                            .foregroundStyle(themeManager.palette.onAccent)
                     }
                 }
             }
+            .themedNavigationBar(themeManager.palette)
         }
         .tint(themeManager.palette.primaryText)
     }

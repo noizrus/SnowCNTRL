@@ -45,9 +45,11 @@ struct CityRulesView: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
+                            .foregroundStyle(themeManager.palette.onAccent)
                     }
                 }
             }
+            .themedNavigationBar(themeManager.palette)
         }
         .tint(themeManager.palette.primaryText)
     }

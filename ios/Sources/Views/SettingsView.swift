@@ -137,6 +137,7 @@ struct SettingsView: View {
                     SnowCntrlBrandmark()
                 }
             }
+            .themedNavigationBar(themeManager.palette)
         }
         .tint(themeManager.palette.primaryText)
     }

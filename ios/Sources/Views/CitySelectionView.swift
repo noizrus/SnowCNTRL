@@ -16,6 +16,7 @@ struct CitySelectionView: View {
                     SnowCntrlBrandmark()
                 }
             }
+            .themedNavigationBar(themeManager.palette)
         }
         .tint(themeManager.palette.primaryText)
     }
@@ -25,6 +26,7 @@ struct CitySelectionView: View {
 /// app opens on.
 struct DefaultCityPickerView: View {
     @EnvironmentObject private var localizer: Localizer
+    @EnvironmentObject private var themeManager: ThemeManager
     @ObservedObject var viewModel: CitySelectionViewModel
     @Environment(\.dismiss) private var dismiss
 
@@ -42,9 +44,11 @@ struct DefaultCityPickerView: View {
                         viewModel.setFavorite(nil)
                         dismiss()
                     }
+                    .tint(themeManager.palette.onAccent)
                 }
             }
         }
+        .themedNavigationBar(themeManager.palette)
     }
 }
 

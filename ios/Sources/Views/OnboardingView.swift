@@ -50,6 +50,7 @@ struct OnboardingView: View {
                     SnowCntrlBrandmark()
                 }
             }
+            .themedNavigationBar(themeManager.palette)
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 6) {
                     if themeManager.province == nil {

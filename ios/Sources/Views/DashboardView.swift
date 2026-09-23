@@ -145,6 +145,7 @@ struct DashboardView: View {
                 .navigationTitle(city.name)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbarContent }
+                .themedNavigationBar(themeManager.palette)
         }
     }
 
@@ -193,15 +194,16 @@ struct DashboardView: View {
 
     private var titleToolbarContent: some View {
         HStack(spacing: 8) {
-            AppLogoImage(size: 30)
+            AppLogoImage(size: 34)
             VStack(alignment: .leading, spacing: 0) {
                 Text(localizer.language.appName)
                     .font(.system(.caption2, design: .rounded).weight(.heavy))
                     .tracking(0.6)
-                    .foregroundStyle(themeManager.palette.accentText)
+                    .foregroundStyle(themeManager.palette.onAccent)
                 Text(city.name)
                     .font(.headline)
                     .lineLimit(1)
+                    .foregroundStyle(themeManager.palette.onAccent)
             }
         }
         .accessibilityElement(children: .combine)
@@ -213,6 +215,7 @@ struct DashboardView: View {
         } label: {
             ZStack(alignment: .topTrailing) {
                 Image(systemName: "list.bullet")
+                    .foregroundStyle(themeManager.palette.onAccent)
                 if !myAddresses.isEmpty {
                     Circle()
                         .fill(themeManager.palette.primary)

@@ -13,20 +13,19 @@ struct GeoLocatingView: View {
     var onManualFallback: () -> Void
 
     var body: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .controlSize(.large)
-            Text(localizer.s(.onboardingLocating))
-                .font(.headline)
+        VStack(spacing: 0) {
+            topBar
+            VStack(spacing: 20) {
+                ProgressView()
+                    .controlSize(.large)
+                Text(localizer.s(.onboardingLocating))
+                    .font(.headline)
 
-            Button(localizer.s(.onboardingLocationFallback), action: onManualFallback)
-                .buttonStyle(.bordered)
-                .padding(.top, 8)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .top) {
-            SnowCntrlBrandmark()
-                .padding(.top, 12)
+                Button(localizer.s(.onboardingLocationFallback), action: onManualFallback)
+                    .buttonStyle(.bordered)
+                    .padding(.top, 8)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .tint(themeManager.palette.primaryText)
         .onAppear { locationManager.requestLocation() }
@@ -34,6 +33,17 @@ struct GeoLocatingView: View {
             guard let coordinate, let city = CityResolver.nearestCity(to: coordinate) else { return }
             onResolved(city)
         }
+    }
+
+    /// No `NavigationStack` on this screen (no back button, no push
+    /// navigation), so there's no real navigation bar to recolor — this
+    /// stands in for one, matching every other screen's navy top bar.
+    private var topBar: some View {
+        SnowCntrlBrandmark()
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(themeManager.palette.accent)
+            .ignoresSafeArea(edges: .top)
     }
 }
 

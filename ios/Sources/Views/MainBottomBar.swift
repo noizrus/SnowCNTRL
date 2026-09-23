@@ -12,7 +12,9 @@ enum MainTab: Hashable {
 /// neon glow (map buttons, status pill, theme picker), so the bar that's
 /// visible on every screen should glow too. Sits as a `.safeAreaInset` so
 /// both tabs' own content lays out above it exactly like it did above the
-/// system tab bar.
+/// system tab bar. Same accent-colored background as the top navigation
+/// bar (`themedNavigationBar`), so switching themes recolors both bars
+/// together.
 struct MainBottomBar: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
@@ -32,10 +34,10 @@ struct MainBottomBar: View {
 
     private var barBackground: some View {
         Rectangle()
-            .fill(.bar)
+            .fill(themeManager.palette.accent)
             .overlay(alignment: .top) {
                 Rectangle()
-                    .fill(Color(.separator))
+                    .fill(themeManager.palette.onAccent.opacity(0.15))
                     .frame(height: 0.5)
             }
             .ignoresSafeArea(edges: .bottom)
@@ -43,13 +45,14 @@ struct MainBottomBar: View {
 
     private func tabButton(tab: MainTab, systemImage: String, title: String) -> some View {
         let isSelected = selectedTab == tab
+        let onAccent = themeManager.palette.onAccent
         return Button {
             selectedTab = tab
         } label: {
             barItem(
                 systemImage: systemImage,
                 title: title,
-                color: isSelected ? themeManager.palette.primary : .secondary,
+                color: isSelected ? onAccent : onAccent.opacity(0.5),
                 glowRadius: isSelected ? 6 : 0
             )
         }
@@ -64,7 +67,7 @@ struct MainBottomBar: View {
             barItem(
                 systemImage: "car.fill",
                 title: localizer.s(.tabHelp),
-                color: themeManager.palette.primary,
+                color: themeManager.palette.onAccent,
                 glowRadius: 6
             )
         }
@@ -80,7 +83,7 @@ struct MainBottomBar: View {
                 .font(.caption2.weight(.semibold))
         }
         .foregroundStyle(color)
-        .neonGlow(color, radius: glowRadius)
+        .neonGlow(themeManager.palette.primary, radius: glowRadius)
     }
 }
 

@@ -1,5 +1,25 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Barres du haut et du bas bleu marine, logo agrandi, thèmes qui changent tout (dernière itération)
+
+- **Barre du haut bleu marine** (`ThemedNavigationBar.swift`, `themedNavigationBar(_:)`) :
+  la barre de navigation de chaque écran (Onboarding, Réglages, Sélection de ville,
+  Tableau de bord, Mes alertes, Aide, Comment ça marche ici, textes légaux) est
+  maintenant peinte dans la couleur d'accent du thème actif — marine par défaut,
+  comme le fond du logo — au lieu de la barre système transparente. La
+  Géolocalisation n'a pas de vraie barre de navigation (pas de retour, pas
+  d'empilement) : une barre marine du même style est simulée en haut de l'écran.
+- **Barre du bas assortie** (`MainBottomBar.swift`) : même couleur d'accent que la
+  barre du haut, pour que les deux se répondent visuellement.
+- **Logo agrandi** dans le bandeau (`SnowCntrlBrandmark`, 24 → 32 pt) et dans le
+  titre du Tableau de bord (30 → 34 pt).
+- **Les thèmes changent vraiment tout maintenant** : comme la barre du haut, la
+  barre du bas et le bandeau utilisent tous la couleur d'accent/primaire du thème
+  actif (`ThemePalette.onAccent` pour le texte/les icônes, contraste calculé
+  automatiquement en noir ou blanc selon la couleur), choisir un autre thème dans
+  Réglages recolore désormais ces deux barres, pas seulement les boutons de la
+  carte et la pastille de statut.
+
 ## Nouveau logo, thème par défaut, barre du bas néon (dernière itération)
 
 - **Nouveau logo** (fond marine `#082340`, voiture/déneigeuse orange `#fb6600`,
