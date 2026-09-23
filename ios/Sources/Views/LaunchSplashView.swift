@@ -25,10 +25,8 @@ struct LaunchSplashView: View {
                     .foregroundStyle(themeManager.palette.accentText)
                     .neonGlow(themeManager.palette.accent, radius: isPulsing ? 8 : 4)
 
-                ProgressView()
-                    .progressViewStyle(.linear)
-                    .tint(themeManager.palette.primary)
-                    .frame(maxWidth: 160)
+                LoadingBar(color: themeManager.palette.primary)
+                    .frame(width: 160, height: 4)
                     .padding(.top, 4)
             }
         }
@@ -37,6 +35,35 @@ struct LaunchSplashView: View {
         .onAppear {
             withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
                 isPulsing = true
+            }
+        }
+    }
+}
+
+/// A `ProgressView` in `.linear` style renders as a static, unmoving track
+/// when it has no fraction to show — `UIProgressView` (what it wraps on
+/// iOS) has no indeterminate mode, unlike the default spinner. This draws
+/// the animation by hand: a short highlight sliding back and forth along
+/// the track, the standard look for "working, no known duration".
+private struct LoadingBar: View {
+    let color: Color
+    @State private var slideRight = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            let runnerWidth = geometry.size.width * 0.4
+            ZStack(alignment: .leading) {
+                Capsule().fill(color.opacity(0.2))
+                Capsule()
+                    .fill(color)
+                    .frame(width: runnerWidth)
+                    .offset(x: slideRight ? geometry.size.width - runnerWidth : 0)
+            }
+        }
+        .clipShape(Capsule())
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
+                slideRight = true
             }
         }
     }

@@ -1,5 +1,15 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Correction : la barre de chargement ne s'animait pas (dernière itération)
+
+- **`ProgressView` en style `.linear` ne s'anime pas sans valeur précise** —
+  `UIProgressView`, ce qu'il utilise sous iOS, n'a pas de mode indéterminé
+  (contrairement au spinner circulaire par défaut) : la barre ajoutée
+  précédemment restait donc figée. Remplacée par une barre dessinée à la
+  main (`LoadingBar` dans `LaunchSplashView.swift`) : un segment glisse
+  d'un bout à l'autre en boucle, l'apparence standard « en cours, durée
+  inconnue ».
+
 ## Barre de chargement à l'ouverture (dernière itération)
 
 - **Barre de chargement sur l'écran de démarrage** (`LaunchSplashView`) : un
