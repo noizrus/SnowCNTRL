@@ -141,41 +141,53 @@ struct DashboardView: View {
 
     private var content: some View {
         NavigationStack {
-            ZStack(alignment: .bottom) {
-                TappableMapView(
-                    region: $region,
-                    pinCoordinate: .constant(pendingAlert?.coordinate),
-                    accentColor: UIColor(themeManager.palette.primary),
-                    segments: segments,
-                    readOnlyPins: myAddresses,
-                    highlightedSegmentIDs: highlightedSideIDs,
-                    onTap: handleMapTap,
-                    onSelectPin: selectAlert,
-                    // Below the map buttons column: 8 pt top padding + four
-                    // 44 pt buttons + three 10 pt gaps + 12 pt spacing.
-                    compassTopInset: 8 + 4 * 44 + 3 * 10 + 12
-                )
-                .ignoresSafeArea(edges: .top)
+            mapStack
+                .navigationTitle(city.name)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { toolbarContent }
+        }
+    }
 
-                mapOverlay
+    /// Fixed default, spelled out as a stored constant rather than an
+    /// inline arithmetic expression — one less thing for the type-checker
+    /// to resolve as part of the TappableMapView call below.
+    private var compassTopInset: CGFloat {
+        // 8 pt top padding + four 44 pt buttons + three 10 pt gaps + 12 pt.
+        8 + 4 * 44 + 3 * 10 + 12
+    }
 
-                bottomPanel
-            }
-            .navigationTitle(city.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                // Leading/trailing are icon-only now, so there's room for
-                // the wordmark above the city name instead of squeezing it
-                // into a corner.
-                ToolbarItem(placement: .principal) {
-                    titleToolbarContent
-                }
-                // Info-Neige puts its favorites list top-left — same spot,
-                // same idea: every alert in one place.
-                ToolbarItem(placement: .navigationBarLeading) {
-                    alertsListToolbarButton
-                }
-            }
+    private var mapStack: some View {
+        ZStack(alignment: .bottom) {
+            TappableMapView(
+                region: $region,
+                pinCoordinate: .constant(pendingAlert?.coordinate),
+                accentColor: UIColor(themeManager.palette.primary),
+                segments: segments,
+                readOnlyPins: myAddresses,
+                highlightedSegmentIDs: highlightedSideIDs,
+                onTap: handleMapTap,
+                onSelectPin: selectAlert,
+                compassTopInset: compassTopInset
+            )
+            .ignoresSafeArea(edges: .top)
+
+            mapOverlay
+
+            bottomPanel
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        // Leading/trailing are icon-only now, so there's room for the
+        // wordmark above the city name instead of squeezing it into a corner.
+        ToolbarItem(placement: .principal) {
+            titleToolbarContent
+        }
+        // Info-Neige puts its favorites list top-left — same spot, same
+        // idea: every alert in one place.
+        ToolbarItem(placement: .navigationBarLeading) {
+            alertsListToolbarButton
         }
     }
 
