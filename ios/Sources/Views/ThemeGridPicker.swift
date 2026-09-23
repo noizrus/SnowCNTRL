@@ -5,7 +5,6 @@ import SwiftUI
 struct ThemeGridPicker: View {
     @Binding var selection: AppTheme
     @EnvironmentObject private var localizer: Localizer
-    @EnvironmentObject private var themeManager: ThemeManager
 
     private let columns = [GridItem(.adaptive(minimum: 140), spacing: 10)]
 
@@ -13,7 +12,7 @@ struct ThemeGridPicker: View {
         LazyVGrid(columns: columns, spacing: 10) {
             ForEach(AppTheme.allCases) { theme in
                 let isSelected = selection == theme
-                let color = theme.curatedPalette?.primary ?? (themeManager.province?.flagPalette.primary ?? .gray)
+                let color = theme.curatedPalette?.primary ?? ThemePalette.brandDefault.primary
 
                 Button {
                     selection = theme
@@ -23,7 +22,7 @@ struct ThemeGridPicker: View {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
                         } else if theme == .automatic {
-                            Image(systemName: "location.fill")
+                            Image(systemName: "star.fill")
                                 .font(.caption)
                         }
                         Text(theme.label(language: localizer.language))

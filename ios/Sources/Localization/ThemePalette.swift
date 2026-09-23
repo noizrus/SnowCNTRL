@@ -11,6 +11,14 @@ struct ThemePalette {
     let primary: Color
     let accent: Color
 
+    /// The app's own colors, sampled from the logo (navy background, orange
+    /// car) — the default theme, independent of province.
+    static let brandDefault = ThemePalette(
+        name: "SnowCNTRL",
+        primary: Color(red: 0.984, green: 0.400, blue: 0.0),
+        accent: Color(red: 0.031, green: 0.137, blue: 0.251)
+    )
+
     var onPrimary: Color { Self.contrastingText(on: primary) }
     var onAccent: Color { Self.contrastingText(on: accent) }
     var primaryText: Color { Self.readable(primary) }
@@ -110,8 +118,10 @@ enum AppearanceMode: String, CaseIterable, Identifiable, Hashable {
 }
 
 extension ProvinceCode {
-    /// Approximate colors inspired by each province/territory's flag —
-    /// decorative branding, not an official reproduction.
+    /// Approximate colors inspired by each province/territory's flag — used
+    /// only to color that province's chip in the onboarding picker, not for
+    /// the app's own theme (which defaults to the logo's colors regardless
+    /// of province).
     var flagPalette: ThemePalette {
         switch self {
         case .qc: return ThemePalette(name: "Québec", primary: Color(red: 0.02, green: 0.25, blue: 0.65), accent: .white)
@@ -131,10 +141,11 @@ extension ProvinceCode {
     }
 }
 
-/// Ten selectable looks: "Automatique" follows the user's province, the
-/// rest are curated neon palettes (plus two seasonal ones) — all rendered
-/// with the same glow treatment (see NeonGlow.swift) so switching themes
-/// never changes what a color *means* (tier/status colors are separate).
+/// Ten selectable looks: "Automatique" is the app's own brand colors (from
+/// the logo), the rest are curated neon palettes (plus two seasonal ones) —
+/// all rendered with the same glow treatment (see NeonGlow.swift) so
+/// switching themes never changes what a color *means* (tier/status colors
+/// are separate).
 enum AppTheme: String, Codable, CaseIterable, Identifiable, Hashable {
     case automatic
     case aurora
@@ -151,9 +162,9 @@ enum AppTheme: String, Codable, CaseIterable, Identifiable, Hashable {
 
     func label(language: AppLanguage) -> String {
         switch (self, language) {
-        case (.automatic, .french): return "Automatique (ma province)"
-        case (.automatic, .english): return "Automatic (my province)"
-        case (.automatic, .spanish): return "Automático (mi provincia)"
+        case (.automatic, .french): return "SnowCNTRL (par défaut)"
+        case (.automatic, .english): return "SnowCNTRL (default)"
+        case (.automatic, .spanish): return "SnowCNTRL (predeterminado)"
         case (.aurora, .french): return "Aurore boréale"
         case (.aurora, .english): return "Aurora"
         case (.aurora, .spanish): return "Aurora boreal"
@@ -187,7 +198,7 @@ enum AppTheme: String, Codable, CaseIterable, Identifiable, Hashable {
     var curatedPalette: ThemePalette? {
         switch self {
         case .automatic:
-            return nil
+            return .brandDefault
         case .aurora:
             return ThemePalette(name: "Aurore boréale", primary: Color(red: 0.0, green: 0.85, blue: 0.85), accent: Color(red: 0.60, green: 0.25, blue: 1.0))
         case .blizzard:

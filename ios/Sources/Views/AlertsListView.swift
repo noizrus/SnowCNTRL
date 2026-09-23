@@ -2,8 +2,9 @@ import SwiftUI
 import MapKit
 
 /// The favorites list opened from the top-left button — same idea as
-/// Info-Neige's own list icon: every alert in one place, swipe to remove,
-/// tap to jump to it on the map.
+/// Info-Neige's own list icon: every alert in one place, tap to jump to
+/// it on the map. Deleting is a visible trash button on every row (plus
+/// the standard swipe-to-delete), not just a hidden gesture.
 struct AlertsListView: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
@@ -32,24 +33,42 @@ struct AlertsListView: View {
                 } else {
                     List {
                         ForEach(alerts) { alert in
-                            Button {
-                                dismiss()
-                                onSelect(alert)
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Circle()
-                                        .fill(currentStatus.neonColor)
-                                        .frame(width: 12, height: 12)
-                                        .shadow(color: currentStatus.neonColor, radius: 4)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(alert.label)
-                                            .foregroundStyle(.primary)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                        Text(currentStatus.label(language: localizer.language))
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                            HStack(spacing: 12) {
+                                Button {
+                                    dismiss()
+                                    onSelect(alert)
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Circle()
+                                            .fill(currentStatus.neonColor)
+                                            .frame(width: 12, height: 12)
+                                            .shadow(color: currentStatus.neonColor, radius: 4)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(alert.label)
+                                                .foregroundStyle(.primary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                            Text(currentStatus.label(language: localizer.language))
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
                                     }
                                 }
+                                .buttonStyle(.plain)
+
+                                Spacer(minLength: 8)
+
+                                // A visible delete button on every row, not
+                                // just the swipe gesture — easy to find, not
+                                // something the user has to discover.
+                                Button {
+                                    onRemove(alert)
+                                } label: {
+                                    Image(systemName: "trash.circle.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(.red, Color.red.opacity(0.15))
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(localizer.s(.alertRemove))
                             }
                             .swipeActions {
                                 Button(role: .destructive) {
@@ -65,6 +84,9 @@ struct AlertsListView: View {
             .navigationTitle(localizer.s(.alertsListTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    SnowCntrlBrandmark()
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         dismiss()

@@ -38,6 +38,7 @@ enum LocKey: Hashable, CaseIterable {
     case disclaimerTierNA
 
     case tabDashboard
+    case tabHelp
     case tabSettings
 
     case settingsTitle
@@ -285,6 +286,11 @@ enum Strings {
             .french: "Alertes",
             .english: "Alerts",
             .spanish: "Alertas",
+        ],
+        .tabHelp: [
+            .french: "Aide",
+            .english: "Help",
+            .spanish: "Ayuda",
         ],
         .tabSettings: [
             .french: "Réglages",

@@ -12,7 +12,7 @@ struct CitySelectionView: View {
             }
             .navigationTitle(localizer.s(.citySelectionTitle))
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .principal) {
                     SnowCntrlBrandmark()
                 }
             }

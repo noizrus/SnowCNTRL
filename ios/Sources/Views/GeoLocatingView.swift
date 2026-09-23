@@ -24,9 +24,9 @@ struct GeoLocatingView: View {
                 .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .topLeading) {
+        .overlay(alignment: .top) {
             SnowCntrlBrandmark()
-                .padding()
+                .padding(.top, 12)
         }
         .tint(themeManager.palette.primaryText)
         .onAppear { locationManager.requestLocation() }

@@ -46,7 +46,7 @@ struct OnboardingView: View {
                 .padding(20)
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .principal) {
                     SnowCntrlBrandmark()
                 }
             }

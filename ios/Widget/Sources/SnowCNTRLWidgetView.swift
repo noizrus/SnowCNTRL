@@ -65,7 +65,7 @@ struct SnowCNTRLWidgetEntryView: View {
     /// The alert's street when there is one, the city otherwise.
     private var placeText: String? { entry.alertLabel ?? entry.cityName }
     private var accent: Color {
-        guard let rgb = entry.accentRGB, rgb.count == 3 else { return Color(red: 0.85, green: 0.34, blue: 0.12) }
+        guard let rgb = entry.accentRGB, rgb.count == 3 else { return Color(red: 0.984, green: 0.400, blue: 0.0) }
         return Color(red: rgb[0], green: rgb[1], blue: rgb[2])
     }
 

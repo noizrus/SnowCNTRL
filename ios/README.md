@@ -1,5 +1,36 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Nouveau logo, thème par défaut, barre du bas néon (dernière itération)
+
+- **Nouveau logo** (fond marine `#082340`, voiture/déneigeuse orange `#fb6600`,
+  flocons blancs, feuille d'érable sur la lame) : remplace l'icône et le logo
+  interne partout (`Assets.xcassets/AppIcon.appiconset` des deux cibles,
+  `AppLogo.imageset` de l'app et du widget). Image déjà carrée et plate, pas de
+  découpe de cadre nécessaire cette fois.
+- **Thème par défaut = couleurs du logo, plus lié à la province** :
+  `ThemePalette.brandDefault` (orange `#fb6600` / marine `#082340`, extraits du
+  logo) remplace l'ancien orange générique. Le thème « Automatique » retourne
+  maintenant toujours ce thème (`ThemeManager.palette`), au lieu de suivre la
+  province choisie/géolocalisée. La province reste suivie (`syncProvince` dans
+  `RootView`) uniquement pour l'aperçu des villes par province à l'onboarding —
+  elle ne pilote plus aucune couleur de l'app.
+- **Logo affiché en permanence, centré en haut, sur tous les écrans** :
+  Onboarding, Réglages, Sélection de ville, Géolocalisation, Tableau de bord et
+  **Mes alertes** ont tous le bandeau `SnowCntrlBrandmark` en position centrale
+  (`.principal`) — avant, certains l'avaient en haut à gauche ou pas du tout.
+- **Suppression facile dans Mes alertes** (`AlertsListView`) : chaque alerte a
+  maintenant un bouton corbeille visible directement sur la ligne (en plus du
+  glisser-pour-retirer existant), pour ne plus dépendre d'un geste caché.
+- **Barre du bas personnalisée, néon** (`MainBottomBar.swift`) : remplace la
+  barre d'onglets système (ses icônes ne peuvent pas briller). Alertes,
+  Réglages et un nouveau bouton **Aide** (voiture remorquée, `car.fill`) —
+  celui du milieu, toujours accessible peu importe la ville affichée. Les
+  icônes s'allument en néon dans la couleur du thème (glow permanent sur
+  Aide, glow à l'activation sur Alertes/Réglages). `RootView` garde les deux
+  écrans vivants dans un `TabView` cachée (`.toolbar(.hidden, for: .tabBar)`)
+  pour ne pas perdre la position de la carte en changeant d'onglet, et pose la
+  barre custom en `.safeAreaInset` par-dessus.
+
 ## Voiture remorquée, ville par défaut, villes par distance (dernière itération)
 
 - **« Voiture remorquée ? »** (`CityHelpView`, données dans `Data/CityHelp.swift`) :

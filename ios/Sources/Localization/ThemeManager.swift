@@ -8,8 +8,9 @@ final class ThemeManager: ObservableObject {
     @Published var selectedTheme: AppTheme {
         didSet { UserDefaults.standard.set(selectedTheme.rawValue, forKey: Self.themeKey) }
     }
-    /// Follows the current city (see RootView) — drives the "Automatique"
-    /// flag theme.
+    /// Follows the current city (see RootView) — no longer drives the app's
+    /// theme (that's always the brand default unless a curated theme is
+    /// picked), only the province chip preview shown during onboarding.
     @Published var province: ProvinceCode? {
         didSet { UserDefaults.standard.set(province?.rawValue, forKey: Self.provinceKey) }
     }
@@ -43,14 +44,7 @@ final class ThemeManager: ObservableObject {
     }
 
     var palette: ThemePalette {
-        if let curated = selectedTheme.curatedPalette {
-            return curated
-        }
-        return province?.flagPalette ?? ThemePalette(
-            name: "SnowCNTRL",
-            primary: Color(red: 0.85, green: 0.34, blue: 0.12),
-            accent: Color(red: 0.85, green: 0.34, blue: 0.12)
-        )
+        selectedTheme.curatedPalette ?? .brandDefault
     }
 
     /// Applied on the windows themselves (not just SwiftUI's

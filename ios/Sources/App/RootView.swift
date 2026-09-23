@@ -7,6 +7,8 @@ struct RootView: View {
     @StateObject private var citySelection = CitySelectionViewModel()
     @State private var skippedGeolocation = false
     @State private var showSplash = true
+    @State private var selectedTab: MainTab = .dashboard
+    @State private var isShowingTowedHelp = false
 
     var body: some View {
         ZStack {
@@ -33,8 +35,10 @@ struct RootView: View {
         }
     }
 
-    /// The flag theme follows the city actually shown, so there's no
-    /// separate province setting to keep in sync.
+    /// Theme no longer follows the province — the app always defaults to
+    /// its own brand colors. This only keeps `themeManager.province` in
+    /// step with the city actually shown, for the province chip preview
+    /// used during onboarding.
     private func syncProvince(with city: City?) {
         guard let city, themeManager.province != city.province else { return }
         themeManager.province = city.province
@@ -46,19 +50,7 @@ struct RootView: View {
             if !onboarding.hasAccepted {
                 OnboardingView { onboarding.accept() }
             } else if let city = citySelection.selectedCity {
-                TabView {
-                    DashboardView(city: city) {
-                        citySelection.clearSelection()
-                        // Straight to the manual list: the user tapped
-                        // "change city" on purpose, so re-running geolocation
-                        // here would just re-resolve to the same city.
-                        skippedGeolocation = true
-                    }
-                    .tabItem { Label(localizer.s(.tabDashboard), systemImage: "snowflake") }
-
-                    SettingsView(selectedCity: city, citySelection: citySelection)
-                        .tabItem { Label(localizer.s(.tabSettings), systemImage: "gearshape") }
-                }
+                mainTabs(for: city)
             } else if !skippedGeolocation {
                 GeoLocatingView(
                     onResolved: { citySelection.select($0) },
@@ -67,6 +59,38 @@ struct RootView: View {
             } else {
                 CitySelectionView(viewModel: citySelection)
             }
+        }
+    }
+
+    /// Dashboard and Settings behind a custom bottom bar (not the system
+    /// tab bar — its icons can't glow neon), plus the towed-car help sheet
+    /// the bar's third button opens from anywhere. `TabView` (rather than a
+    /// plain switch on `selectedTab`) keeps both screens alive across tab
+    /// switches, so Dashboard doesn't lose its map position and loaded
+    /// streets every time Settings is opened.
+    private func mainTabs(for city: City) -> some View {
+        TabView(selection: $selectedTab) {
+            DashboardView(city: city) {
+                citySelection.clearSelection()
+                // Straight to the manual list: the user tapped
+                // "change city" on purpose, so re-running geolocation
+                // here would just re-resolve to the same city.
+                skippedGeolocation = true
+            }
+            .tag(MainTab.dashboard)
+            .toolbar(.hidden, for: .tabBar)
+
+            SettingsView(selectedCity: city, citySelection: citySelection)
+                .tag(MainTab.settings)
+                .toolbar(.hidden, for: .tabBar)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            MainBottomBar(selectedTab: $selectedTab) {
+                isShowingTowedHelp = true
+            }
+        }
+        .sheet(isPresented: $isShowingTowedHelp) {
+            CityHelpView(city: city)
         }
     }
 }
