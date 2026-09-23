@@ -10,6 +10,14 @@ struct CityHelpView: View {
 
     private var entry: CityHelp.Entry? { CityHelp.entry(for: city) }
     private var lookupURL: URL? { entry?.towedVehicleURL ?? city.sourceURL }
+    /// Always offered next to "Voiture remorquée ?", not just when the city
+    /// has no verified towing number — a missing/incorrect snow-ban sign is
+    /// a separate problem from not knowing who to call about a tow. Prefers
+    /// the city's own 311/services line (a real way to reach them) over
+    /// just linking their website.
+    private var reportSignageURL: URL? {
+        entry?.contacts.first { $0.kind == .cityServices }?.dialURL ?? city.sourceURL
+    }
 
     var body: some View {
         NavigationStack {
@@ -34,6 +42,17 @@ struct CityHelpView: View {
                     }
                 }
 
+                if let reportSignageURL {
+                    Section {
+                        Link(destination: reportSignageURL) {
+                            Label(localizer.s(.helpReportSignageIssue), systemImage: "exclamationmark.bubble.fill")
+                        }
+                        .buttonStyle(NeutralButtonStyle())
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+                    }
+                }
+
                 Section(localizer.s(.helpContactsTitle)) {
                     if let contacts = entry?.contacts, !contacts.isEmpty {
                         ForEach(contacts) { contact in
@@ -44,12 +63,6 @@ struct CityHelpView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-                        if let url = city.sourceURL {
-                            Link(destination: url) {
-                                Label(localizer.s(.helpReportSignageIssue), systemImage: "exclamationmark.bubble.fill")
-                            }
-                            .font(.subheadline)
-                        }
                     }
                     callRow(title: localizer.s(.helpEmergency), number: "911", url: URL(string: "tel:911"), isEmergency: true)
                 }

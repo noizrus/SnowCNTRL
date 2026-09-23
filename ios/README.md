@@ -1,5 +1,20 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Onglet actif visible dans la barre du bas, signaler toujours visible (dernière itération)
+
+- **Pastille sous l'icône active dans la barre du bas** (`MainBottomBar`) : la
+  seule différence de luminosité entre Alertes/Réglages sélectionné et non
+  sélectionné ne suffisait pas à distinguer l'onglet actif du bouton Aide, qui
+  brille en permanence — ajouté un fond en pastille derrière l'icône
+  sélectionnée (glow renforcé aussi, 6 → 10), qu'Aide n'a jamais puisqu'il
+  n'indique pas "tu es ici".
+- **« Signaler un problème de signalisation » toujours visible** à côté de
+  « Voiture remorquée ? », plutôt que seulement quand la ville n'a pas de
+  numéro vérifié : un problème de signalisation dans la rue (panneau absent/
+  incorrect) est indépendant du fait que l'app connaisse ou non le numéro du
+  service de remorquage. Utilise le 311/service municipal de la ville quand
+  `CityHelp.swift` en a un (appel direct), sinon son site officiel.
+
 ## Barre de chargement qui se remplit (3 s), signaler un problème de signalisation (dernière itération)
 
 - **La barre de chargement se remplit maintenant réellement**, de vide à
