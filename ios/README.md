@@ -1,5 +1,13 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Barre de chargement à l'ouverture (dernière itération)
+
+- **Barre de chargement sur l'écran de démarrage** (`LaunchSplashView`) : un
+  premier lancement après réinstallation peut prendre un moment (permission de
+  localisation, fix GPS, premier appel réseau) sans que rien à l'écran ne le
+  montre à part le logo qui pulse — ajouté une barre de progression sous le
+  logo pour que ce soit clairement un chargement, pas un blocage.
+
 ## Widget réservé à l'écran verrouillé (dernière itération)
 
 - **Le widget n'est plus proposé pour l'écran d'accueil** : seules les familles

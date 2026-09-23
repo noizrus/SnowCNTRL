@@ -2,7 +2,10 @@ import SwiftUI
 
 /// Branded splash shown for ~1s on cold start: the app logo pulsing in a
 /// neon glow of the theme color, plus the wordmark. Shown as an overlay by
-/// `RootView` before the real content appears.
+/// `RootView` before the real content appears. A loading bar makes clear
+/// something is happening on a slow first launch (fresh install: location
+/// permission prompt, GPS fix, first network fetch) rather than looking
+/// stuck on the logo.
 struct LaunchSplashView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var localizer: Localizer
@@ -21,6 +24,12 @@ struct LaunchSplashView: View {
                     .tracking(2)
                     .foregroundStyle(themeManager.palette.accentText)
                     .neonGlow(themeManager.palette.accent, radius: isPulsing ? 8 : 4)
+
+                ProgressView()
+                    .progressViewStyle(.linear)
+                    .tint(themeManager.palette.primary)
+                    .frame(maxWidth: 160)
+                    .padding(.top, 4)
             }
         }
         // Always on black, so theme colors resolve to their night variants.
