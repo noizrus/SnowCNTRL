@@ -28,9 +28,10 @@ struct DashboardView: View {
     @State private var notificationsDenied = false
     @State private var toast: String?
     @State private var isShowingAlertsList = false
+    @State private var isShowingCityPicker = false
     @Binding var selectedTab: MainTab
+    @ObservedObject var citySelection: CitySelectionViewModel
     let city: City
-    var onChangeCity: () -> Void
     var onShowTowedHelp: () -> Void
 
     /// A marker placed by tapping the map but not added yet.
@@ -41,10 +42,10 @@ struct DashboardView: View {
         var label: String?
     }
 
-    init(city: City, selectedTab: Binding<MainTab>, onChangeCity: @escaping () -> Void, onShowTowedHelp: @escaping () -> Void) {
+    init(city: City, selectedTab: Binding<MainTab>, citySelection: CitySelectionViewModel, onShowTowedHelp: @escaping () -> Void) {
         self.city = city
         self._selectedTab = selectedTab
-        self.onChangeCity = onChangeCity
+        self.citySelection = citySelection
         self.onShowTowedHelp = onShowTowedHelp
         _region = State(initialValue: MKCoordinateRegion(
             center: city.approximateCoordinate,
@@ -157,6 +158,15 @@ struct DashboardView: View {
                 // pill) then rendered partly behind the bottom bar.
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     MainBottomBar(selectedTab: $selectedTab, onShowTowedHelp: onShowTowedHelp)
+                }
+                // Pushed into this same stack (not a sheet) so "Changer de
+                // ville" gets a normal back button and keeps the bottom bar
+                // visible underneath instead of covering it.
+                .navigationDestination(isPresented: $isShowingCityPicker) {
+                    CityListScreen(viewModel: citySelection) { newCity in
+                        citySelection.select(newCity)
+                        isShowingCityPicker = false
+                    }
                 }
         }
     }
@@ -313,7 +323,7 @@ struct DashboardView: View {
     private var mapControlsColumn: some View {
         VStack(alignment: .trailing, spacing: 10) {
             MapControlButton(systemImage: "mappin.and.ellipse", accessibilityText: localizer.s(.citySelectionChangeButton)) {
-                onChangeCity()
+                isShowingCityPicker = true
             }
             MapControlButton(systemImage: "location.fill", accessibilityText: localizer.s(.mapLocateMe)) {
                 isLocating = true
@@ -785,7 +795,7 @@ struct DashboardView: View {
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
         let montreal = CitiesData.all.first { $0.id == "montreal" }!
-        DashboardView(city: montreal, selectedTab: .constant(.dashboard), onChangeCity: {}, onShowTowedHelp: {})
+        DashboardView(city: montreal, selectedTab: .constant(.dashboard), citySelection: CitySelectionViewModel(), onShowTowedHelp: {})
             .environmentObject(Localizer())
             .environmentObject(ThemeManager())
             .environmentObject(PremiumManager())

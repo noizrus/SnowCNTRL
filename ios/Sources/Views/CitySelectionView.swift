@@ -1,15 +1,19 @@
 import SwiftUI
 
-struct CitySelectionView: View {
+/// The city list's title, brandmark and themed nav bar — shared by the
+/// mandatory first-launch picker (`CitySelectionView` below, its own
+/// `NavigationStack`) and Dashboard's "Changer de ville", which pushes
+/// this straight into its own stack instead of presenting a sheet, so it
+/// gets a normal back button and keeps the bottom bar visible underneath
+/// instead of covering it the way a sheet would.
+struct CityListScreen: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
     @ObservedObject var viewModel: CitySelectionViewModel
+    var onPick: (City) -> Void
 
     var body: some View {
-        NavigationStack {
-            CityListView(viewModel: viewModel) { city in
-                viewModel.select(city)
-            }
+        CityListView(viewModel: viewModel, onPick: onPick)
             .navigationTitle(localizer.s(.citySelectionTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -18,6 +22,18 @@ struct CitySelectionView: View {
                 }
             }
             .themedNavigationBar(themeManager.palette)
+    }
+}
+
+struct CitySelectionView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+    @ObservedObject var viewModel: CitySelectionViewModel
+
+    var body: some View {
+        NavigationStack {
+            CityListScreen(viewModel: viewModel) { city in
+                viewModel.select(city)
+            }
         }
         .tint(themeManager.palette.primaryText)
     }

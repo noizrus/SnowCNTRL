@@ -1,5 +1,22 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Changer de ville : retour en arrière + barre du bas visible (dernière itération)
+
+- **« Changer de ville » ne mène plus dans une impasse** : ce bouton (colonne de
+  droite sur la carte) videait complètement la ville sélectionnée et repassait
+  par le parcours du tout premier lancement (plein écran, sans bouton retour, ni
+  barre du bas — d'où le problème signalé). Il pousse maintenant l'écran de
+  sélection directement dans la pile de navigation du Tableau de bord
+  (`CityListScreen`, extrait de `CitySelectionView` et partagé entre les deux) :
+  bouton retour standard en haut à gauche pour annuler sans rien changer, et la
+  barre du bas reste visible en dessous puisqu'on ne quitte jamais le Tableau de
+  bord.
+- **Choisir une nouvelle ville reste fiable** : `DashboardView` reçoit
+  maintenant le `CitySelectionViewModel` directement (au lieu d'une fermeture
+  qui vidait tout), et `RootView` force une identité fraîche par ville
+  (`.id(city.id)`) pour repartir d'une carte, de rues et d'un statut propres à
+  chaque changement plutôt que de garder ceux de l'ancienne ville par erreur.
+
 ## Correction : pastille de statut cachée sous la barre du bas (dernière itération)
 
 - **« Hors saison » (panneau réduit) caché sous la barre du bas** : le

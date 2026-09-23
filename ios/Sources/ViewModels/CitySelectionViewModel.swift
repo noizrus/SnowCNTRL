@@ -52,10 +52,6 @@ final class CitySelectionViewModel: ObservableObject {
         selectedCity = city
     }
 
-    func clearSelection() {
-        selectedCity = nil
-    }
-
     func setFavorite(_ city: City?) {
         favoriteCityID = city?.id
     }

@@ -79,15 +79,16 @@ struct RootView: View {
             DashboardView(
                 city: city,
                 selectedTab: $selectedTab,
-                onChangeCity: {
-                    citySelection.clearSelection()
-                    // Straight to the manual list: the user tapped
-                    // "change city" on purpose, so re-running geolocation
-                    // here would just re-resolve to the same city.
-                    skippedGeolocation = true
-                },
+                citySelection: citySelection,
                 onShowTowedHelp: { isShowingTowedHelp = true }
             )
+            // "Changer de ville" picks the new city in place (see
+            // DashboardView's own pushed city picker) rather than clearing
+            // the selection and dropping back to the mandatory first-launch
+            // flow. Forcing a fresh identity per city resets the map
+            // region, loaded streets and status — otherwise they'd carry
+            // over stale from whichever city was shown before.
+            .id(city.id)
             .tag(MainTab.dashboard)
             .toolbar(.hidden, for: .tabBar)
 
