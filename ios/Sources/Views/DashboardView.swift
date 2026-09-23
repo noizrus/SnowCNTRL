@@ -108,6 +108,38 @@ struct DashboardView: View {
     }
 
     var body: some View {
+        // Kept as separate statements (not one long chained expression) —
+        // otherwise the type-checker times out on this many stacked
+        // modifiers ("unable to type-check in reasonable time").
+        content
+            .task(id: isSimulatingBan) {
+                await viewModel.load(city: city, language: localizer.language)
+            }
+            .task(id: widgetSignature) {
+                await publishToWidget()
+            }
+            .task(id: myAddresses.map(\.id)) {
+                centerOnAddressesIfNeeded()
+            }
+            .task(id: streetRequest) {
+                await loadSegmentsDebounced()
+            }
+            .onReceive(locationManager.$lastLocation) { coordinate in
+                handleLocationUpdate(coordinate)
+            }
+            .sheet(isPresented: $isShowingCityHelp) {
+                CityHelpView(city: city)
+            }
+            .sheet(isPresented: $isShowingCityRules) {
+                CityRulesView(city: city)
+            }
+            .sheet(isPresented: $isShowingAlertsList) {
+                alertsListSheet
+            }
+            .tint(themeManager.palette.primaryText)
+    }
+
+    private var content: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
                 TappableMapView(
@@ -136,82 +168,85 @@ struct DashboardView: View {
                 // the wordmark above the city name instead of squeezing it
                 // into a corner.
                 ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        AppLogoImage(size: 30)
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(localizer.language.appName)
-                                .font(.system(.caption2, design: .rounded).weight(.heavy))
-                                .tracking(0.6)
-                                .foregroundStyle(themeManager.palette.accentText)
-                            Text(city.name)
-                                .font(.headline)
-                                .lineLimit(1)
-                        }
-                    }
-                    .accessibilityElement(children: .combine)
+                    titleToolbarContent
                 }
                 // Info-Neige puts its favorites list top-left — same spot,
                 // same idea: every alert in one place.
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        isShowingAlertsList = true
-                    } label: {
-                        ZStack(alignment: .topTrailing) {
-                            Image(systemName: "list.bullet")
-                            if !myAddresses.isEmpty {
-                                Circle()
-                                    .fill(themeManager.palette.primary)
-                                    .frame(width: 8, height: 8)
-                                    .offset(x: 6, y: -4)
-                            }
-                        }
-                    }
-                    .accessibilityLabel(localizer.s(.alertsListTitle))
+                    alertsListToolbarButton
                 }
-            }
-            .task(id: isSimulatingBan) {
-                await viewModel.load(city: city, language: localizer.language)
-            }
-            .task(id: widgetSignature) {
-                guard let result = viewModel.result else { return }
-                WidgetBridge.publish(city: city, result: result, language: localizer.language, accent: themeManager.palette.primary)
-            }
-            .task(id: myAddresses.map(\.id)) {
-                if !hasCenteredOnAddresses, !myAddresses.isEmpty {
-                    region = fittingRegion(for: myAddresses)
-                    hasCenteredOnAddresses = true
-                }
-            }
-            .task(id: streetRequest) {
-                // Debounce: panning changes the request continuously.
-                try? await Task.sleep(nanoseconds: 300_000_000)
-                guard !Task.isCancelled else { return }
-                await loadSegments()
-            }
-            .onReceive(locationManager.$lastLocation) { coordinate in
-                guard isLocating, let coordinate else { return }
-                isLocating = false
-                region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
-            }
-            .sheet(isPresented: $isShowingCityHelp) {
-                CityHelpView(city: city)
-            }
-            .sheet(isPresented: $isShowingCityRules) {
-                CityRulesView(city: city)
-            }
-            .sheet(isPresented: $isShowingAlertsList) {
-                AlertsListView(
-                    alerts: myAddresses,
-                    currentStatus: (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus,
-                    onSelect: { alert in
-                        focus(on: alert)
-                        selectAlert(alert.id)
-                    },
-                    onRemove: removeAlert
-                )
             }
         }
-        .tint(themeManager.palette.primaryText)
+    }
+
+    private var titleToolbarContent: some View {
+        HStack(spacing: 8) {
+            AppLogoImage(size: 30)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(localizer.language.appName)
+                    .font(.system(.caption2, design: .rounded).weight(.heavy))
+                    .tracking(0.6)
+                    .foregroundStyle(themeManager.palette.accentText)
+                Text(city.name)
+                    .font(.headline)
+                    .lineLimit(1)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var alertsListToolbarButton: some View {
+        Button {
+            isShowingAlertsList = true
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                Image(systemName: "list.bullet")
+                if !myAddresses.isEmpty {
+                    Circle()
+                        .fill(themeManager.palette.primary)
+                        .frame(width: 8, height: 8)
+                        .offset(x: 6, y: -4)
+                }
+            }
+        }
+        .accessibilityLabel(localizer.s(.alertsListTitle))
+    }
+
+    private var alertsListSheet: some View {
+        AlertsListView(
+            alerts: myAddresses,
+            currentStatus: (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus,
+            onSelect: { alert in
+                focus(on: alert)
+                selectAlert(alert.id)
+            },
+            onRemove: removeAlert
+        )
+    }
+
+    private func publishToWidget() async {
+        guard let result = viewModel.result else { return }
+        WidgetBridge.publish(city: city, result: result, language: localizer.language, accent: themeManager.palette.primary)
+    }
+
+    private func centerOnAddressesIfNeeded() {
+        if !hasCenteredOnAddresses, !myAddresses.isEmpty {
+            region = fittingRegion(for: myAddresses)
+            hasCenteredOnAddresses = true
+        }
+    }
+
+    private func loadSegmentsDebounced() async {
+        // Debounce: panning changes the request continuously.
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        guard !Task.isCancelled else { return }
+        await loadSegments()
+    }
+
+    private func handleLocationUpdate(_ coordinate: CLLocationCoordinate2D?) {
+        guard isLocating, let coordinate else { return }
+        isLocating = false
+        region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
     }
 
     // MARK: - Map overlay
