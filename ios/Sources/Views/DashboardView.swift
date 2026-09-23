@@ -265,55 +265,72 @@ struct DashboardView: View {
 
     private var mapOverlay: some View {
         VStack {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let toast {
-                        MapHintCapsule(text: toast)
-                            .transition(.opacity)
-                    }
-                    if isZoomedOutTooFar {
-                        MapHintCapsule(text: localizer.s(.mapZoomInHint))
-                    } else if isLoadingStreets {
-                        MapHintCapsule(text: localizer.s(.mapLoadingStreets), showsProgress: true)
-                    }
-                }
-                Spacer(minLength: 8)
-                VStack(alignment: .trailing, spacing: 10) {
-                    MapControlButton(systemImage: "mappin.and.ellipse", accessibilityText: localizer.s(.citySelectionChangeButton)) {
-                        onChangeCity()
-                    }
-                    MapControlButton(systemImage: "location.fill", accessibilityText: localizer.s(.mapLocateMe)) {
-                        isLocating = true
-                        locationManager.requestLocation()
-                    }
-                    MapControlButton(
-                        systemImage: colorScheme == .dark ? "sun.max.fill" : "moon.stars.fill",
-                        accessibilityText: localizer.s(.mapToggleDayNight)
-                    ) {
-                        themeManager.appearance = colorScheme == .dark ? .light : .dark
-                    }
-                    MapControlButton(systemImage: "info", isActive: isShowingInfo, accessibilityText: localizer.s(.infoButton)) {
-                        withAnimation(.easeInOut(duration: 0.2)) { isShowingInfo.toggle() }
-                    }
-                    if isShowingInfo {
-                        MapLegendView(
-                            onShowCityRules: {
-                                isShowingInfo = false
-                                isShowingCityRules = true
-                            },
-                            onShowCityHelp: {
-                                isShowingInfo = false
-                                isShowingCityHelp = true
-                            }
-                        )
-                        .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
+            mapOverlayTopRow
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
             Spacer()
         }
+    }
+
+    private var mapOverlayTopRow: some View {
+        HStack(alignment: .top) {
+            mapHints
+            Spacer(minLength: 8)
+            mapControlsColumn
+        }
+    }
+
+    @ViewBuilder
+    private var mapHints: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let toast {
+                MapHintCapsule(text: toast)
+                    .transition(.opacity)
+            }
+            if isZoomedOutTooFar {
+                MapHintCapsule(text: localizer.s(.mapZoomInHint))
+            } else if isLoadingStreets {
+                MapHintCapsule(text: localizer.s(.mapLoadingStreets), showsProgress: true)
+            }
+        }
+    }
+
+    private var mapControlsColumn: some View {
+        VStack(alignment: .trailing, spacing: 10) {
+            MapControlButton(systemImage: "mappin.and.ellipse", accessibilityText: localizer.s(.citySelectionChangeButton)) {
+                onChangeCity()
+            }
+            MapControlButton(systemImage: "location.fill", accessibilityText: localizer.s(.mapLocateMe)) {
+                isLocating = true
+                locationManager.requestLocation()
+            }
+            MapControlButton(
+                systemImage: colorScheme == .dark ? "sun.max.fill" : "moon.stars.fill",
+                accessibilityText: localizer.s(.mapToggleDayNight)
+            ) {
+                themeManager.appearance = colorScheme == .dark ? .light : .dark
+            }
+            MapControlButton(systemImage: "info", isActive: isShowingInfo, accessibilityText: localizer.s(.infoButton)) {
+                withAnimation(.easeInOut(duration: 0.2)) { isShowingInfo.toggle() }
+            }
+            if isShowingInfo {
+                mapLegendPopover
+            }
+        }
+    }
+
+    private var mapLegendPopover: some View {
+        MapLegendView(
+            onShowCityRules: {
+                isShowingInfo = false
+                isShowingCityRules = true
+            },
+            onShowCityHelp: {
+                isShowingInfo = false
+                isShowingCityHelp = true
+            }
+        )
+        .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
     }
 
     // MARK: - Alerts
@@ -450,76 +467,101 @@ struct DashboardView: View {
     // MARK: - Bottom panel
 
     private var bottomPanel: some View {
+        bottomPanelContent
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            .background(panelBackground)
+            .shadow(color: .black.opacity(0.35), radius: 16, y: 6)
+            .padding(.horizontal, 10)
+            .padding(.bottom, 6)
+            .gesture(panelDragGesture)
+    }
+
+    private var bottomPanelContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Capsule()
-                .fill(Color.secondary.opacity(0.5))
-                .frame(width: 38, height: 5)
-                .frame(maxWidth: .infinity)
+            panelHandle
+            panelHeaderRow
+            if !isPanelCollapsed {
+                panelExpandedContent
+            }
+            if !premiumManager.isPremium {
+                adRow
+            }
+        }
+    }
+
+    private var panelHandle: some View {
+        Capsule()
+            .fill(Color.secondary.opacity(0.5))
+            .frame(width: 38, height: 5)
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+            .onTapGesture { togglePanel() }
+    }
+
+    private var panelHeaderRow: some View {
+        HStack(spacing: 10) {
+            statusPill
                 .contentShape(Rectangle())
                 .onTapGesture { togglePanel() }
+            Spacer(minLength: 0)
+            roundIconButton(systemImage: "arrow.clockwise", accessibilityText: localizer.s(.dashboardRefreshButton)) {
+                Task { await viewModel.load(city: city, language: localizer.language) }
+            }
+            roundIconButton(systemImage: isPanelCollapsed ? "chevron.up" : "chevron.down", accessibilityText: localizer.s(.panelToggle)) {
+                togglePanel()
+            }
+        }
+    }
 
-            HStack(spacing: 10) {
-                statusPill
-                    .contentShape(Rectangle())
-                    .onTapGesture { togglePanel() }
-                Spacer(minLength: 0)
-                roundIconButton(systemImage: "arrow.clockwise", accessibilityText: localizer.s(.dashboardRefreshButton)) {
-                    Task { await viewModel.load(city: city, language: localizer.language) }
-                }
-                roundIconButton(systemImage: isPanelCollapsed ? "chevron.up" : "chevron.down", accessibilityText: localizer.s(.panelToggle)) {
+    @ViewBuilder
+    private var panelExpandedContent: some View {
+        TierDisclaimerBanner(tier: city.tier, cityName: city.name)
+
+        if let pending = pendingAlert {
+            pendingAlertCard(pending)
+        } else if let alert = selectedAlert {
+            alertCard(alert)
+        } else {
+            alertsList
+        }
+
+        Button {
+            isShowingCityHelp = true
+        } label: {
+            Label(localizer.s(.helpTitle), systemImage: "car.fill")
+        }
+        .buttonStyle(NeutralButtonStyle())
+    }
+
+    private var adRow: some View {
+        HStack {
+            Spacer(minLength: 0)
+            AdBannerView()
+                .frame(width: 320, height: 50)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var panelBackground: some View {
+        RoundedRectangle(cornerRadius: 24, style: .continuous)
+            .fill(.regularMaterial)
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(themeManager.palette.primary.opacity(0.25), lineWidth: 1)
+            )
+    }
+
+    private var panelDragGesture: some Gesture {
+        DragGesture(minimumDistance: 15)
+            .onEnded { value in
+                if value.translation.height > 40, !isPanelCollapsed {
+                    togglePanel()
+                } else if value.translation.height < -40, isPanelCollapsed {
                     togglePanel()
                 }
             }
-
-            if !isPanelCollapsed {
-                TierDisclaimerBanner(tier: city.tier, cityName: city.name)
-
-                if let pending = pendingAlert {
-                    pendingAlertCard(pending)
-                } else if let alert = selectedAlert {
-                    alertCard(alert)
-                } else {
-                    alertsList
-                }
-
-                Button {
-                    isShowingCityHelp = true
-                } label: {
-                    Label(localizer.s(.helpTitle), systemImage: "car.fill")
-                }
-                .buttonStyle(NeutralButtonStyle())
-            }
-
-            if !premiumManager.isPremium {
-                HStack {
-                    Spacer(minLength: 0)
-                    AdBannerView()
-                        .frame(width: 320, height: 50)
-                    Spacer(minLength: 0)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(themeManager.palette.primary.opacity(0.25), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.35), radius: 16, y: 6)
-        .padding(.horizontal, 10)
-        .padding(.bottom, 6)
-        .gesture(
-            DragGesture(minimumDistance: 15)
-                .onEnded { value in
-                    if value.translation.height > 40, !isPanelCollapsed {
-                        togglePanel()
-                    } else if value.translation.height < -40, isPanelCollapsed {
-                        togglePanel()
-                    }
-                }
-        )
     }
 
     private func togglePanel() {
