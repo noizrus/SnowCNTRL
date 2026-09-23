@@ -404,9 +404,9 @@ enum Strings {
             .spanish: "Por ahora cada calle muestra el estado general de la ciudad — el detalle por lado llegará con los datos oficiales.",
         ],
         .mapZoomInHint: [
-            .french: "Zoome pour voir le détail rue par rue",
-            .english: "Zoom in for street-by-street detail",
-            .spanish: "Acerca el mapa para ver el detalle calle por calle",
+            .french: "Zoome pour voir l'état des rues",
+            .english: "Zoom in to see street status",
+            .spanish: "Acerca el mapa para ver el estado de las calles",
         ],
         .mapLoadingStreets: [
             .french: "Chargement des rues…",

@@ -1,22 +1,16 @@
 # SnowCNTRL — app iOS (MVP)
 
-## Statut visible même très dézoomé, limité à la ville (dernière itération)
+## Retour en arrière : uniquement les rues avec leur couleur, rien d'autre (dernière itération)
 
-- **Cercle de couleur autour de la ville, pas une teinte sur toute la carte**
-  (`CityStatusCircle` dans `GlowPolylineRenderer.swift`, dessiné par
-  `TappableMapView`) : au-delà du seuil de zoom où charger/afficher chaque
-  rue individuellement serait trop lourd
-  (`OSMStreetGeometryService.maxSpanDegrees`), un cercle de 8 km de rayon
-  centré sur la ville reprend la couleur du statut général — au lieu de
-  teinter tout l'écran visible (une première version faisait ça, ce qui
-  donnait l'impression que les villes voisines et la campagne autour
-  avaient le même statut dès qu'on dézoomait assez pour les voir). Comme
-  chaque côté de rue reprend de toute façon le statut général de la ville
-  pour l'instant (aucun flux par côté de rue n'est branché, voir
-  `SnowSegmentProviding`), ce cercle donne la même information d'un coup
-  d'œil, à n'importe quel zoom, sans rien charger. Le message devient
-  « Zoome pour voir le détail rue par rue » (plus seulement l'état général,
-  qui est maintenant visible tout de suite).
+- **Retiré le cercle de statut affiché en dézoomant** (`CityStatusCircle`,
+  ajouté puis retiré dans la foulée) : la carte revient au comportement
+  d'origine — seules les lignes de rue avec leur couleur de statut sont
+  affichées, et au-delà du seuil de zoom où les charger serait trop lourd
+  (`OSMStreetGeometryService.maxSpanDegrees`), la carte n'affiche rien de
+  plus que le message « zoome pour voir l'état des rues ». Deux tentatives
+  intermédiaires (teinte plein écran, puis cercle autour de la ville)
+  ajoutaient une information que l'app ne doit pas afficher : elle ne montre
+  que les rues elles-mêmes, pas un résumé de zone.
 
 ## Alerte répétée sans limite tant que la voiture n'est pas déplacée (dernière itération)
 

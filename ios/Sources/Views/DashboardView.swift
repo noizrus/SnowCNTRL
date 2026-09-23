@@ -190,9 +190,6 @@ struct DashboardView: View {
                 highlightedSegmentIDs: highlightedSideIDs,
                 onTap: handleMapTap,
                 onSelectPin: selectAlert,
-                cityStatusCircle: isZoomedOutTooFar
-                    ? (city.approximateCoordinate, (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus)
-                    : nil,
                 compassTopInset: compassTopInset
             )
             .ignoresSafeArea(edges: .top)
