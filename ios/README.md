@@ -1,5 +1,19 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Correction barre du haut trop large + logo encore agrandi (dernière itération)
+
+- **Barre du haut anormalement haute dans Réglages** (et, moins visible, Onboarding
+  et Sélection de ville) : ces trois écrans n'avaient pas
+  `.navigationBarTitleDisplayMode(.inline)`, donc la barre retombait en mode
+  « grand titre » — un bloc navy bien plus haut que prévu, réservé pour un titre
+  qu'on ne voit jamais puisqu'il est remplacé par le bandeau logo, avec le contenu
+  qui démarre juste en dessous sans marge (« collé »). Ajouté aux trois — la barre
+  revient à la hauteur compacte standard, comme le Tableau de bord et les autres
+  écrans qui l'avaient déjà.
+- **Logo encore agrandi** (`SnowCntrlBrandmark`, `DashboardView`) : 32/34 → 40 pt
+  partout, en gardant le mode `.inline` — la barre s'ajuste à son contenu sans
+  revenir au bug du dessus.
+
 ## Barres du haut et du bas bleu marine, logo agrandi, thèmes qui changent tout (dernière itération)
 
 - **Barre du haut bleu marine** (`ThemedNavigationBar.swift`, `themedNavigationBar(_:)`) :

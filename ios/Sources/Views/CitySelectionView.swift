@@ -11,6 +11,7 @@ struct CitySelectionView: View {
                 viewModel.select(city)
             }
             .navigationTitle(localizer.s(.citySelectionTitle))
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     SnowCntrlBrandmark()

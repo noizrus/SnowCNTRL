@@ -132,6 +132,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(localizer.s(.settingsTitle))
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     SnowCntrlBrandmark()

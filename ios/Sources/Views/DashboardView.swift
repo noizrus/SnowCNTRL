@@ -194,7 +194,7 @@ struct DashboardView: View {
 
     private var titleToolbarContent: some View {
         HStack(spacing: 8) {
-            AppLogoImage(size: 34)
+            AppLogoImage(size: 40)
             VStack(alignment: .leading, spacing: 0) {
                 Text(localizer.language.appName)
                     .font(.system(.caption2, design: .rounded).weight(.heavy))

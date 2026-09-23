@@ -28,7 +28,7 @@ struct SnowCntrlBrandmark: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            AppLogoImage(size: 32)
+            AppLogoImage(size: 40)
             Text(localizer.language.appName)
                 .font(.system(.caption2, design: .rounded).weight(.heavy))
                 .tracking(0.6)
