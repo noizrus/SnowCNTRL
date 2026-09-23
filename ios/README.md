@@ -1,5 +1,24 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Alerte répétée sans limite tant que la voiture n'est pas déplacée (dernière itération)
+
+- **Sonne toutes les 15 min sans s'arrêter** (`AlertNotifier.swift`), tant que
+  l'interdiction reste active et que « J'ai déplacé ma voiture » n'a pas été
+  touché — avant, ça sonnait à 0, 10 et 20 min puis abandonnait. Une seule
+  notification récurrente (`UNTimeIntervalNotificationTrigger(repeats: true)`)
+  remplace la liste fixe de trois rappels ; elle s'arrête dès qu'on touche
+  « J'ai déplacé ma voiture », qu'on retire l'alerte, ou qu'une vérification
+  ultérieure (lancement, premier plan, ou tâche d'arrière-plan) constate que
+  l'interdiction est terminée.
+- **Alerte 60 min avant le déneigement : pas possible pour l'instant.**
+  Techniquement, ça demanderait de connaître l'*heure prévue* d'une future
+  interdiction — l'app ne connaît que le statut *actuel* (active / inactive /
+  inconnu) via les APIs municipales couvertes, aucune ne publie d'horaire
+  planifié de façon fiable. Une alerte "avant" qui ne se déclenche pas au bon
+  moment (ou jamais) serait pire qu'utile — mieux vaut ne pas promettre un
+  délai qu'on ne peut pas tenir tant que cette donnée n'existe pas quelque
+  part (voir aussi le point correspondant dans "Ce qui reste à faire").
+
 ## Onglet actif visible dans la barre du bas, signaler toujours visible (dernière itération)
 
 - **Pastille sous l'icône active dans la barre du bas** (`MainBottomBar`) : la
@@ -232,8 +251,9 @@ D'après des captures de l'app Info-Neige envoyées par l'utilisateur :
 - **Sonnerie** (`Services/AlertNotifier.swift`) : son de déneigeuse (`Resources/snowplow.wav`,
   12 s, synthétisé : moteur de camion qui passe, klaxon d'avertissement, bips de recul,
   lame qui racle), niveau **Time Sensitive** pour passer à travers le mode Ne pas
-  déranger / Concentration (entitlement dans `project.yml`), répété à 0, 10 et 20 min
-  jusqu'à « J'ai déplacé ma voiture » (bouton dans la notification), avec
+  déranger / Concentration (entitlement dans `project.yml`), sonne tout de suite puis
+  se répète toutes les 15 min sans limite tant que l'interdiction reste active, jusqu'à
+  « J'ai déplacé ma voiture » (bouton dans la notification), avec
   « Rappelle-moi dans 10 min ». Limite : l'interrupteur sonnerie/silencieux de l'iPhone
   coupe quand même le son — seul l'entitlement Apple « Critical Alerts » (sur demande,
   accordé au cas par cas) le contourne.

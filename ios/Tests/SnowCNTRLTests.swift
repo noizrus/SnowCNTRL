@@ -217,9 +217,10 @@ final class AlertNotificationTests: XCTestCase {
     }
 
     func testAlertRepeatsUntilAcknowledged() {
-        XCTAssertEqual(AlertNotifier.repeatOffsets.count, 3)
-        XCTAssertLessThanOrEqual(AlertNotifier.repeatOffsets[0], 1, "first ring is immediate")
-        XCTAssertEqual(Set(AlertNotifier.requestIDs(for: alert.id)).count, AlertNotifier.repeatOffsets.count + 1)
+        XCTAssertLessThanOrEqual(AlertNotifier.firstRingDelay, 1, "first ring is immediate")
+        XCTAssertGreaterThan(AlertNotifier.reminderInterval, 60, "must clear iOS's minimum repeat interval to actually recur")
+        // First ring + recurring reminder + reserved snooze slot, all distinct.
+        XCTAssertEqual(Set(AlertNotifier.requestIDs(for: alert.id)).count, 3)
     }
 
     func testEveryRingDurationHasABundledPlayableSoundOfTheRightLength() throws {

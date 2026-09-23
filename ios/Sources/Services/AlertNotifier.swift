@@ -35,11 +35,17 @@ enum AlertNotifier {
     static var soundName: UNNotificationSoundName {
         UNNotificationSoundName(AlertRingDuration.current.soundFileName)
     }
-    /// Seconds after detection: now, then two reminders if nobody reacts.
-    static let repeatOffsets: [TimeInterval] = [1, 10 * 60, 20 * 60]
+    /// Rings right away, then keeps ringing every `reminderInterval` for as
+    /// long as the ban stays active and nobody's said "J'ai déplacé ma
+    /// voiture" — forgetting for an hour is the exact failure mode this
+    /// alert exists for, so it shouldn't give up after two tries.
+    static let firstRingDelay: TimeInterval = 1
+    static let reminderInterval: TimeInterval = 15 * 60
     static let snoozeDelay: TimeInterval = 10 * 60
     static let testDelay: TimeInterval = 5
     private static let alertedKey = "snowcntrl.alertedAddressIDs"
+    private static let firstRingIndex = 0
+    private static let reminderIndex = 1
     private static let snoozeIndex = 99
 
     static func registerCategories(language: AppLanguage) {
@@ -81,14 +87,19 @@ enum AlertNotifier {
         alertedIDs = alerted
 
         let content = makeContent(for: address, language: language, isTest: false)
-        for (index, offset) in repeatOffsets.enumerated() {
-            let request = UNNotificationRequest(
-                identifier: requestID(address.id, index),
-                content: content,
-                trigger: UNTimeIntervalNotificationTrigger(timeInterval: offset, repeats: false)
-            )
-            UNUserNotificationCenter.current().add(request)
-        }
+        UNUserNotificationCenter.current().add(UNNotificationRequest(
+            identifier: requestID(address.id, firstRingIndex),
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: firstRingDelay, repeats: false)
+        ))
+        // A single recurring request instead of a fixed list of one-shots:
+        // keeps firing every `reminderInterval` indefinitely, not just for
+        // two more tries, until `acknowledge`/`handleBanCleared` cancels it.
+        UNUserNotificationCenter.current().add(UNNotificationRequest(
+            identifier: requestID(address.id, reminderIndex),
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: reminderInterval, repeats: true)
+        ))
     }
 
     /// The ban is over (or the alert was removed): stop ringing and allow a
@@ -127,7 +138,7 @@ enum AlertNotifier {
     }
 
     static func requestIDs(for addressID: UUID) -> [String] {
-        (0..<repeatOffsets.count).map { requestID(addressID, $0) } + [requestID(addressID, snoozeIndex)]
+        [requestID(addressID, firstRingIndex), requestID(addressID, reminderIndex), requestID(addressID, snoozeIndex)]
     }
 
     private static func cancelPending(for addressID: UUID) {
