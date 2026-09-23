@@ -16,6 +16,15 @@ final class GlowMultiPolyline: MKMultiPolyline {
     var isSelected = false
 }
 
+/// A soft circle over roughly the city's own area, drawn instead of
+/// individual street lines when too zoomed out to fetch/render them —
+/// confined to the city rather than tinting the whole visible map, which
+/// wrongly implied the same status for everything on screen (other towns,
+/// open country) when zoomed out far enough to see more than one city.
+final class CityStatusCircle: MKCircle {
+    var status: SnowClearingStatus = .noOperation
+}
+
 /// Neon look: soft translucent halo + bright thin core, plus a white
 /// outline for selected sides.
 final class GlowPolylineRenderer: MKOverlayRenderer {

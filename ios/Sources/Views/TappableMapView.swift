@@ -16,6 +16,11 @@ struct TappableMapView: UIViewRepresentable {
     var highlightedSegmentIDs: Set<String> = []
     var onTap: ((CLLocationCoordinate2D) -> Void)? = nil
     var onSelectPin: ((UUID) -> Void)? = nil
+    /// Shown instead of `segments` when too zoomed out to fetch/render
+    /// individual street lines — a soft circle over the city's own area, in
+    /// its overall status color.
+    var cityStatusCircle: (coordinate: CLLocationCoordinate2D, status: SnowClearingStatus)? = nil
+    private static let cityStatusRadiusMeters: CLLocationDistance = 8000
     /// Distance from the top of the safe area to an always-visible compass
     /// on the trailing edge. The system compass only shows once the map is
     /// rotated and sits under the navigation bar, where it can't be seen.
@@ -103,6 +108,9 @@ struct TappableMapView: UIViewRepresentable {
         for id in highlightedSegmentIDs.sorted() {
             hasher.combine(id)
         }
+        hasher.combine(cityStatusCircle?.coordinate.latitude)
+        hasher.combine(cityStatusCircle?.coordinate.longitude)
+        hasher.combine(cityStatusCircle?.status)
         let signature = hasher.finalize()
         guard signature != coordinator.overlaySignature else { return }
         coordinator.overlaySignature = signature
@@ -127,6 +135,12 @@ struct TappableMapView: UIViewRepresentable {
             overlay.status = key.status
             overlay.isSelected = key.isSelected
             mapView.addOverlay(overlay)
+        }
+
+        if let cityStatusCircle {
+            let circle = CityStatusCircle(center: cityStatusCircle.coordinate, radius: Self.cityStatusRadiusMeters)
+            circle.status = cityStatusCircle.status
+            mapView.addOverlay(circle)
         }
     }
 
@@ -206,6 +220,14 @@ struct TappableMapView: UIViewRepresentable {
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if overlay is GlowMultiPolyline {
                 return GlowPolylineRenderer(overlay: overlay)
+            }
+            if let circle = overlay as? CityStatusCircle {
+                let renderer = MKCircleRenderer(circle: circle)
+                let color = UIColor(circle.status.neonColor)
+                renderer.fillColor = color.withAlphaComponent(0.22)
+                renderer.strokeColor = color.withAlphaComponent(0.55)
+                renderer.lineWidth = 1.5
+                return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
         }

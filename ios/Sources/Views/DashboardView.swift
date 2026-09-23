@@ -190,31 +190,17 @@ struct DashboardView: View {
                 highlightedSegmentIDs: highlightedSideIDs,
                 onTap: handleMapTap,
                 onSelectPin: selectAlert,
-                compassTopInset: compassTopInset
+                compassTopInset: compassTopInset,
+                cityStatusCircle: isZoomedOutTooFar
+                    ? (city.approximateCoordinate, (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus)
+                    : nil
             )
             .ignoresSafeArea(edges: .top)
-
-            if isZoomedOutTooFar {
-                zoomedOutStatusTint
-            }
 
             mapOverlay
 
             bottomPanel
         }
-    }
-
-    /// Individual street lines don't make sense this zoomed out (too dense
-    /// to read, too heavy to fetch) — and since every side currently shares
-    /// the city-wide status anyway (no per-street feed is wired in yet, see
-    /// `SnowSegmentProviding`), a plain tint of that same color shows the
-    /// exact same information at a glance, at any zoom, without loading
-    /// anything.
-    private var zoomedOutStatusTint: some View {
-        (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus.neonColor
-            .opacity(0.18)
-            .ignoresSafeArea(edges: .top)
-            .allowsHitTesting(false)
     }
 
     @ToolbarContentBuilder
