@@ -57,101 +57,22 @@ struct SnowCNTRLWidgetEntryView: View {
     @Environment(\.widgetFamily) private var family
     var entry: SnowCNTRLWidgetProvider.Entry
 
-    private var hasData: Bool { entry.stateRawValue != nil }
     private var statusColor: Color { WidgetText.color(for: entry.stateRawValue) }
     private var statusText: String {
         WidgetText.status(stateRawValue: entry.stateRawValue, language: entry.languageRawValue, isOffSeason: entry.isOffSeason)
     }
     /// The alert's street when there is one, the city otherwise.
     private var placeText: String? { entry.alertLabel ?? entry.cityName }
-    private var accent: Color {
-        guard let rgb = entry.accentRGB, rgb.count == 3 else { return Color(red: 0.984, green: 0.400, blue: 0.0) }
-        return Color(red: rgb[0], green: rgb[1], blue: rgb[2])
-    }
 
     var body: some View {
         switch family {
-        case .accessoryCircular:
-            circularView.widgetBackground(.clear)
         case .accessoryRectangular:
             rectangularView.widgetBackground(.clear)
         case .accessoryInline:
             Label(statusText, systemImage: "snowflake").widgetBackground(.clear)
-        case .systemMedium:
-            mediumView.homeScreenStyle(accent: accent, glow: statusColor)
         default:
-            smallView.homeScreenStyle(accent: accent, glow: statusColor)
+            circularView.widgetBackground(.clear)
         }
-    }
-
-    // MARK: Home screen
-
-    private var brandRow: some View {
-        HStack(spacing: 6) {
-            WidgetLogo(size: 22)
-            Text(WidgetText.appName(language: entry.languageRawValue))
-                .font(.system(size: 11, weight: .heavy, design: .rounded))
-                .tracking(0.5)
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
-    }
-
-    private var statusRow: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Circle()
-                .fill(statusColor)
-                .frame(width: 9, height: 9)
-                .shadow(color: statusColor, radius: 4)
-            Text(statusText)
-                .font(.system(size: hasData ? 15 : 13, weight: .bold, design: .rounded))
-                .foregroundStyle(hasData ? statusColor : .white)
-                .shadow(color: hasData ? statusColor.opacity(0.6) : .clear, radius: 4)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-        }
-    }
-
-    private var smallView: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            brandRow
-            Spacer(minLength: 0)
-            statusRow
-            if let placeText {
-                Text(placeText)
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.75))
-                    .lineLimit(2)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-    }
-
-    private var mediumView: some View {
-        HStack(spacing: 14) {
-            WidgetLogo(size: 64)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(WidgetText.appName(language: entry.languageRawValue))
-                    .font(.system(size: 12, weight: .heavy, design: .rounded))
-                    .tracking(0.6)
-                    .foregroundStyle(.white)
-                statusRow
-                if let placeText {
-                    Text(placeText)
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.8))
-                        .lineLimit(2)
-                }
-                if let updatedAt = entry.updatedAt {
-                    (Text(WidgetText.updated(language: entry.languageRawValue) + " ") + Text(updatedAt, style: .time))
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.5))
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     // MARK: Lock screen
@@ -184,54 +105,7 @@ struct SnowCNTRLWidgetEntryView: View {
     }
 }
 
-/// The app logo, kept in full color even in iOS 18's tinted home screen.
-private struct WidgetLogo: View {
-    let size: CGFloat
-
-    var body: some View {
-        logoImage
-            .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
-    }
-
-    @ViewBuilder
-    private var logoImage: some View {
-        if #available(iOS 18.0, *) {
-            Image("AppLogo")
-                .resizable()
-                .widgetAccentedRenderingMode(.fullColor)
-                .scaledToFit()
-        } else {
-            Image("AppLogo")
-                .resizable()
-                .scaledToFit()
-        }
-    }
-}
-
 private extension View {
-    /// Home screen look: always dark, a glow of the theme color and of the
-    /// status color in the corners, white text.
-    @ViewBuilder
-    func homeScreenStyle(accent: Color, glow: Color) -> some View {
-        let background = ZStack {
-            Color(red: 0.05, green: 0.06, blue: 0.09)
-            RadialGradient(colors: [accent.opacity(0.45), .clear], center: .topTrailing, startRadius: 0, endRadius: 170)
-            RadialGradient(colors: [glow.opacity(0.28), .clear], center: .bottomLeading, startRadius: 0, endRadius: 150)
-        }
-        if #available(iOS 17.0, *) {
-            // iOS 17+ adds the standard content margins itself.
-            self
-                .environment(\.colorScheme, .dark)
-                .containerBackground(for: .widget) { background }
-        } else {
-            self
-                .environment(\.colorScheme, .dark)
-                .padding()
-                .background(background)
-        }
-    }
-
     @ViewBuilder
     func widgetBackground(_ color: Color) -> some View {
         if #available(iOS 17.0, *) {
@@ -250,7 +124,9 @@ struct SnowCNTRLWidget: Widget {
             SnowCNTRLWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("NEIGE CNTRL")
-        .description("Statut du déneigement de ta rue, en un coup d'œil.")
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
+        .description("Statut du déneigement de ta rue, en un coup d'œil sur l'écran verrouillé.")
+        // Lock screen only — no .systemSmall/.systemMedium, so it can't be
+        // added to the Home Screen.
+        .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }

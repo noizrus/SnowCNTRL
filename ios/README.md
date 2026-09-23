@@ -1,5 +1,16 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Widget réservé à l'écran verrouillé (dernière itération)
+
+- **Le widget n'est plus proposé pour l'écran d'accueil** : seules les familles
+  écran verrouillé restent déclarées (`.accessoryCircular`, `.accessoryRectangular`,
+  `.accessoryInline`) — `.systemSmall`/`.systemMedium` retirées de
+  `SnowCNTRLWidget.supportedFamilies`, donc il n'apparaît plus du tout dans le
+  sélecteur de widgets de l'écran d'accueil, seulement dans celui de l'écran
+  verrouillé. Tout le code de rendu écran d'accueil devenu inutilisable
+  (`smallView`, `mediumView`, `WidgetLogo`, le dégradé de fond) a été retiré de
+  `SnowCNTRLWidgetView.swift`.
+
 ## Changer de ville : retour en arrière + barre du bas visible (dernière itération)
 
 - **« Changer de ville » ne mène plus dans une impasse** : ce bouton (colonne de
@@ -389,10 +400,11 @@ pour **les deux** (comme pour l'app seule avant) :
   dernier résultat (`StatusCache`) pour répondre même hors-ligne juste après un lancement
   précédent. Aucune cible Xcode supplémentaire requise (App Intents iOS 16+ vit dans la
   cible principale).
-- **Widget écran d'accueil + écran verrouillé** (`ios/Widget/`) : nouvelle cible
+- **Widget écran verrouillé uniquement** (`ios/Widget/`) : nouvelle cible
   `SnowCNTRLWidgetExtension` (WidgetKit). Affiche la ville, un point coloré et le statut
-  en petit (accueil, `.systemSmall`/`.systemMedium`) ou en icône/texte (verrouillage,
-  `.accessoryCircular`/`.accessoryRectangular`/`.accessoryInline`). Les données passent
+  en icône/texte (`.accessoryCircular`/`.accessoryRectangular`/`.accessoryInline`) —
+  volontairement pas d'écran d'accueil (`.systemSmall`/`.systemMedium` retirés de
+  `.supportedFamilies`, plus disponible que sur l'écran verrouillé). Les données passent
   par un App Group (`group.com.snowcntrl.app`, voir `Sources/Shared/WidgetSharedStatus.swift`)
   écrit par `DashboardViewModel` et `SiriIntents` à chaque vérification de statut — le
   widget ne fait lui-même aucun appel réseau, il relit juste la dernière valeur connue et
