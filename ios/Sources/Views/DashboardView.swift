@@ -28,8 +28,10 @@ struct DashboardView: View {
     @State private var notificationsDenied = false
     @State private var toast: String?
     @State private var isShowingAlertsList = false
+    @Binding var selectedTab: MainTab
     let city: City
     var onChangeCity: () -> Void
+    var onShowTowedHelp: () -> Void
 
     /// A marker placed by tapping the map but not added yet.
     private struct PendingAlert {
@@ -39,9 +41,11 @@ struct DashboardView: View {
         var label: String?
     }
 
-    init(city: City, onChangeCity: @escaping () -> Void) {
+    init(city: City, selectedTab: Binding<MainTab>, onChangeCity: @escaping () -> Void, onShowTowedHelp: @escaping () -> Void) {
         self.city = city
+        self._selectedTab = selectedTab
         self.onChangeCity = onChangeCity
+        self.onShowTowedHelp = onShowTowedHelp
         _region = State(initialValue: MKCoordinateRegion(
             center: city.approximateCoordinate,
             span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
@@ -146,6 +150,14 @@ struct DashboardView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbarContent }
                 .themedNavigationBar(themeManager.palette)
+                // Declared on this screen's own NavigationStack, not on the
+                // TabView wrapping it — a `.safeAreaInset` added further up
+                // the tree wasn't reliably reaching the draggable panel
+                // inside here, which the collapsed panel (just the status
+                // pill) then rendered partly behind the bottom bar.
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    MainBottomBar(selectedTab: $selectedTab, onShowTowedHelp: onShowTowedHelp)
+                }
         }
     }
 
@@ -773,7 +785,7 @@ struct DashboardView: View {
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
         let montreal = CitiesData.all.first { $0.id == "montreal" }!
-        DashboardView(city: montreal, onChangeCity: {})
+        DashboardView(city: montreal, selectedTab: .constant(.dashboard), onChangeCity: {}, onShowTowedHelp: {})
             .environmentObject(Localizer())
             .environmentObject(ThemeManager())
             .environmentObject(PremiumManager())

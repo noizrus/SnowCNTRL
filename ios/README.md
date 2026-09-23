@@ -1,5 +1,16 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Correction : pastille de statut cachée sous la barre du bas (dernière itération)
+
+- **« Hors saison » (panneau réduit) caché sous la barre du bas** : le
+  `.safeAreaInset` de `MainBottomBar` était déclaré sur le `TabView` dans
+  `RootView`, mais ne remontait pas de façon fiable jusqu'au panneau
+  glissant à l'intérieur du `NavigationStack` du Tableau de bord — la
+  pastille de statut, seule visible une fois le panneau réduit, se
+  retrouvait partiellement sous la barre. Corrigé en déclarant l'inset
+  directement dans chaque écran (`DashboardView`, `SettingsView`), sur leur
+  propre `NavigationStack`, plutôt que sur le `TabView` qui les enveloppe.
+
 ## Correction barre du haut trop large + logo encore agrandi (dernière itération)
 
 - **Barre du haut anormalement haute dans Réglages** (et, moins visible, Onboarding

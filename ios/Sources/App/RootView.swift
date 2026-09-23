@@ -68,26 +68,37 @@ struct RootView: View {
     /// plain switch on `selectedTab`) keeps both screens alive across tab
     /// switches, so Dashboard doesn't lose its map position and loaded
     /// streets every time Settings is opened.
+    ///
+    /// Each screen declares its own `.safeAreaInset` for the bar (inside its
+    /// own `NavigationStack`) instead of this view declaring one shared
+    /// inset on the `TabView` — an inset added here wasn't reliably
+    /// reaching content nested inside each tab's `NavigationStack`, so
+    /// Dashboard's collapsed panel rendered partly behind the bar.
     private func mainTabs(for city: City) -> some View {
         TabView(selection: $selectedTab) {
-            DashboardView(city: city) {
-                citySelection.clearSelection()
-                // Straight to the manual list: the user tapped
-                // "change city" on purpose, so re-running geolocation
-                // here would just re-resolve to the same city.
-                skippedGeolocation = true
-            }
+            DashboardView(
+                city: city,
+                selectedTab: $selectedTab,
+                onChangeCity: {
+                    citySelection.clearSelection()
+                    // Straight to the manual list: the user tapped
+                    // "change city" on purpose, so re-running geolocation
+                    // here would just re-resolve to the same city.
+                    skippedGeolocation = true
+                },
+                onShowTowedHelp: { isShowingTowedHelp = true }
+            )
             .tag(MainTab.dashboard)
             .toolbar(.hidden, for: .tabBar)
 
-            SettingsView(selectedCity: city, citySelection: citySelection)
-                .tag(MainTab.settings)
-                .toolbar(.hidden, for: .tabBar)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            MainBottomBar(selectedTab: $selectedTab) {
-                isShowingTowedHelp = true
-            }
+            SettingsView(
+                selectedCity: city,
+                citySelection: citySelection,
+                selectedTab: $selectedTab,
+                onShowTowedHelp: { isShowingTowedHelp = true }
+            )
+            .tag(MainTab.settings)
+            .toolbar(.hidden, for: .tabBar)
         }
         .sheet(isPresented: $isShowingTowedHelp) {
             CityHelpView(city: city)
