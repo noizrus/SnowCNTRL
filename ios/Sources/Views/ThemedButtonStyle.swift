@@ -39,7 +39,7 @@ struct NeutralButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(.tertiarySystemBackground))
+                    .fill(Color(configuration.isPressed ? .systemGray4 : .tertiarySystemBackground))
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)

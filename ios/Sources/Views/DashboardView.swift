@@ -374,16 +374,28 @@ struct DashboardView: View {
 
     /// Same one-shot request as tapping the "locate me" button, fired
     /// automatically on first appearance so the map opens zoomed on the
-    /// driver's actual position instead of the whole city — same fallback
-    /// as before if permission is denied or the fix never arrives (just the
-    /// wide city view). Once-only via `hasCenteredOnLocation`, so returning
-    /// to this screen from a pushed one (city rules, weather…) doesn't
-    /// re-snap the map away from wherever the user then panned it to.
+    /// driver's actual position instead of the whole city. Once-only via
+    /// `hasCenteredOnLocation`, so returning to this screen from a pushed
+    /// one (city rules, weather…) doesn't re-snap the map away from
+    /// wherever the user then panned it to.
     private func centerOnCurrentLocationIfNeeded() {
         guard !hasCenteredOnLocation else { return }
         hasCenteredOnLocation = true
-        isLocating = true
-        locationManager.requestLocation()
+        requestLocationCentering()
+    }
+
+    /// If permission was denied (or restricted), `CLLocationManager` won't
+    /// even show the system prompt again and `requestLocation()` silently
+    /// does nothing — surfaced here instead of leaving the map stuck on the
+    /// wide city view with no explanation.
+    private func requestLocationCentering() {
+        switch locationManager.authorizationStatus {
+        case .denied, .restricted:
+            showToast(localizer.s(.mapLocationPermissionDenied))
+        default:
+            isLocating = true
+            locationManager.requestLocation()
+        }
     }
 
     private func loadSegmentsDebounced() async {
@@ -456,8 +468,7 @@ struct DashboardView: View {
                 isShowingCityPicker = true
             }
             MapControlButton(systemImage: "location.fill", accessibilityText: localizer.s(.mapLocateMe)) {
-                isLocating = true
-                locationManager.requestLocation()
+                requestLocationCentering()
             }
             MapControlButton(
                 systemImage: colorScheme == .dark ? "sun.max.fill" : "moon.stars.fill",

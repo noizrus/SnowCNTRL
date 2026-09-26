@@ -67,6 +67,7 @@ enum LocKey: Hashable, CaseIterable {
     case legendCityWideNote
     case mapLoadingStreets
     case mapLocateMe
+    case mapLocationPermissionDenied
     case panelToggle
     case settingsAppearance
     case mapToggleDayNight
@@ -454,6 +455,11 @@ enum Strings {
             .french: "Ma position",
             .english: "My location",
             .spanish: "Mi ubicación",
+        ],
+        .mapLocationPermissionDenied: [
+            .french: "Localisation désactivée — active-la dans Réglages pour centrer la carte automatiquement.",
+            .english: "Location is off — enable it in Settings to auto-center the map.",
+            .spanish: "Ubicación desactivada — actívala en Ajustes para centrar el mapa automáticamente.",
         ],
         .panelToggle: [
             .french: "Afficher ou réduire le panneau",
