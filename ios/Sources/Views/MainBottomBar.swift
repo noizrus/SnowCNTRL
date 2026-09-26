@@ -58,7 +58,7 @@ struct MainBottomBar: View {
                 glowRadius: isSelected ? 10 : 0
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressFlashButtonStyle(flashColor: themeManager.palette.primary))
         .frame(maxWidth: .infinity)
     }
 
@@ -74,7 +74,7 @@ struct MainBottomBar: View {
                 glowRadius: 6
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressFlashButtonStyle(flashColor: themeManager.palette.primary))
         .frame(maxWidth: .infinity)
     }
 
@@ -94,6 +94,21 @@ struct MainBottomBar: View {
         .neonGlow(themeManager.palette.primary, radius: glowRadius)
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
+    }
+}
+
+/// A brief extra glow burst exactly while a finger is down on the button —
+/// on top of whatever its resting state already is (dim, bright-selected,
+/// or always-lit), not a replacement for it.
+private struct PressFlashButtonStyle: ButtonStyle {
+    let flashColor: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .brightness(configuration.isPressed ? 0.4 : 0)
+            .shadow(color: flashColor.opacity(configuration.isPressed ? 0.9 : 0), radius: configuration.isPressed ? 14 : 0)
+            .scaleEffect(configuration.isPressed ? 1.08 : 1.0)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
