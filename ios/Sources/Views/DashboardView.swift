@@ -539,7 +539,9 @@ struct DashboardView: View {
     private func showToast(_ text: String) {
         withAnimation { toast = text }
         Task {
-            try? await Task.sleep(nanoseconds: 3_500_000_000)
+            // Long enough to read/screenshot a raw CloudKit error message,
+            // not just a short confirmation phrase.
+            try? await Task.sleep(nanoseconds: 8_000_000_000)
             if toast == text {
                 withAnimation { toast = nil }
             }
@@ -928,12 +930,19 @@ struct DashboardView: View {
     private func submitCommunityReport(_ state: CommunityReportState) {
         isSubmittingReport = true
         Task {
-            let success = await CommunityReportService.submitReport(cityID: city.id, state: state)
+            let outcome = await CommunityReportService.submitReport(cityID: city.id, state: state)
             isSubmittingReport = false
-            showToast(localizer.s(success ? .communityReportThanks : .communityReportFailed))
-            if success {
+            switch outcome {
+            case .success:
+                showToast(localizer.s(.communityReportThanks))
                 communityTally = await CommunityReportService.tally(for: city.id)
                 applyCommunityColor(for: state)
+            case .cooldown, .noiCloudAccount:
+                showToast(localizer.s(.communityReportFailed))
+            case .error(let message):
+                // TEMP: surfaces the raw CloudKit error so it's diagnosable
+                // without a debugger attached (no Mac during normal use).
+                showToast(message)
             }
         }
     }

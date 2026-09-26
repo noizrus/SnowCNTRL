@@ -33,27 +33,46 @@ enum CommunityReportService {
         let activeCount: Int
     }
 
+    /// Distinguishes *why* a report didn't go through — surfaced to the UI
+    /// so a failure is diagnosable without a debugger attached to the
+    /// device (this app has no attached Mac during normal TestFlight use).
+    enum Outcome {
+        case success
+        case cooldown
+        case noiCloudAccount(CKAccountStatus)
+        case error(String)
+    }
+
     static func canReport(cityID: String) -> Bool {
         guard let last = lastReportDate(for: cityID) else { return true }
         return Date().timeIntervalSince(last) >= cooldown
     }
 
     /// Requires the device to be signed into iCloud (Apple's default public
-    /// database security only allows writes from authenticated accounts) —
-    /// fails silently to `false` otherwise, same "no crash, just no report"
-    /// philosophy as every other optional feature in this app.
+    /// database security only allows writes from authenticated accounts).
     @discardableResult
-    static func submitReport(cityID: String, state: CommunityReportState) async -> Bool {
-        guard canReport(cityID: cityID) else { return false }
-        guard let status = try? await container.accountStatus(), status == .available else { return false }
+    static func submitReport(cityID: String, state: CommunityReportState) async -> Outcome {
+        guard canReport(cityID: cityID) else { return .cooldown }
+
+        let status: CKAccountStatus
+        do {
+            status = try await container.accountStatus()
+        } catch {
+            return .error("accountStatus: \(error.localizedDescription)")
+        }
+        guard status == .available else { return .noiCloudAccount(status) }
 
         let record = CKRecord(recordType: recordType)
         record["cityID"] = cityID
         record["state"] = state.rawValue
 
-        guard (try? await database.save(record)) != nil else { return false }
+        do {
+            _ = try await database.save(record)
+        } catch {
+            return .error("save: \(error.localizedDescription)")
+        }
         setLastReportDate(Date(), for: cityID)
-        return true
+        return .success
     }
 
     /// `nil` on any failure (offline, schema not ready yet, no iCloud) —
