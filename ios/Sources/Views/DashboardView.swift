@@ -16,6 +16,7 @@ struct DashboardView: View {
     @State private var segments: [StreetSegment] = []
     @State private var region: MKCoordinateRegion
     @State private var hasCenteredOnAddresses = false
+    @State private var hasCenteredOnLocation = false
     @State private var isShowingCityRules = false
     @State private var isShowingCityHelp = false
     @State private var isPanelCollapsed = true
@@ -186,7 +187,10 @@ struct DashboardView: View {
             .onReceive(locationManager.$lastLocation) { coordinate in
                 handleLocationUpdate(coordinate)
             }
-            .onAppear { checkForDetectedParking() }
+            .onAppear {
+                checkForDetectedParking()
+                centerOnCurrentLocationIfNeeded()
+            }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 checkForDetectedParking()
             }
@@ -347,6 +351,20 @@ struct DashboardView: View {
             region = fittingRegion(for: myAddresses)
             hasCenteredOnAddresses = true
         }
+    }
+
+    /// Same one-shot request as tapping the "locate me" button, fired
+    /// automatically on first appearance so the map opens zoomed on the
+    /// driver's actual position instead of the whole city — same fallback
+    /// as before if permission is denied or the fix never arrives (just the
+    /// wide city view). Once-only via `hasCenteredOnLocation`, so returning
+    /// to this screen from a pushed one (city rules, weather…) doesn't
+    /// re-snap the map away from wherever the user then panned it to.
+    private func centerOnCurrentLocationIfNeeded() {
+        guard !hasCenteredOnLocation else { return }
+        hasCenteredOnLocation = true
+        isLocating = true
+        locationManager.requestLocation()
     }
 
     private func loadSegmentsDebounced() async {
