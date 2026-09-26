@@ -29,6 +29,7 @@ struct DashboardView: View {
     @State private var toast: String?
     @State private var isShowingAlertsList = false
     @State private var isShowingCityPicker = false
+    @State private var isShowingWeather = false
     @Binding var selectedTab: MainTab
     @ObservedObject var citySelection: CitySelectionViewModel
     let city: City
@@ -140,20 +141,11 @@ struct DashboardView: View {
     }
 
     private var content: some View {
+        // Split from mapStackWithChrome (not one long chain) — this file
+        // already hit the type-checker timeout once from an oversized
+        // modifier chain; keep each one short as more get added.
         NavigationStack {
-            mapStack
-                .navigationTitle(city.name)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar { toolbarContent }
-                .themedNavigationBar(themeManager.palette)
-                // Declared on this screen's own NavigationStack, not on the
-                // TabView wrapping it — a `.safeAreaInset` added further up
-                // the tree wasn't reliably reaching the draggable panel
-                // inside here, which the collapsed panel (just the status
-                // pill) then rendered partly behind the bottom bar.
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    MainBottomBar(selectedTab: $selectedTab, onShowTowedHelp: { isShowingCityHelp = true })
-                }
+            mapStackWithChrome
                 // Pushed into this same stack (not a sheet) so "Changer de
                 // ville" gets a normal back button and keeps the bottom bar
                 // visible underneath instead of covering it.
@@ -170,7 +162,30 @@ struct DashboardView: View {
                 .navigationDestination(isPresented: $isShowingCityHelp) {
                     CityHelpView(city: city)
                 }
+                .navigationDestination(isPresented: $isShowingWeather) {
+                    WeatherForecastView(city: city)
+                }
         }
+    }
+
+    private var mapStackWithChrome: some View {
+        mapStack
+            .navigationTitle(city.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { toolbarContent }
+            .themedNavigationBar(themeManager.palette)
+            // Declared on this screen's own NavigationStack, not on the
+            // TabView wrapping it — a `.safeAreaInset` added further up the
+            // tree wasn't reliably reaching the draggable panel inside
+            // here, which the collapsed panel (just the status pill) then
+            // rendered partly behind the bottom bar.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                MainBottomBar(
+                    selectedTab: $selectedTab,
+                    onShowTowedHelp: { isShowingCityHelp = true },
+                    onShowWeather: { isShowingWeather = true }
+                )
+            }
     }
 
     /// 8 pt top padding + four 44 pt buttons + three 10 pt gaps + 12 pt

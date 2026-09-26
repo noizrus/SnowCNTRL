@@ -8,6 +8,7 @@ struct SettingsView: View {
     @AppStorage(CityStatusService.simulateBanKey) private var isSimulatingBan = false
     @AppStorage(AlertRingDuration.storageKey) private var alertRingDurationSeconds = AlertRingDuration.default.rawValue
     @State private var isShowingCityHelp = false
+    @State private var isShowingWeather = false
     let selectedCity: City?
     @ObservedObject var citySelection: CitySelectionViewModel
     @Binding var selectedTab: MainTab
@@ -142,13 +143,22 @@ struct SettingsView: View {
             }
             .themedNavigationBar(themeManager.palette)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                MainBottomBar(selectedTab: $selectedTab, onShowTowedHelp: { isShowingCityHelp = true })
+                MainBottomBar(
+                    selectedTab: $selectedTab,
+                    onShowTowedHelp: { isShowingCityHelp = true },
+                    onShowWeather: { isShowingWeather = true }
+                )
             }
             // Pushed (not sheeted) so the bottom bar stays visible
             // underneath, same reasoning as Dashboard's own "Aide".
             .navigationDestination(isPresented: $isShowingCityHelp) {
                 if let selectedCity {
                     CityHelpView(city: selectedCity)
+                }
+            }
+            .navigationDestination(isPresented: $isShowingWeather) {
+                if let selectedCity {
+                    WeatherForecastView(city: selectedCity)
                 }
             }
         }

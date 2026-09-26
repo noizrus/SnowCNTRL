@@ -118,6 +118,13 @@ enum LocKey: Hashable, CaseIterable {
     case helpNoVerifiedNumber
     case helpReportSignageIssue
     case helpSourceNote
+
+    case tabWeather
+    case weatherTitle
+    case weatherLoading
+    case weatherError
+    case weatherSnowThisWeek
+    case weatherSnowAmount
 }
 
 enum Strings {
@@ -657,6 +664,36 @@ enum Strings {
             .french: "Liens et numéros tirés des sites officiels des villes. En cas de doute, vérifie auprès de ta ville.",
             .english: "Links and numbers come from the cities' official websites. When in doubt, check with your city.",
             .spanish: "Los enlaces y números provienen de los sitios oficiales de las ciudades. En caso de duda, consulta con tu ciudad.",
+        ],
+        .tabWeather: [
+            .french: "Météo",
+            .english: "Weather",
+            .spanish: "Clima",
+        ],
+        .weatherTitle: [
+            .french: "Prévisions 7 jours",
+            .english: "7-day forecast",
+            .spanish: "Pronóstico a 7 días",
+        ],
+        .weatherLoading: [
+            .french: "Chargement de la météo…",
+            .english: "Loading weather…",
+            .spanish: "Cargando el clima…",
+        ],
+        .weatherError: [
+            .french: "Impossible de charger la météo pour l'instant.",
+            .english: "Couldn't load the weather right now.",
+            .spanish: "No se pudo cargar el clima por ahora.",
+        ],
+        .weatherSnowThisWeek: [
+            .french: "Neige prévue cette semaine",
+            .english: "Snow expected this week",
+            .spanish: "Nieve prevista esta semana",
+        ],
+        .weatherSnowAmount: [
+            .french: "%CM% cm",
+            .english: "%CM% cm",
+            .spanish: "%CM% cm",
         ],
     ]
 

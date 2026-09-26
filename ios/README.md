@@ -1,5 +1,29 @@
 # SnowCNTRL — app iOS (MVP)
 
+## Prévisions météo 7 jours dans la barre du bas (dernière itération)
+
+- **Nouveau bouton « Météo »** dans la barre du bas (entre Aide et Réglages,
+  icône `cloud.snow.fill`) : ouvre les prévisions à 7 jours pour la ville
+  affichée — poussé dans la pile de navigation comme Aide et Changer de
+  ville, donc la barre du bas reste visible en dessous.
+- **Source : Open-Meteo** (`Services/WeatherService.swift`), gratuite et sans
+  clé API — contrairement à WeatherKit d'Apple qui aurait demandé
+  d'enregistrer une nouvelle capacité payante sur le compte développeur, le
+  genre de friction déjà rencontrée avec App Groups plus tôt dans le projet.
+  Un appel HTTPS direct suffit, rien à ajouter dans `project.yml`.
+- **`snowfall_sum` en cm par jour** est la vraie raison de choisir cette API
+  plutôt qu'une autre : savoir que de la neige arrive cette semaine est
+  directement utile à côté d'un traqueur d'interdictions de stationnement.
+  Un bandeau en haut de l'écran résume le total de neige prévue sur les 7
+  jours quand il y en a ; chaque jour affiche aussi sa propre quantité s'il
+  y a lieu, avec l'icône météo (codes météo WMO → SF Symbols), le nom du
+  jour (« Aujourd'hui » pour le premier) et les températures min/max en °C.
+- Dates reconstruites à partir de l'année/mois/jour renvoyés par l'API avec
+  le calendrier de l'appareil, plutôt que parsées comme minuit UTC — un
+  décalage fixe à UTC aurait pu faire tomber du mauvais côté de minuit une
+  fois comparé à `Calendar.current`, décalant « aujourd'hui » et les noms de
+  jours d'un jour pour qui n'est pas dans un fuseau proche de UTC.
+
 ## Barre du bas visible en ouvrant Aide (dernière itération)
 
 - **« Aide » ne cache plus la barre du bas** (`CityHelpView`) : elle

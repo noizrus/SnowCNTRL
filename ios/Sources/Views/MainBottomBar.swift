@@ -20,11 +20,13 @@ struct MainBottomBar: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @Binding var selectedTab: MainTab
     var onShowTowedHelp: () -> Void
+    var onShowWeather: () -> Void
 
     var body: some View {
         HStack(spacing: 0) {
             tabButton(tab: .dashboard, systemImage: "snowflake", title: localizer.s(.tabDashboard))
-            helpButton
+            actionButton(systemImage: "car.fill", title: localizer.s(.tabHelp), action: onShowTowedHelp)
+            actionButton(systemImage: "cloud.snow.fill", title: localizer.s(.tabWeather), action: onShowWeather)
             tabButton(tab: .settings, systemImage: "gearshape.fill", title: localizer.s(.tabSettings))
         }
         .padding(.top, 10)
@@ -61,16 +63,16 @@ struct MainBottomBar: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// Always glowing, not just when active — it opens a sheet rather than
-    /// selecting a tab, so there's no "selected" state to dim it against.
-    /// No selection pill either, for the same reason: it never means "you
-    /// are here" the way Alertes/Réglages do, so it must never look like it
-    /// does.
-    private var helpButton: some View {
-        Button(action: onShowTowedHelp) {
+    /// Always glowing, not just when active — these open a pushed screen
+    /// rather than selecting a tab, so there's no "selected" state to dim
+    /// them against. No selection pill either, for the same reason: neither
+    /// ever means "you are here" the way Alertes/Réglages do, so they must
+    /// never look like they do.
+    private func actionButton(systemImage: String, title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             barItem(
-                systemImage: "car.fill",
-                title: localizer.s(.tabHelp),
+                systemImage: systemImage,
+                title: title,
                 color: themeManager.palette.onAccent,
                 glowRadius: 6,
                 showsSelectionPill: false
@@ -89,10 +91,12 @@ struct MainBottomBar: View {
                 .font(.system(size: 21, weight: .semibold))
             Text(title)
                 .font(.caption2.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .foregroundStyle(color)
         .neonGlow(themeManager.palette.primary, radius: glowRadius)
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background {
             if showsSelectionPill {
@@ -106,7 +110,7 @@ struct MainBottomBar_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             Spacer()
-            MainBottomBar(selectedTab: .constant(.dashboard), onShowTowedHelp: {})
+            MainBottomBar(selectedTab: .constant(.dashboard), onShowTowedHelp: {}, onShowWeather: {})
         }
         .background(Color.black)
         .environmentObject(Localizer())
