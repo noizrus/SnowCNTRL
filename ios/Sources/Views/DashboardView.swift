@@ -584,13 +584,20 @@ struct DashboardView: View {
             .shadow(color: .black.opacity(0.35), radius: 16, y: 6)
             .padding(.horizontal, 10)
             .padding(.bottom, 6)
-            .gesture(panelDragGesture)
     }
 
     private var bottomPanelContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            panelHandle
-            panelHeaderRow
+            // Drag-to-expand/collapse is scoped to the handle + header only:
+            // attaching it to the whole panel swallowed taps on buttons
+            // further down (e.g. the community report buttons) before they
+            // ever reached the button's own tap gesture.
+            VStack(alignment: .leading, spacing: 12) {
+                panelHandle
+                panelHeaderRow
+            }
+            .contentShape(Rectangle())
+            .gesture(panelDragGesture)
             if !isPanelCollapsed {
                 panelExpandedContent
             }
