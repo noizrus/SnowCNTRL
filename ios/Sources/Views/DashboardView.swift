@@ -94,18 +94,47 @@ struct DashboardView: View {
         )
     }
 
+    /// Fixed patch size loaded around each point of interest below —
+    /// independent of the map's current zoom, so panning or zooming the
+    /// visible map never changes how much street data gets fetched.
+    private static let streetLoadSpanDegrees: CLLocationDegrees = 0.02
+
+    /// Real street geometry is only ever needed around two kinds of place:
+    /// where the driver is right now, and where they've parked (their
+    /// saved alerts). Loading the whole visible map area used to mean the
+    /// query (and the number of lines to draw) grew with how far out you'd
+    /// zoomed, which got slow; a few small fixed radiuses here stay fast at
+    /// any zoom level. Falls back to the city center so a first-time user
+    /// with no saved address and no location yet still sees something to
+    /// tap.
+    private var pointsOfInterest: [CLLocationCoordinate2D] {
+        var points = myAddresses.map(\.coordinate)
+        if let location = locationManager.lastLocation {
+            points.append(location)
+        }
+        if points.isEmpty {
+            points.append(city.approximateCoordinate)
+        }
+        return points
+    }
+
     private struct StreetRequest: Equatable {
-        let latitude: Int
-        let longitude: Int
-        let zoom: Int
+        struct Point: Equatable {
+            let latitude: Int
+            let longitude: Int
+        }
+        let points: [Point]
         let state: ParkingBanState?
     }
 
     private var streetRequest: StreetRequest {
         StreetRequest(
-            latitude: Int((region.center.latitude / 0.0015).rounded()),
-            longitude: Int((region.center.longitude / 0.0015).rounded()),
-            zoom: Int((log2(region.span.latitudeDelta) * 2).rounded()),
+            points: pointsOfInterest.map {
+                StreetRequest.Point(
+                    latitude: Int(($0.latitude / 0.0015).rounded()),
+                    longitude: Int(($0.longitude / 0.0015).rounded())
+                )
+            },
             state: viewModel.result?.state
         )
     }
@@ -472,8 +501,17 @@ struct DashboardView: View {
     private func loadSegments() async {
         let overallStatus = (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus
         isLoadingStreets = true
-        segments = await SnowSegmentService.shared.segments(for: city, in: region, overallStatus: overallStatus)
+        var merged: [String: StreetSegment] = [:]
+        for point in pointsOfInterest {
+            let pointRegion = MKCoordinateRegion(
+                center: point,
+                span: MKCoordinateSpan(latitudeDelta: Self.streetLoadSpanDegrees, longitudeDelta: Self.streetLoadSpanDegrees)
+            )
+            let loaded = await SnowSegmentService.shared.segments(for: city, in: pointRegion, overallStatus: overallStatus)
+            for segment in loaded { merged[segment.id] = segment }
+        }
         isLoadingStreets = false
+        segments = Array(merged.values)
     }
 
     private func fittingRegion(for addresses: [SavedAddress]) -> MKCoordinateRegion {
