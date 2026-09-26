@@ -32,6 +32,12 @@ struct DashboardView: View {
     @State private var tomorrowRiskPercent: Int?
     @State private var communityTally: CommunityReportService.Tally?
     @State private var isSubmittingReport = false
+    /// A community report recolors the map right away instead of waiting on
+    /// official data — cleared to nil (falling back to the official color)
+    /// the moment the official ban state itself changes, since that's a
+    /// stronger signal than a crowd report.
+    @State private var communityOverrideStatus: SnowClearingStatus?
+    @State private var communityOverrideBaseState: ParkingBanState?
     @Binding var selectedTab: MainTab
     @ObservedObject var citySelection: CitySelectionViewModel
     let city: City
@@ -543,7 +549,14 @@ struct DashboardView: View {
     // MARK: - Data
 
     private func loadSegments() async {
-        let overallStatus = (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus
+        let officialState = viewModel.result?.state ?? .unknownNoData
+        let overallStatus: SnowClearingStatus
+        if let override = communityOverrideStatus, communityOverrideBaseState == officialState {
+            overallStatus = override
+        } else {
+            communityOverrideStatus = nil
+            overallStatus = officialState.asSnowClearingStatus
+        }
         isLoadingStreets = true
         var merged: [String: StreetSegment] = [:]
         for point in pointsOfInterest {
@@ -920,7 +933,22 @@ struct DashboardView: View {
             showToast(localizer.s(success ? .communityReportThanks : .communityReportFailed))
             if success {
                 communityTally = await CommunityReportService.tally(for: city.id)
+                applyCommunityColor(for: state)
             }
+        }
+    }
+
+    /// Recolors the streets on screen right away, using the same legend
+    /// colors as the map's official statuses, so the report has visible
+    /// proof it went through instead of only a toast + a tally number.
+    private func applyCommunityColor(for state: CommunityReportState) {
+        let status: SnowClearingStatus = state == .cleared ? .cleared : .noParkingActive
+        communityOverrideBaseState = viewModel.result?.state ?? .unknownNoData
+        communityOverrideStatus = status
+        segments = segments.map { segment in
+            var updated = segment
+            updated.status = status
+            return updated
         }
     }
 
