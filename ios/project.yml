@@ -21,6 +21,8 @@ targets:
       SystemCapabilities:
         com.apple.ApplicationGroups.iOS:
           enabled: 1
+        com.apple.iCloud:
+          enabled: 1
     platform: iOS
     sources:
       - path: Sources
@@ -73,6 +75,12 @@ targets:
           - group.com.snowcntrl.app
         # Lets snow alerts ring through Focus / Do Not Disturb.
         com.apple.developer.usernotifications.time-sensitive: true
+        # Public CloudKit database for the community status confirmations —
+        # shared across everyone's install, no custom server to host.
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.snowcntrl.app
+        com.apple.developer.icloud-services:
+          - CloudKit
     scheme:
       testTargets:
         - SnowCNTRLTests

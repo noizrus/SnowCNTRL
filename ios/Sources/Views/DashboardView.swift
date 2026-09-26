@@ -30,6 +30,8 @@ struct DashboardView: View {
     @State private var isShowingCityPicker = false
     @State private var isShowingWeather = false
     @State private var tomorrowRiskPercent: Int?
+    @State private var communityTally: CommunityReportService.Tally?
+    @State private var isSubmittingReport = false
     @Binding var selectedTab: MainTab
     @ObservedObject var citySelection: CitySelectionViewModel
     let city: City
@@ -162,6 +164,9 @@ struct DashboardView: View {
                 } else {
                     tomorrowRiskPercent = nil
                 }
+            }
+            .task(id: city.id) {
+                communityTally = await CommunityReportService.tally(for: city.id)
             }
             .task(id: widgetSignature) {
                 await publishToWidget()
@@ -627,6 +632,8 @@ struct DashboardView: View {
             riskEstimateRow(riskPercent)
         }
 
+        communityReportRow
+
         if let pending = pendingAlert {
             pendingAlertCard(pending)
         } else if let alert = selectedAlert {
@@ -850,6 +857,64 @@ struct DashboardView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(themeManager.palette.primary.opacity(0.12)))
+    }
+
+    /// Crowdsourced cross-check on the official/placeholder status — no
+    /// city gives a per-street feed, so this is the closest thing to one:
+    /// what other people on the ground are actually seeing right now.
+    private var communityReportRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(localizer.s(.communityReportTitle))
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                communityReportButton(
+                    state: .cleared,
+                    icon: "checkmark.circle.fill",
+                    label: localizer.s(.communityReportCleared),
+                    count: communityTally?.clearedCount
+                )
+                communityReportButton(
+                    state: .stillActive,
+                    icon: "exclamationmark.triangle.fill",
+                    label: localizer.s(.communityReportActive),
+                    count: communityTally?.activeCount
+                )
+            }
+        }
+    }
+
+    private func communityReportButton(state: CommunityReportState, icon: String, label: String, count: Int?) -> some View {
+        Button {
+            submitCommunityReport(state)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                Text(label)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                if let count, count > 0 {
+                    Text("\(count)")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .font(.caption.weight(.semibold))
+        }
+        .buttonStyle(NeutralButtonStyle())
+        .disabled(isSubmittingReport || !CommunityReportService.canReport(cityID: city.id))
+    }
+
+    private func submitCommunityReport(_ state: CommunityReportState) {
+        isSubmittingReport = true
+        Task {
+            let success = await CommunityReportService.submitReport(cityID: city.id, state: state)
+            isSubmittingReport = false
+            showToast(localizer.s(success ? .communityReportThanks : .communityReportFailed))
+            if success {
+                communityTally = await CommunityReportService.tally(for: city.id)
+            }
+        }
     }
 
     @ViewBuilder

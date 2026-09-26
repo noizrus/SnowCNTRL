@@ -147,6 +147,12 @@ enum LocKey: Hashable, CaseIterable {
     case parkingDetectedTitle
     case parkingDetectedBody
     case siriNoCity
+
+    case communityReportTitle
+    case communityReportCleared
+    case communityReportActive
+    case communityReportThanks
+    case communityReportFailed
     case tireReminderWinterTitle
     case tireReminderWinterBody
     case tireReminderSummerTitle
@@ -817,6 +823,31 @@ enum Strings {
             .french: "Choisis d'abord une ville dans l'app SnowCNTRL.",
             .english: "Pick a city in the SnowCNTRL app first.",
             .spanish: "Elige primero una ciudad en la app SnowCNTRL.",
+        ],
+        .communityReportTitle: [
+            .french: "Confirmé par la communauté",
+            .english: "Confirmed by the community",
+            .spanish: "Confirmado por la comunidad",
+        ],
+        .communityReportCleared: [
+            .french: "Déjà déneigé",
+            .english: "Already cleared",
+            .spanish: "Ya despejado",
+        ],
+        .communityReportActive: [
+            .french: "Toujours interdit",
+            .english: "Still banned",
+            .spanish: "Aún prohibido",
+        ],
+        .communityReportThanks: [
+            .french: "Merci ! Ton signalement a été ajouté.",
+            .english: "Thanks! Your report was added.",
+            .spanish: "¡Gracias! Tu reporte fue añadido.",
+        ],
+        .communityReportFailed: [
+            .french: "Signalement impossible — iCloud requis, ou tu as déjà signalé récemment.",
+            .english: "Couldn't report — iCloud is required, or you already reported recently.",
+            .spanish: "No se pudo enviar — se requiere iCloud, o ya reportaste hace poco.",
         ],
         .tireReminderWinterTitle: [
             .french: "C'est le moment de passer aux pneus d'hiver",
