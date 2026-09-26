@@ -30,12 +30,16 @@ enum TireChangeAdvisor {
     static let stopAskingActionIdentifier = "snowcntrl.tire.stopAsking"
     static let enabledKey = "snowcntrl.tireReminderEnabled"
 
-    /// Below this, winter tires' softer rubber grips better; above it,
-    /// summer tires do — the standard rule of thumb tire shops use.
-    private static let thresholdC = 7.0
-    /// Requires the trend to hold for several days, not one warm/cold
-    /// blip, before recommending a swap.
-    private static let lookaheadDays = 5
+    /// Winter tires are recommended once nights are reliably below freezing
+    /// — not the 7°C rule of thumb, which fires weeks before it's actually
+    /// needed and reads as "do this right now" instead of "here's what's
+    /// coming". Summer tires still use the 7°C rule since there's no
+    /// urgency/safety case for catching that one early.
+    private static let freezeThresholdC = 0.0
+    private static let summerThresholdC = 7.0
+    /// Requires the trend to hold for several consecutive days, not one
+    /// cold/warm blip, before recommending a swap.
+    private static let sustainDays = 3
 
     static func registerCategory(language: AppLanguage) {
         let dismiss = UNNotificationAction(
@@ -65,18 +69,35 @@ enum TireChangeAdvisor {
     /// best-effort background refresh), but only actually fetches weather
     /// and evaluates the trend once per calendar day — no need for more,
     /// since this is a once-a-year notification at most per season.
+    ///
+    /// Scans the whole available forecast (up to 14 days) for the first
+    /// sustained cold or warm spell, instead of only checking whether it's
+    /// already happening in the next few days — that's what turns this
+    /// into an early heads-up ("in 9 days it'll be below freezing") rather
+    /// than a same-day "go change your tires now".
     static func checkAndNotify(city: City, language: AppLanguage) async {
         guard UserDefaults.standard.bool(forKey: enabledKey) else { return }
         guard shouldCheckToday() else { return }
-        guard let forecast = await WeatherService.forecast(for: city), forecast.count >= lookaheadDays else { return }
+        guard let forecast = await WeatherService.forecast(for: city), forecast.count >= sustainDays else { return }
         markCheckedToday()
 
-        let nextDays = forecast.prefix(lookaheadDays)
-        if nextDays.allSatisfy({ $0.highC <= thresholdC }) {
-            notifyIfDue(season: .winter, language: language)
-        } else if nextDays.allSatisfy({ $0.highC >= thresholdC }) {
-            notifyIfDue(season: .summer, language: language)
+        if let daysUntil = daysUntilSustained(forecast, where: { $0.lowC < freezeThresholdC }) {
+            notifyIfDue(season: .winter, daysUntil: daysUntil, cityName: city.name, language: language)
+        } else if let daysUntil = daysUntilSustained(forecast, where: { $0.highC > summerThresholdC }) {
+            notifyIfDue(season: .summer, daysUntil: daysUntil, cityName: city.name, language: language)
         }
+    }
+
+    /// First index (days from today) where `condition` holds for
+    /// `sustainDays` in a row, or `nil` if no such run exists in `forecast`.
+    private static func daysUntilSustained(_ forecast: [DailyForecast], where condition: (DailyForecast) -> Bool) -> Int? {
+        guard forecast.count >= sustainDays else { return nil }
+        for start in 0...(forecast.count - sustainDays) {
+            if forecast[start..<(start + sustainDays)].allSatisfy(condition) {
+                return start
+            }
+        }
+        return nil
     }
 
     /// The action button on the notification itself — silences just this
@@ -92,15 +113,19 @@ enum TireChangeAdvisor {
         UserDefaults.standard.removeObject(forKey: optOutKey(.summer))
     }
 
-    private static func notifyIfDue(season: TireSeason, language: AppLanguage) {
+    private static func notifyIfDue(season: TireSeason, daysUntil: Int, cityName: String, language: AppLanguage) {
         guard !isOptedOut(season) else { return }
         let year = Calendar.current.component(.year, from: Date())
         guard lastNotifiedYear(season) != year else { return }
         setLastNotifiedYear(season, year: year)
 
+        let body = Strings.text(for: season.bodyKey, language: language)
+            .replacingOccurrences(of: "%DAYS%", with: String(daysUntil))
+            .replacingOccurrences(of: "%CITY%", with: cityName)
+
         let content = UNMutableNotificationContent()
         content.title = Strings.text(for: season.titleKey, language: language)
-        content.body = Strings.text(for: season.bodyKey, language: language)
+        content.body = body
         content.sound = .default
         content.categoryIdentifier = categoryIdentifier
         content.userInfo = ["tireSeason": season.rawValue]
