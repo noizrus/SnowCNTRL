@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// 7-day forecast for the city currently shown — useful next to a
+/// 14-day forecast for the city currently shown — useful next to a
 /// snow-clearing ban tracker precisely because it says whether more snow
-/// (and therefore another ban) is coming this week. Always pushed into the
-/// presenting screen's own `NavigationStack` (see `CityHelpView`), so the
-/// bottom bar stays visible underneath.
+/// (and therefore another ban) is coming. Tapping a day pushes an hourly
+/// breakdown (`DayForecastDetailView`). Always pushed into the presenting
+/// screen's own `NavigationStack` (see `CityHelpView`), so the bottom bar
+/// stays visible underneath.
 struct WeatherForecastView: View {
     @EnvironmentObject private var localizer: Localizer
     @EnvironmentObject private var themeManager: ThemeManager
@@ -14,6 +15,10 @@ struct WeatherForecastView: View {
 
     private var totalSnowCm: Double {
         (forecast ?? []).reduce(0) { $0 + $1.snowfallCm }
+    }
+
+    private var maxDailySnowCm: Double {
+        (forecast ?? []).map(\.snowfallCm).max() ?? 0
     }
 
     var body: some View {
@@ -35,8 +40,14 @@ struct WeatherForecastView: View {
                     }
                     Section {
                         ForEach(forecast) { day in
-                            dayRow(day)
+                            NavigationLink {
+                                DayForecastDetailView(day: day, cityName: city.name)
+                            } label: {
+                                dayRow(day)
+                            }
                         }
+                    } footer: {
+                        Text(localizer.s(.weatherHourlyHint))
                     }
                 }
             } else if loadFailed {
@@ -98,12 +109,20 @@ struct WeatherForecastView: View {
 
     private func dayRow(_ day: DailyForecast) -> some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
+            Image(systemName: WeatherCode.symbolName(for: day.weatherCode))
+                .font(.title2)
+                .foregroundStyle(iconColor(for: day.weatherCode))
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 4) {
                 Text(weekdayText(day.date))
                     .font(.subheadline.weight(.semibold))
                 Text(WeatherCode.label(for: day.weatherCode, language: localizer.language))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                if day.snowfallCm >= 0.1 {
+                    snowIntensityBar(cm: day.snowfallCm)
+                }
             }
             Spacer(minLength: 8)
             if day.snowfallCm >= 0.1 {
@@ -112,19 +131,33 @@ struct WeatherForecastView: View {
                     .foregroundStyle(themeManager.palette.primaryText)
                     .lineLimit(1)
             }
-            Image(systemName: WeatherCode.symbolName(for: day.weatherCode))
-                .font(.title3)
-                .foregroundStyle(iconColor(for: day.weatherCode))
-                .frame(width: 28)
-            Text("\(Int(day.highC.rounded()))°")
-                .font(.subheadline.weight(.semibold).monospacedDigit())
-                .frame(minWidth: 28, alignment: .trailing)
-            Text("\(Int(day.lowC.rounded()))°")
-                .font(.subheadline.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 28, alignment: .trailing)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(Int(day.highC.rounded()))°")
+                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                Text("\(Int(day.lowC.rounded()))°")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            .frame(minWidth: 32, alignment: .trailing)
         }
         .padding(.vertical, 4)
+    }
+
+    /// Snow amount relative to the biggest day in the whole forecast, so the
+    /// list reads at a glance like a mini bar chart of "which days matter".
+    private func snowIntensityBar(cm: Double) -> some View {
+        GeometryReader { geo in
+            let fraction = maxDailySnowCm > 0 ? min(1, cm / maxDailySnowCm) : 0
+            Capsule()
+                .fill(themeManager.palette.primary.opacity(0.18))
+                .overlay(alignment: .leading) {
+                    Capsule()
+                        .fill(themeManager.palette.primary)
+                        .frame(width: geo.size.width * fraction)
+                }
+        }
+        .frame(height: 4)
+        .frame(maxWidth: 90)
     }
 
     private func iconColor(for code: Int) -> Color {

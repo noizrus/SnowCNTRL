@@ -124,6 +124,9 @@ enum LocKey: Hashable, CaseIterable {
     case weatherError
     case weatherSnowThisWeek
     case weatherSnowAmount
+    case weatherHourlyHint
+    case weatherHourlyTitle
+    case weatherHourlyNoSnow
 }
 
 enum Strings {
@@ -665,9 +668,9 @@ enum Strings {
             .spanish: "Clima",
         ],
         .weatherTitle: [
-            .french: "Prévisions 7 jours",
-            .english: "7-day forecast",
-            .spanish: "Pronóstico a 7 días",
+            .french: "Prévisions 14 jours",
+            .english: "14-day forecast",
+            .spanish: "Pronóstico a 14 días",
         ],
         .weatherLoading: [
             .french: "Chargement de la météo…",
@@ -680,14 +683,29 @@ enum Strings {
             .spanish: "No se pudo cargar el clima por ahora.",
         ],
         .weatherSnowThisWeek: [
-            .french: "Neige prévue cette semaine",
-            .english: "Snow expected this week",
-            .spanish: "Nieve prevista esta semana",
+            .french: "Neige prévue ces 14 jours",
+            .english: "Snow expected these 14 days",
+            .spanish: "Nieve prevista en 14 días",
         ],
         .weatherSnowAmount: [
             .french: "%CM% cm",
             .english: "%CM% cm",
             .spanish: "%CM% cm",
+        ],
+        .weatherHourlyHint: [
+            .french: "Touche un jour pour voir l'heure par heure",
+            .english: "Tap a day to see it hour by hour",
+            .spanish: "Toca un día para verlo hora por hora",
+        ],
+        .weatherHourlyTitle: [
+            .french: "Heure par heure",
+            .english: "Hour by hour",
+            .spanish: "Hora por hora",
+        ],
+        .weatherHourlyNoSnow: [
+            .french: "Aucune neige prévue ce jour-là.",
+            .english: "No snow expected that day.",
+            .spanish: "No se espera nieve ese día.",
         ],
     ]
 
