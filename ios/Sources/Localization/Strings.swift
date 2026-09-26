@@ -146,7 +146,6 @@ enum LocKey: Hashable, CaseIterable {
     case settingsParkingDetectionSubtitle
     case parkingDetectedTitle
     case parkingDetectedBody
-    case siriNoCity
 
     case communityReportTitle
     case communityReportCleared
@@ -818,11 +817,6 @@ enum Strings {
             .french: "Ouvre l'app pour ajouter une alerte à cet endroit en un tap.",
             .english: "Open the app to add an alert here in one tap.",
             .spanish: "Abre la app para añadir una alerta aquí en un toque.",
-        ],
-        .siriNoCity: [
-            .french: "Choisis d'abord une ville dans l'app SnowCNTRL.",
-            .english: "Pick a city in the SnowCNTRL app first.",
-            .spanish: "Elige primero una ciudad en la app SnowCNTRL.",
         ],
         .communityReportTitle: [
             .french: "Confirmé par la communauté",
