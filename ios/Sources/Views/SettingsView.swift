@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject private var premiumManager: PremiumManager
     @AppStorage("snowcntrl.dailyReminder") private var dailyReminderEnabled = false
     @AppStorage(TireChangeAdvisor.enabledKey) private var tireReminderEnabled = false
+    @AppStorage(CarConnectionMonitor.enabledKey) private var parkingDetectionEnabled = false
     @AppStorage(CityStatusService.simulateBanKey) private var isSimulatingBan = false
     @AppStorage(AlertRingDuration.storageKey) private var alertRingDurationSeconds = AlertRingDuration.default.rawValue
     @State private var isShowingCityHelp = false
@@ -86,6 +87,16 @@ struct SettingsView: View {
                             handleTireReminderToggle(enabled)
                         }
                     Text(localizer.s(.settingsTireReminderSubtitle))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section {
+                    Toggle(localizer.s(.settingsParkingDetectionToggle), isOn: $parkingDetectionEnabled)
+                        .onChange(of: parkingDetectionEnabled) { enabled in
+                            handleParkingDetectionToggle(enabled)
+                        }
+                    Text(localizer.s(.settingsParkingDetectionSubtitle))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -218,6 +229,22 @@ struct SettingsView: View {
         Task {
             let granted = await NotificationScheduler.requestAuthorizationIfNeeded()
             if !granted { tireReminderEnabled = false }
+        }
+    }
+
+    private func handleParkingDetectionToggle(_ enabled: Bool) {
+        guard enabled else {
+            CarConnectionMonitor.shared.stopMonitoring()
+            return
+        }
+        CarConnectionMonitor.shared.requestAuthorizationIfNeeded()
+        Task {
+            let granted = await NotificationScheduler.requestAuthorizationIfNeeded()
+            guard granted else {
+                parkingDetectionEnabled = false
+                return
+            }
+            CarConnectionMonitor.shared.startMonitoring()
         }
     }
 }

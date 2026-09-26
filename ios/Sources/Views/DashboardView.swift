@@ -175,6 +175,10 @@ struct DashboardView: View {
             .onReceive(locationManager.$lastLocation) { coordinate in
                 handleLocationUpdate(coordinate)
             }
+            .onAppear { checkForDetectedParking() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                checkForDetectedParking()
+            }
             .sheet(isPresented: $isShowingCityRules) {
                 CityRulesView(city: city)
             }
@@ -345,6 +349,25 @@ struct DashboardView: View {
         guard isLocating, let coordinate else { return }
         isLocating = false
         region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
+    }
+
+    /// Surfaces a parking spot `CarConnectionMonitor` picked up (car audio
+    /// disconnected): centers the map there and presents the same "add
+    /// alert" card a manual tap would, at the exact detected point. Doesn't
+    /// go through `handleMapTap`'s curb-snapping — `segments` for this
+    /// brand-new location hasn't loaded yet at this exact moment, so
+    /// matching against whatever's currently loaded (from wherever the map
+    /// was showing before) would silently snap to the wrong street.
+    private func checkForDetectedParking() {
+        guard let coordinate = CarConnectionMonitor.shared.pendingCoordinate else { return }
+        CarConnectionMonitor.shared.consumePendingCoordinate()
+        region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006))
+        let pending = PendingAlert(coordinate: coordinate, segmentID: nil)
+        present(pending)
+        Task {
+            let label = await AddressGeocoder.reverseGeocode(coordinate)
+            if pendingAlert?.id == pending.id { pendingAlert?.label = label }
+        }
     }
 
     // MARK: - Map overlay

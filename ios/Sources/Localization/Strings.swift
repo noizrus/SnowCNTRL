@@ -141,6 +141,11 @@ enum LocKey: Hashable, CaseIterable {
     case wrappedFooterNote
     case wrappedShareTitle
     case wrappedShareButton
+
+    case settingsParkingDetectionToggle
+    case settingsParkingDetectionSubtitle
+    case parkingDetectedTitle
+    case parkingDetectedBody
     case tireReminderWinterTitle
     case tireReminderWinterBody
     case tireReminderSummerTitle
@@ -786,6 +791,26 @@ enum Strings {
             .french: "Partager",
             .english: "Share",
             .spanish: "Compartir",
+        ],
+        .settingsParkingDetectionToggle: [
+            .french: "Détection auto du stationnement",
+            .english: "Automatic parking detection",
+            .spanish: "Detección automática de estacionamiento",
+        ],
+        .settingsParkingDetectionSubtitle: [
+            .french: "Quand le Bluetooth de l'auto se déconnecte, propose d'ajouter une alerte ici. Fonctionne surtout quand l'app est ouverte ou récemment fermée.",
+            .english: "When the car's Bluetooth disconnects, offers to add an alert here. Works best while the app is open or recently backgrounded.",
+            .spanish: "Cuando el Bluetooth del auto se desconecta, sugiere añadir una alerta aquí. Funciona mejor con la app abierta o recién en segundo plano.",
+        ],
+        .parkingDetectedTitle: [
+            .french: "Tu viens de te stationner ?",
+            .english: "Did you just park?",
+            .spanish: "¿Acabas de estacionar?",
+        ],
+        .parkingDetectedBody: [
+            .french: "Ouvre l'app pour ajouter une alerte à cet endroit en un tap.",
+            .english: "Open the app to add an alert here in one tap.",
+            .spanish: "Abre la app para añadir una alerta aquí en un toque.",
         ],
         .tireReminderWinterTitle: [
             .french: "C'est le moment de passer aux pneus d'hiver",

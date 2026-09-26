@@ -16,6 +16,7 @@ struct SnowCNTRLApp: App {
         UNUserNotificationCenter.current().delegate = NotificationCoordinator.shared
         AlertNotifier.registerCategories(language: Localizer().language)
         TireChangeAdvisor.registerCategory(language: Localizer().language)
+        CarConnectionMonitor.shared.startMonitoring()
     }
 
     var body: some Scene {

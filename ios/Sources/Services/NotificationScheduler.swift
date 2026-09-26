@@ -45,4 +45,19 @@ enum NotificationScheduler {
     static func cancelDailyReminder() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
     }
+
+    private static let parkingDetectedIdentifier = "snowcntrl.parking-detected"
+
+    /// Fired by `CarConnectionMonitor` right after a car-audio disconnect —
+    /// opening the app from here is what actually surfaces the "add an
+    /// alert here?" suggestion, since notifications can't show custom UI.
+    static func notifyParkingDetected() {
+        let language = Localizer().language
+        let content = UNMutableNotificationContent()
+        content.title = Strings.text(for: .parkingDetectedTitle, language: language)
+        content.body = Strings.text(for: .parkingDetectedBody, language: language)
+        content.sound = .default
+        let request = UNNotificationRequest(identifier: parkingDetectedIdentifier, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
 }
