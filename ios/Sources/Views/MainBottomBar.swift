@@ -54,9 +54,8 @@ struct MainBottomBar: View {
             barItem(
                 systemImage: systemImage,
                 title: title,
-                color: isSelected ? onAccent : onAccent.opacity(0.5),
-                glowRadius: isSelected ? 10 : 0,
-                showsSelectionPill: isSelected
+                color: isSelected ? onAccent : onAccent.opacity(0.45),
+                glowRadius: isSelected ? 10 : 0
             )
         }
         .buttonStyle(.plain)
@@ -65,27 +64,24 @@ struct MainBottomBar: View {
 
     /// Always glowing, not just when active — these open a pushed screen
     /// rather than selecting a tab, so there's no "selected" state to dim
-    /// them against. No selection pill either, for the same reason: neither
-    /// ever means "you are here" the way Alertes/Réglages do, so they must
-    /// never look like they do.
+    /// them against.
     private func actionButton(systemImage: String, title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             barItem(
                 systemImage: systemImage,
                 title: title,
                 color: themeManager.palette.onAccent,
-                glowRadius: 6,
-                showsSelectionPill: false
+                glowRadius: 6
             )
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
     }
 
-    /// The pill background is what actually answers "where am I" — relying
-    /// on brightness/glow alone wasn't enough to tell the active tab apart
-    /// from Aide, which glows all the time.
-    private func barItem(systemImage: String, title: String, color: Color, glowRadius: CGFloat, showsSelectionPill: Bool) -> some View {
+    /// "Where am I" is answered by brightness/glow alone — full-opacity +
+    /// glow for the active tab, dimmed for the others — with no background
+    /// shape behind any icon.
+    private func barItem(systemImage: String, title: String, color: Color, glowRadius: CGFloat) -> some View {
         VStack(spacing: 2) {
             Image(systemName: systemImage)
                 .font(.system(size: 21, weight: .semibold))
@@ -98,11 +94,6 @@ struct MainBottomBar: View {
         .neonGlow(themeManager.palette.primary, radius: glowRadius)
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background {
-            if showsSelectionPill {
-                Capsule().fill(themeManager.palette.primary.opacity(0.22))
-            }
-        }
     }
 }
 
