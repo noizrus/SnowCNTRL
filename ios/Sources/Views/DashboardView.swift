@@ -99,7 +99,7 @@ struct DashboardView: View {
     /// visible map never changes how much street data gets fetched.
     private static let streetLoadSpanDegrees: CLLocationDegrees = 0.02
 
-    /// Real street geometry is only ever needed around two kinds of place:
+    /// Real street geometry is mainly needed around two kinds of place:
     /// where the driver is right now, and where they've parked (their
     /// saved alerts). Loading the whole visible map area used to mean the
     /// query (and the number of lines to draw) grew with how far out you'd
@@ -111,6 +111,14 @@ struct DashboardView: View {
         var points = myAddresses.map(\.coordinate)
         if let location = locationManager.lastLocation {
             points.append(location)
+        }
+        // Zoomed in close enough that the visible area is already about the
+        // size of one loaded patch: also load wherever that is, so browsing
+        // to an unfamiliar spot still shows its lines once zoomed in enough
+        // to actually place an alert there — just not while zoomed out
+        // wide, which is what made the whole-viewport version slow.
+        if region.span.latitudeDelta <= Self.streetLoadSpanDegrees {
+            points.append(region.center)
         }
         if points.isEmpty {
             points.append(city.approximateCoordinate)
