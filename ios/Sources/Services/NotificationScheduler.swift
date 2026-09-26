@@ -19,7 +19,13 @@ enum NotificationScheduler {
         }
     }
 
-    static func scheduleDailyReminder(cityName: String, language: AppLanguage) {
+    private static let defaultHour = 18
+
+    /// `preferredHour` — the hour the user actually tends to act, learned
+    /// from `StatsStore.typicalAcknowledgedHour` — moves the reminder to an
+    /// hour ahead of that instead of the fixed default, once there's enough
+    /// history to trust it. Falls back to the default otherwise.
+    static func scheduleDailyReminder(cityName: String, language: AppLanguage, preferredHour: Int? = nil) {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
 
@@ -29,7 +35,7 @@ enum NotificationScheduler {
         content.sound = .default
 
         var dateComponents = DateComponents()
-        dateComponents.hour = 18
+        dateComponents.hour = preferredHour.map { max(0, $0 - 1) } ?? defaultHour
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
 
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)

@@ -32,6 +32,21 @@ struct SettingsView: View {
                     Text(localizer.s(.settingsDefaultCityHint))
                 }
 
+                Section {
+                    NavigationLink {
+                        WinterWrappedView(cityName: selectedCity?.name)
+                    } label: {
+                        HStack {
+                            Label(localizer.s(.settingsWrappedLink), systemImage: "sparkles")
+                            Spacer()
+                            if StatsStore.shared.avoidedBansCount > 0 {
+                                Text("\(StatsStore.shared.avoidedBansCount)")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
                 Section(localizer.s(.settingsLanguage)) {
                     Picker(localizer.s(.settingsLanguage), selection: $localizer.language) {
                         ForEach(AppLanguage.allCases) { lang in
@@ -187,7 +202,11 @@ struct SettingsView: View {
                 dailyReminderEnabled = false
                 return
             }
-            NotificationScheduler.scheduleDailyReminder(cityName: city.name, language: localizer.language)
+            NotificationScheduler.scheduleDailyReminder(
+                cityName: city.name,
+                language: localizer.language,
+                preferredHour: StatsStore.shared.typicalAcknowledgedHour
+            )
         }
     }
 

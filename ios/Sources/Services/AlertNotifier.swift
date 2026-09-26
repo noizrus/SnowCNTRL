@@ -111,9 +111,12 @@ enum AlertNotifier {
         cancelPending(for: addressID)
     }
 
-    /// "J'ai déplacé ma voiture": stop the reminders for this ban.
+    /// "J'ai déplacé ma voiture": stop the reminders for this ban, and
+    /// count it — this exact tap, on an alert that was actively ringing,
+    /// is the clearest signal the app just saved a ticket.
     static func acknowledge(addressID: UUID) {
         cancelPending(for: addressID)
+        StatsStore.shared.recordAvoidedBan()
     }
 
     static func snooze(addressID: UUID, content: UNNotificationContent) {

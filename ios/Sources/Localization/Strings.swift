@@ -130,6 +130,17 @@ enum LocKey: Hashable, CaseIterable {
 
     case settingsTireReminderToggle
     case settingsTireReminderSubtitle
+    case dashboardRiskTomorrow
+
+    case settingsWrappedLink
+    case wrappedTitle
+    case wrappedHeadline
+    case wrappedAvoidedBans
+    case wrappedSavings
+    case wrappedMemberSince
+    case wrappedFooterNote
+    case wrappedShareTitle
+    case wrappedShareButton
     case tireReminderWinterTitle
     case tireReminderWinterBody
     case tireReminderSummerTitle
@@ -725,6 +736,56 @@ enum Strings {
             .french: "Basé sur la météo à venir, pour devancer la ruée chez les garagistes.",
             .english: "Based on the upcoming forecast, so you can beat the rush at the garage.",
             .spanish: "Según el pronóstico, para adelantarte a la afluencia en el taller.",
+        ],
+        .dashboardRiskTomorrow: [
+            .french: "Risque de déneigement demain : %PCT% % (estimation météo)",
+            .english: "Snow-clearing risk tomorrow: %PCT% % (weather estimate)",
+            .spanish: "Riesgo de retiro de nieve mañana: %PCT% % (estimación)",
+        ],
+        .settingsWrappedLink: [
+            .french: "Ton bilan de l'hiver",
+            .english: "Your winter recap",
+            .spanish: "Tu resumen del invierno",
+        ],
+        .wrappedTitle: [
+            .french: "Bilan de l'hiver",
+            .english: "Winter recap",
+            .spanish: "Resumen del invierno",
+        ],
+        .wrappedHeadline: [
+            .french: "Ton hiver avec SnowCNTRL à %CITY%",
+            .english: "Your winter with SnowCNTRL in %CITY%",
+            .spanish: "Tu invierno con SnowCNTRL en %CITY%",
+        ],
+        .wrappedAvoidedBans: [
+            .french: "contravention(s) évitée(s)",
+            .english: "ticket(s) avoided",
+            .spanish: "multa(s) evitada(s)",
+        ],
+        .wrappedSavings: [
+            .french: "estimé économisé",
+            .english: "estimated saved",
+            .spanish: "estimado ahorrado",
+        ],
+        .wrappedMemberSince: [
+            .french: "sur SnowCNTRL depuis",
+            .english: "on SnowCNTRL since",
+            .spanish: "en SnowCNTRL desde",
+        ],
+        .wrappedFooterNote: [
+            .french: "Basé sur tes alertes acquittées dans l'app — une estimation, pas un montant officiel.",
+            .english: "Based on alerts you acknowledged in the app — an estimate, not an official amount.",
+            .spanish: "Basado en tus alertas confirmadas en la app — una estimación, no un monto oficial.",
+        ],
+        .wrappedShareTitle: [
+            .french: "Mon bilan de l'hiver SnowCNTRL",
+            .english: "My SnowCNTRL winter recap",
+            .spanish: "Mi resumen del invierno en SnowCNTRL",
+        ],
+        .wrappedShareButton: [
+            .french: "Partager",
+            .english: "Share",
+            .spanish: "Compartir",
         ],
         .tireReminderWinterTitle: [
             .french: "C'est le moment de passer aux pneus d'hiver",

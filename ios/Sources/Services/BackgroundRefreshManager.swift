@@ -70,6 +70,18 @@ enum BackgroundRefreshManager {
 
         if let city = CitySelectionViewModel.currentCity {
             await TireChangeAdvisor.checkAndNotify(city: city, language: language)
+
+            // Re-applies the smart reminder hour as more acknowledgements
+            // come in, not just the moment the Settings toggle is flipped.
+            if UserDefaults.standard.bool(forKey: dailyReminderEnabledKey) {
+                NotificationScheduler.scheduleDailyReminder(
+                    cityName: city.name,
+                    language: language,
+                    preferredHour: StatsStore.shared.typicalAcknowledgedHour
+                )
+            }
         }
     }
+
+    private static let dailyReminderEnabledKey = "snowcntrl.dailyReminder"
 }
