@@ -29,6 +29,7 @@ struct DashboardView: View {
     @State private var isShowingAlertsList = false
     @State private var isShowingCityPicker = false
     @State private var isShowingWeather = false
+    @State private var tomorrowRiskPercent: Int?
     @Binding var selectedTab: MainTab
     @ObservedObject var citySelection: CitySelectionViewModel
     let city: City
@@ -154,6 +155,13 @@ struct DashboardView: View {
         content
             .task(id: isSimulatingBan) {
                 await viewModel.load(city: city, language: localizer.language)
+            }
+            .task(id: city.id) {
+                if let forecast = await WeatherService.forecast(for: city), forecast.count > 1 {
+                    tomorrowRiskPercent = SnowRiskEstimator.riskPercent(for: forecast[1])
+                } else {
+                    tomorrowRiskPercent = nil
+                }
             }
             .task(id: widgetSignature) {
                 await publishToWidget()
@@ -592,6 +600,10 @@ struct DashboardView: View {
     private var panelExpandedContent: some View {
         TierDisclaimerBanner(tier: city.tier, cityName: city.name)
 
+        if viewModel.result?.state != .activeBanNow, let riskPercent = tomorrowRiskPercent, riskPercent >= 25 {
+            riskEstimateRow(riskPercent)
+        }
+
         if let pending = pendingAlert {
             pendingAlertCard(pending)
         } else if let alert = selectedAlert {
@@ -798,6 +810,23 @@ struct DashboardView: View {
         .padding(.vertical, 8)
         .background(Capsule().fill(Color(.tertiarySystemBackground)))
         .overlay(Capsule().strokeBorder(themeManager.palette.primary.opacity(0.35), lineWidth: 1))
+    }
+
+    /// A same-day-ahead heuristic from the forecast, not an official
+    /// prediction — shown only when notable (≥25%) and only while there's
+    /// no active ban right now to distract from.
+    private func riskEstimateRow(_ percent: Int) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "cloud.snow.fill")
+                .foregroundStyle(themeManager.palette.primary)
+            Text(localizer.s(.dashboardRiskTomorrow).replacingOccurrences(of: "%PCT%", with: "\(percent)"))
+                .font(.caption.weight(.semibold))
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(themeManager.palette.primary.opacity(0.12)))
     }
 
     @ViewBuilder
