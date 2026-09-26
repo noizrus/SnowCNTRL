@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var premiumManager: PremiumManager
     @AppStorage("snowcntrl.dailyReminder") private var dailyReminderEnabled = false
+    @AppStorage(TireChangeAdvisor.enabledKey) private var tireReminderEnabled = false
     @AppStorage(CityStatusService.simulateBanKey) private var isSimulatingBan = false
     @AppStorage(AlertRingDuration.storageKey) private var alertRingDurationSeconds = AlertRingDuration.default.rawValue
     @State private var isShowingCityHelp = false
@@ -60,6 +61,16 @@ struct SettingsView: View {
                             handleReminderToggle(enabled)
                         }
                     Text(localizer.s(.settingsNotificationsSubtitle))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section {
+                    Toggle(localizer.s(.settingsTireReminderToggle), isOn: $tireReminderEnabled)
+                        .onChange(of: tireReminderEnabled) { enabled in
+                            handleTireReminderToggle(enabled)
+                        }
+                    Text(localizer.s(.settingsTireReminderSubtitle))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -177,6 +188,17 @@ struct SettingsView: View {
                 return
             }
             NotificationScheduler.scheduleDailyReminder(cityName: city.name, language: localizer.language)
+        }
+    }
+
+    private func handleTireReminderToggle(_ enabled: Bool) {
+        guard enabled else { return }
+        // Re-enabling is the "undo" for a "Ne plus demander" tapped earlier
+        // on either season, and a request the first time it's turned on.
+        TireChangeAdvisor.resetOptOuts()
+        Task {
+            let granted = await NotificationScheduler.requestAuthorizationIfNeeded()
+            if !granted { tireReminderEnabled = false }
         }
     }
 }

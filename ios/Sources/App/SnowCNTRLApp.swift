@@ -15,6 +15,7 @@ struct SnowCNTRLApp: App {
         // Must be set before launch finishes to receive notification actions.
         UNUserNotificationCenter.current().delegate = NotificationCoordinator.shared
         AlertNotifier.registerCategories(language: Localizer().language)
+        TireChangeAdvisor.registerCategory(language: Localizer().language)
     }
 
     var body: some Scene {
@@ -28,6 +29,7 @@ struct SnowCNTRLApp: App {
                 }
                 .onChange(of: localizer.language) { language in
                     AlertNotifier.registerCategories(language: language)
+                    TireChangeAdvisor.registerCategory(language: language)
                 }
         }
         .onChange(of: scenePhase) { newPhase in

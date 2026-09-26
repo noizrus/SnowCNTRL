@@ -127,6 +127,15 @@ enum LocKey: Hashable, CaseIterable {
     case weatherHourlyHint
     case weatherHourlyTitle
     case weatherHourlyNoSnow
+
+    case settingsTireReminderToggle
+    case settingsTireReminderSubtitle
+    case tireReminderWinterTitle
+    case tireReminderWinterBody
+    case tireReminderSummerTitle
+    case tireReminderSummerBody
+    case tireReminderDismiss
+    case tireReminderStopAsking
 }
 
 enum Strings {
@@ -706,6 +715,46 @@ enum Strings {
             .french: "Aucune neige prévue ce jour-là.",
             .english: "No snow expected that day.",
             .spanish: "No se espera nieve ese día.",
+        ],
+        .settingsTireReminderToggle: [
+            .french: "Rappel changement de pneus",
+            .english: "Tire change reminder",
+            .spanish: "Recordatorio de cambio de neumáticos",
+        ],
+        .settingsTireReminderSubtitle: [
+            .french: "Basé sur la météo à venir, pour devancer la ruée chez les garagistes.",
+            .english: "Based on the upcoming forecast, so you can beat the rush at the garage.",
+            .spanish: "Según el pronóstico, para adelantarte a la afluencia en el taller.",
+        ],
+        .tireReminderWinterTitle: [
+            .french: "C'est le moment de passer aux pneus d'hiver",
+            .english: "Time to switch to winter tires",
+            .spanish: "Es hora de poner los neumáticos de invierno",
+        ],
+        .tireReminderWinterBody: [
+            .french: "Les températures vont rester sous 7 °C — devance la ruée et fais ton changement bientôt.",
+            .english: "Temperatures are about to stay below 7°C — beat the rush and get it done soon.",
+            .spanish: "Las temperaturas se mantendrán bajo 7 °C — adelántate y hazlo pronto.",
+        ],
+        .tireReminderSummerTitle: [
+            .french: "C'est le moment de remettre les pneus d'été",
+            .english: "Time to switch back to summer tires",
+            .spanish: "Es hora de volver a los neumáticos de verano",
+        ],
+        .tireReminderSummerBody: [
+            .french: "Les températures vont rester au-dessus de 7 °C — devance la ruée et fais ton changement bientôt.",
+            .english: "Temperatures are about to stay above 7°C — beat the rush and get it done soon.",
+            .spanish: "Las temperaturas se mantendrán sobre 7 °C — adelántate y hazlo pronto.",
+        ],
+        .tireReminderDismiss: [
+            .french: "OK",
+            .english: "OK",
+            .spanish: "OK",
+        ],
+        .tireReminderStopAsking: [
+            .french: "Ne plus demander",
+            .english: "Don't ask again",
+            .spanish: "No preguntar de nuevo",
         ],
     ]
 

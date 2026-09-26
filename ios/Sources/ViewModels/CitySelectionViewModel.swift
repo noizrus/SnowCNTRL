@@ -33,6 +33,15 @@ final class CitySelectionViewModel: ObservableObject {
         allCities.first { $0.id == favoriteCityID }
     }
 
+    /// Same city the app opens on at launch, read directly from storage —
+    /// lets a non-view service (background refresh) know which city's
+    /// weather to check without needing a view model instance.
+    static var currentCity: City? {
+        let favoriteID = UserDefaults.standard.string(forKey: favoriteKey)
+        let id = favoriteID ?? UserDefaults.standard.string(forKey: storageKey)
+        return CitiesData.all.first { $0.id == id }
+    }
+
     /// Cities matching the search, nearest to `location` first.
     func cities(sortedFrom location: CLLocationCoordinate2D?) -> [City] {
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)

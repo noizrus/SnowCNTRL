@@ -4,6 +4,7 @@ import BackgroundTasks
 /// Checks every saved address that has alerts enabled and lives in a city
 /// with a live data integration (currently: Montreal only — see
 /// MontrealOpenDataProvider). If a ban is active, fires a local notification.
+/// Also runs the tire-change advisory check for the app's current city.
 ///
 /// iOS controls exactly when a BGAppRefreshTask actually runs — it is
 /// opportunistic (network + battery permitting), never instant and never
@@ -65,6 +66,10 @@ enum BackgroundRefreshManager {
                 // A failed check must not cancel reminders for a real ban.
                 break
             }
+        }
+
+        if let city = CitySelectionViewModel.currentCity {
+            await TireChangeAdvisor.checkAndNotify(city: city, language: language)
         }
     }
 }

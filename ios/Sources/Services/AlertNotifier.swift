@@ -175,6 +175,14 @@ final class NotificationCoordinator: NSObject, UNUserNotificationCenterDelegate 
     ) {
         defer { completionHandler() }
         let content = response.notification.request.content
+
+        if let rawSeason = content.userInfo["tireSeason"] as? String, let season = TireSeason(rawValue: rawSeason) {
+            if response.actionIdentifier == TireChangeAdvisor.stopAskingActionIdentifier {
+                TireChangeAdvisor.stopAsking(season: season)
+            }
+            return
+        }
+
         guard let raw = content.userInfo["addressID"] as? String, let addressID = UUID(uuidString: raw) else { return }
         switch response.actionIdentifier {
         case AlertNotifier.movedActionIdentifier:
