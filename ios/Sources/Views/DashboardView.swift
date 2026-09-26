@@ -20,7 +20,6 @@ struct DashboardView: View {
     @State private var isShowingCityHelp = false
     @State private var isPanelCollapsed = true
     @State private var isShowingInfo = false
-    @State private var isZoomedOutTooFar = false
     @State private var isLoadingStreets = false
     @State private var isLocating = false
     @State private var pendingAlert: PendingAlert?
@@ -329,9 +328,7 @@ struct DashboardView: View {
                 MapHintCapsule(text: toast)
                     .transition(.opacity)
             }
-            if isZoomedOutTooFar {
-                MapHintCapsule(text: localizer.s(.mapZoomInHint))
-            } else if isLoadingStreets {
+            if isLoadingStreets {
                 MapHintCapsule(text: localizer.s(.mapLoadingStreets), showsProgress: true)
             }
         }
@@ -379,10 +376,6 @@ struct DashboardView: View {
 
     private func handleMapTap(_ coordinate: CLLocationCoordinate2D) {
         selectedAlertID = nil
-        guard !isZoomedOutTooFar else {
-            showToast(localizer.s(.mapZoomInHint))
-            return
-        }
 
         // Roughly a finger's width on screen at the current zoom.
         let threshold = max(25, region.span.latitudeDelta * 111_000 * 0.04)
@@ -479,16 +472,8 @@ struct DashboardView: View {
     private func loadSegments() async {
         let overallStatus = (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus
         isLoadingStreets = true
-        let result = await SnowSegmentService.shared.segments(for: city, in: region, overallStatus: overallStatus)
+        segments = await SnowSegmentService.shared.segments(for: city, in: region, overallStatus: overallStatus)
         isLoadingStreets = false
-        switch result {
-        case .zoomedOutTooFar:
-            isZoomedOutTooFar = true
-            segments = []
-        case .segments(let loaded):
-            isZoomedOutTooFar = false
-            segments = loaded
-        }
     }
 
     private func fittingRegion(for addresses: [SavedAddress]) -> MKCoordinateRegion {

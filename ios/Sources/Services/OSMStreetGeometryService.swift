@@ -12,11 +12,14 @@ import MapKit
 final class OSMStreetGeometryService {
     static let shared = OSMStreetGeometryService()
 
-    /// Beyond this latitude span the lines are too dense to read and the
-    /// query too large, so the map asks the user to zoom in instead.
-    static let maxSpanDegrees: CLLocationDegrees = 0.02
     private static let tileSize = 0.01
     private static let maxCachedBlocks = 40_000
+    /// Past this span (well beyond even a whole metro area) the tile grid
+    /// itself would be millions of cells — computing and fetching that would
+    /// freeze the app. Lines already loaded stay on screen; the map just
+    /// stops asking for more until zoomed back in. No message shown either
+    /// way — the lines (or their absence) speak for themselves.
+    private static let maxFetchSpanDegrees: CLLocationDegrees = 2.0
 
     private struct TileKey: Hashable {
         let x: Int
@@ -28,25 +31,24 @@ final class OSMStreetGeometryService {
     private var loadedTiles: Set<TileKey> = []
     private var pending: [TileKey: Task<Void, Never>] = [:]
 
-    /// `nil` means zoomed out too far to show street lines.
-    func blocks(in region: MKCoordinateRegion) async -> [StreetBlock]? {
-        guard region.span.latitudeDelta <= Self.maxSpanDegrees else { return nil }
-
-        let wanted = Self.tiles(covering: region)
-        let toFetch = wanted.filter { !loadedTiles.contains($0) && pending[$0] == nil }
-        if !toFetch.isEmpty {
-            let box = Self.boundingBox(of: toFetch)
-            // Unstructured so a fetch already started completes and gets
-            // cached even if the caller's task is cancelled by more panning.
-            let task = Task {
-                let fetched = await OverpassClient.fetchBlocks(south: box.south, west: box.west, north: box.north, east: box.east)
-                self.store(fetched, for: toFetch)
+    func blocks(in region: MKCoordinateRegion) async -> [StreetBlock] {
+        if region.span.latitudeDelta <= Self.maxFetchSpanDegrees {
+            let wanted = Self.tiles(covering: region)
+            let toFetch = wanted.filter { !loadedTiles.contains($0) && pending[$0] == nil }
+            if !toFetch.isEmpty {
+                let box = Self.boundingBox(of: toFetch)
+                // Unstructured so a fetch already started completes and gets
+                // cached even if the caller's task is cancelled by more panning.
+                let task = Task {
+                    let fetched = await OverpassClient.fetchBlocks(south: box.south, west: box.west, north: box.north, east: box.east)
+                    self.store(fetched, for: toFetch)
+                }
+                for tile in toFetch { pending[tile] = task }
             }
-            for tile in toFetch { pending[tile] = task }
-        }
 
-        for task in Set(wanted.compactMap { pending[$0] }) {
-            await task.value
+            for task in Set(wanted.compactMap { pending[$0] }) {
+                await task.value
+            }
         }
 
         let visible = Self.mapRect(for: region)

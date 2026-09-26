@@ -13,23 +13,18 @@ extension ParkingBanState {
     }
 }
 
-enum StreetSegmentsResult {
-    case zoomedOutTooFar
-    case segments([StreetSegment])
-}
-
 @MainActor
 final class SnowSegmentService {
     static let shared = SnowSegmentService()
 
     /// Both curbs of every real street block in `region`. Each side takes
     /// `overallStatus` for now: a per-side feed (Montréal's Planif-Neige,
-    /// keyed by street side) would replace it here once wired in.
-    func segments(for city: City, in region: MKCoordinateRegion, overallStatus: SnowClearingStatus) async -> StreetSegmentsResult {
-        guard city.tier != .notApplicable else { return .segments([]) }
-        guard let blocks = await OSMStreetGeometryService.shared.blocks(in: region) else {
-            return .zoomedOutTooFar
-        }
-        return .segments(blocks.flatMap { $0.sides(status: overallStatus) })
+    /// keyed by street side) would replace it here once wired in. Shown at
+    /// every zoom level — no substitute indicator when zoomed out, just the
+    /// same colored lines, however many of them fit in view.
+    func segments(for city: City, in region: MKCoordinateRegion, overallStatus: SnowClearingStatus) async -> [StreetSegment] {
+        guard city.tier != .notApplicable else { return [] }
+        let blocks = await OSMStreetGeometryService.shared.blocks(in: region)
+        return blocks.flatMap { $0.sides(status: overallStatus) }
     }
 }

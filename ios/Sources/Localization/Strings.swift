@@ -65,7 +65,6 @@ enum LocKey: Hashable, CaseIterable {
     case dashboardStatusOffSeason
     case legendTitle
     case legendCityWideNote
-    case mapZoomInHint
     case mapLoadingStreets
     case mapLocateMe
     case panelToggle
@@ -409,11 +408,6 @@ enum Strings {
             .french: "Pour l'instant, chaque rue affiche le statut général de la ville — le détail côté par côté viendra avec les données officielles.",
             .english: "For now every street shows the city-wide status — side-by-side detail will come with official data.",
             .spanish: "Por ahora cada calle muestra el estado general de la ciudad — el detalle por lado llegará con los datos oficiales.",
-        ],
-        .mapZoomInHint: [
-            .french: "Zoome pour voir l'état des rues",
-            .english: "Zoom in to see street status",
-            .spanish: "Acerca el mapa para ver el estado de las calles",
         ],
         .mapLoadingStreets: [
             .french: "Chargement des rues…",
