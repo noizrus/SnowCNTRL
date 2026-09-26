@@ -62,6 +62,10 @@ targets:
           - SKAdNetworkIdentifier: 2u9pt9hc89.skadnetwork
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
+        # Only standard HTTPS/TLS (via URLSession) for API calls — no
+        # custom or proprietary encryption — so export compliance is
+        # exempt and App Store Connect can skip asking on every upload.
+        ITSAppUsesNonExemptEncryption: false
     entitlements:
       path: SnowCNTRL.entitlements
       properties:
