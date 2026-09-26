@@ -152,6 +152,8 @@ enum LocKey: Hashable, CaseIterable {
     case communityReportActive
     case communityReportThanks
     case communityReportFailed
+    case communityReportCooldown
+    case communityReportNoAccount
     case tireReminderWinterTitle
     case tireReminderWinterBody
     case tireReminderSummerTitle
@@ -839,9 +841,19 @@ enum Strings {
             .spanish: "¡Gracias! Tu reporte fue añadido.",
         ],
         .communityReportFailed: [
-            .french: "Signalement impossible — iCloud requis, ou tu as déjà signalé récemment.",
-            .english: "Couldn't report — iCloud is required, or you already reported recently.",
-            .spanish: "No se pudo enviar — se requiere iCloud, o ya reportaste hace poco.",
+            .french: "Signalement impossible — réessaie plus tard.",
+            .english: "Couldn't send the report — try again later.",
+            .spanish: "No se pudo enviar el reporte — inténtalo más tarde.",
+        ],
+        .communityReportCooldown: [
+            .french: "Tu as déjà signalé cette ville il y a moins d'une heure.",
+            .english: "You already reported this city less than an hour ago.",
+            .spanish: "Ya reportaste esta ciudad hace menos de una hora.",
+        ],
+        .communityReportNoAccount: [
+            .french: "Connecte-toi à iCloud pour signaler.",
+            .english: "Sign in to iCloud to send a report.",
+            .spanish: "Inicia sesión en iCloud para enviar un reporte.",
         ],
         .tireReminderWinterTitle: [
             .french: "Prépare tes pneus d'hiver",

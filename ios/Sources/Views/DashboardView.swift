@@ -33,12 +33,14 @@ struct DashboardView: View {
     @State private var tomorrowRiskPercent: Int?
     @State private var communityTally: CommunityReportService.Tally?
     @State private var isSubmittingReport = false
-    /// A community report recolors the map right away instead of waiting on
-    /// official data — cleared to nil (falling back to the official color)
-    /// the moment the official ban state itself changes, since that's a
-    /// stronger signal than a crowd report.
-    @State private var communityOverrideStatus: SnowClearingStatus?
-    @State private var communityOverrideBaseState: ParkingBanState?
+    /// A community report only reflects one street (whichever the map is
+    /// centered on when it's submitted, since the report itself carries no
+    /// per-street data — just a city-wide "cleared"/"still active" signal),
+    /// so only that one segment gets recolored, keyed by its stable ID so
+    /// the override survives the segment array being reloaded (e.g. on
+    /// pan). Cleared out the moment the official ban state itself changes,
+    /// since that's a stronger signal than a crowd report.
+    @State private var communityColorOverrides: [String: SnowClearingStatus] = [:]
     @Binding var selectedTab: MainTab
     @ObservedObject var citySelection: CitySelectionViewModel
     let city: City
@@ -80,6 +82,19 @@ struct DashboardView: View {
             ids.insert(pendingID)
         }
         return ids
+    }
+
+    /// `segments` with any community-reported street recolored — kept as a
+    /// derived overlay instead of mutating `segments` itself, so the
+    /// override survives `loadSegments()` replacing the array wholesale.
+    private var mapSegments: [StreetSegment] {
+        guard !communityColorOverrides.isEmpty else { return segments }
+        return segments.map { segment in
+            guard let status = communityColorOverrides[segment.id] else { return segment }
+            var updated = segment
+            updated.status = status
+            return updated
+        }
     }
 
     /// Everything the home/lock screen widget displays; it's republished
@@ -175,6 +190,10 @@ struct DashboardView: View {
             .task(id: city.id) {
                 communityTally = await CommunityReportService.tally(for: city.id)
             }
+            .onChange(of: viewModel.result?.state) { _ in
+                // Fresh official data supersedes any crowd-reported color.
+                communityColorOverrides = [:]
+            }
             .task(id: widgetSignature) {
                 await publishToWidget()
             }
@@ -265,7 +284,7 @@ struct DashboardView: View {
                 region: $region,
                 pinCoordinate: .constant(pendingAlert?.coordinate),
                 accentColor: UIColor(themeManager.palette.primary),
-                segments: segments,
+                segments: mapSegments,
                 readOnlyPins: myAddresses,
                 highlightedSegmentIDs: highlightedSideIDs,
                 onTap: handleMapTap,
@@ -569,14 +588,7 @@ struct DashboardView: View {
     // MARK: - Data
 
     private func loadSegments() async {
-        let officialState = viewModel.result?.state ?? .unknownNoData
-        let overallStatus: SnowClearingStatus
-        if let override = communityOverrideStatus, communityOverrideBaseState == officialState {
-            overallStatus = override
-        } else {
-            communityOverrideStatus = nil
-            overallStatus = officialState.asSnowClearingStatus
-        }
+        let overallStatus = (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus
         isLoadingStreets = true
         var merged: [String: StreetSegment] = [:]
         for point in pointsOfInterest {
@@ -955,8 +967,10 @@ struct DashboardView: View {
                 showToast(localizer.s(.communityReportThanks))
                 communityTally = await CommunityReportService.tally(for: city.id)
                 applyCommunityColor(for: state)
-            case .cooldown, .noiCloudAccount:
-                showToast(localizer.s(.communityReportFailed))
+            case .cooldown:
+                showToast(localizer.s(.communityReportCooldown))
+            case .noiCloudAccount:
+                showToast(localizer.s(.communityReportNoAccount))
             case .error(let message):
                 // TEMP: surfaces the raw CloudKit error so it's diagnosable
                 // without a debugger attached (no Mac during normal use).
@@ -965,18 +979,16 @@ struct DashboardView: View {
         }
     }
 
-    /// Recolors the streets on screen right away, using the same legend
-    /// colors as the map's official statuses, so the report has visible
-    /// proof it went through instead of only a toast + a tally number.
+    /// Recolors just the street the map is centered on (the report itself
+    /// has no per-street data — it's a city-wide "cleared"/"still active"
+    /// signal — so this is the closest visible stand-in for "the street I'm
+    /// reporting on"), using the same legend colors as the map's official
+    /// statuses, so the report has visible proof it went through instead of
+    /// only a toast + a tally number.
     private func applyCommunityColor(for state: CommunityReportState) {
+        guard let match = segments.nearestSide(to: region.center, within: 60) else { return }
         let status: SnowClearingStatus = state == .cleared ? .cleared : .noParkingActive
-        communityOverrideBaseState = viewModel.result?.state ?? .unknownNoData
-        communityOverrideStatus = status
-        segments = segments.map { segment in
-            var updated = segment
-            updated.status = status
-            return updated
-        }
+        communityColorOverrides[match.segment.id] = status
     }
 
     @ViewBuilder
