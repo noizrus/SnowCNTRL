@@ -206,6 +206,9 @@ struct DashboardView: View {
             .onReceive(locationManager.$lastLocation) { coordinate in
                 handleLocationUpdate(coordinate)
             }
+            .onReceive(locationManager.$lastFailure) { failure in
+                handleLocationFailure(failure)
+            }
             .onAppear {
                 checkForDetectedParking()
                 centerOnCurrentLocationIfNeeded()
@@ -409,6 +412,17 @@ struct DashboardView: View {
         guard isLocating, let coordinate else { return }
         isLocating = false
         region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
+    }
+
+    /// `requestLocation()` only ever calls back once — a failure here (no
+    /// signal, airplane mode, system-wide Location Services off even though
+    /// this app is authorized) means it's never coming, so `isLocating`
+    /// needs to be cleared and the wait ended explicitly instead of hanging
+    /// until the next manual retry silently overwrites it.
+    private func handleLocationFailure(_ failure: UUID?) {
+        guard isLocating, failure != nil else { return }
+        isLocating = false
+        showToast(localizer.s(.mapLocationFailed))
     }
 
     /// Surfaces a parking spot `CarConnectionMonitor` picked up (car audio

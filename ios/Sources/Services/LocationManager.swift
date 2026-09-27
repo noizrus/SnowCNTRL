@@ -7,6 +7,11 @@ import Combine
 final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published private(set) var lastLocation: CLLocationCoordinate2D?
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
+    /// Ticks (via a fresh UUID, not the error itself) whenever a one-shot
+    /// `requestLocation()` fails — `didFailWithError` only fires once per
+    /// request, so this is the one chance to tell the caller "give up
+    /// waiting" instead of leaving it hung on a location that's never coming.
+    @Published private(set) var lastFailure: UUID?
 
     private let manager = CLLocationManager()
 
@@ -39,6 +44,6 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // Silent: the user can still search or drop a pin manually.
+        lastFailure = UUID()
     }
 }
