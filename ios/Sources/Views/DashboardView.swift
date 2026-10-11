@@ -21,8 +21,11 @@ struct DashboardView: View {
     @State private var isShowingCityHelp = false
     @State private var isPanelCollapsed = true
     @State private var isShowingInfo = false
-    @State private var isLoadingStreets = false
     @State private var isLocating = false
+    /// Whether the map is continuously recentering on the driver's live
+    /// position (toggled by the "locate me" button) rather than the
+    /// one-shot fix used on first launch.
+    @State private var isFollowingLocation = false
     @State private var pendingAlert: PendingAlert?
     @State private var selectedAlertID: UUID?
     @State private var notificationsDenied = false
@@ -213,6 +216,12 @@ struct DashboardView: View {
                 checkForDetectedParking()
                 centerOnCurrentLocationIfNeeded()
             }
+            .onDisappear {
+                if isFollowingLocation {
+                    isFollowingLocation = false
+                    locationManager.stopUpdatingLocation()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 checkForDetectedParking()
             }
@@ -375,12 +384,11 @@ struct DashboardView: View {
         }
     }
 
-    /// Same one-shot request as tapping the "locate me" button, fired
-    /// automatically on first appearance so the map opens zoomed on the
-    /// driver's actual position instead of the whole city. Once-only via
-    /// `hasCenteredOnLocation`, so returning to this screen from a pushed
-    /// one (city rules, weather…) doesn't re-snap the map away from
-    /// wherever the user then panned it to.
+    /// A one-shot centering fix, fired automatically on first appearance so
+    /// the map opens zoomed on the driver's actual position instead of the
+    /// whole city. Once-only via `hasCenteredOnLocation`, so returning to
+    /// this screen from a pushed one (city rules, weather…) doesn't re-snap
+    /// the map away from wherever the user then panned it to.
     private func centerOnCurrentLocationIfNeeded() {
         guard !hasCenteredOnLocation else { return }
         hasCenteredOnLocation = true
@@ -401,6 +409,25 @@ struct DashboardView: View {
         }
     }
 
+    /// The "locate me" map button: first tap centers once *and* keeps the
+    /// map following the driver's live position (so it doesn't drift off
+    /// to the side while driving); a second tap turns following back off,
+    /// leaving the map wherever it is.
+    private func toggleLocationFollow() {
+        guard !isFollowingLocation else {
+            isFollowingLocation = false
+            locationManager.stopUpdatingLocation()
+            return
+        }
+        switch locationManager.authorizationStatus {
+        case .denied, .restricted:
+            showToast(localizer.s(.mapLocationPermissionDenied))
+        default:
+            isFollowingLocation = true
+            locationManager.startUpdatingLocation()
+        }
+    }
+
     private func loadSegmentsDebounced() async {
         // Debounce: panning changes the request continuously.
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -409,19 +436,32 @@ struct DashboardView: View {
     }
 
     private func handleLocationUpdate(_ coordinate: CLLocationCoordinate2D?) {
-        guard isLocating, let coordinate else { return }
-        isLocating = false
-        region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
+        guard let coordinate else { return }
+        if isLocating {
+            isLocating = false
+            region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
+        } else if isFollowingLocation {
+            // Only the center moves — not the span — so following doesn't
+            // fight whatever zoom level the driver chose.
+            region.center = coordinate
+        }
     }
 
-    /// `requestLocation()` only ever calls back once — a failure here (no
-    /// signal, airplane mode, system-wide Location Services off even though
-    /// this app is authorized) means it's never coming, so `isLocating`
-    /// needs to be cleared and the wait ended explicitly instead of hanging
-    /// until the next manual retry silently overwrites it.
+    /// A failure here (no signal, airplane mode, system-wide Location
+    /// Services off even though this app is authorized) can end either kind
+    /// of request: `requestLocation()` only ever calls back once, so
+    /// `isLocating` needs to be cleared and the wait ended explicitly
+    /// instead of hanging until the next manual retry silently overwrites
+    /// it; a live `startUpdatingLocation()` session can also die mid-drive
+    /// (tunnel, parking garage), which should drop out of follow mode
+    /// rather than silently stop tracking while still showing as active.
     private func handleLocationFailure(_ failure: UUID?) {
-        guard isLocating, failure != nil else { return }
+        guard failure != nil, isLocating || isFollowingLocation else { return }
         isLocating = false
+        if isFollowingLocation {
+            isFollowingLocation = false
+            locationManager.stopUpdatingLocation()
+        }
         showToast(localizer.s(.mapLocationFailed))
     }
 
@@ -470,9 +510,6 @@ struct DashboardView: View {
                 MapHintCapsule(text: toast)
                     .transition(.opacity)
             }
-            if isLoadingStreets {
-                MapHintCapsule(text: localizer.s(.mapLoadingStreets), showsProgress: true)
-            }
         }
     }
 
@@ -481,8 +518,8 @@ struct DashboardView: View {
             MapControlButton(systemImage: "mappin.and.ellipse", accessibilityText: localizer.s(.citySelectionChangeButton)) {
                 isShowingCityPicker = true
             }
-            MapControlButton(systemImage: "location.fill", accessibilityText: localizer.s(.mapLocateMe)) {
-                requestLocationCentering()
+            MapControlButton(systemImage: "location.fill", isActive: isFollowingLocation, accessibilityText: localizer.s(.mapLocateMe)) {
+                toggleLocationFollow()
             }
             MapControlButton(
                 systemImage: colorScheme == .dark ? "sun.max.fill" : "moon.stars.fill",
@@ -614,7 +651,6 @@ struct DashboardView: View {
 
     private func loadSegments() async {
         let overallStatus = (viewModel.result?.state ?? .unknownNoData).asSnowClearingStatus
-        isLoadingStreets = true
         var merged: [String: StreetSegment] = [:]
         for point in pointsOfInterest {
             let pointRegion = MKCoordinateRegion(
@@ -624,7 +660,6 @@ struct DashboardView: View {
             let loaded = await SnowSegmentService.shared.segments(for: city, in: pointRegion, overallStatus: overallStatus)
             for segment in loaded { merged[segment.id] = segment }
         }
-        isLoadingStreets = false
         segments = Array(merged.values)
     }
 

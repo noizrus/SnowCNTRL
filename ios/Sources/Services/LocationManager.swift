@@ -14,14 +14,24 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published private(set) var lastFailure: UUID?
 
     private let manager = CLLocationManager()
+    /// Whether the last request before an auth prompt was for continuous
+    /// tracking (vs. a one-shot fix) — so once permission actually comes
+    /// back, the right kind of request resumes instead of always falling
+    /// back to a single fix.
+    private var wantsContinuousUpdates = false
 
     override init() {
         authorizationStatus = manager.authorizationStatus
         super.init()
         manager.delegate = self
+        // Road-speed movement, not pedestrian jitter: filters GPS noise
+        // appropriately and avoids redundant updates every couple of meters.
+        manager.activityType = .automotiveNavigation
+        manager.distanceFilter = 15
     }
 
     func requestLocation() {
+        wantsContinuousUpdates = false
         switch manager.authorizationStatus {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
@@ -32,9 +42,32 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         }
     }
 
+    /// Keeps `lastLocation` updated as the car moves, instead of the single
+    /// fix `requestLocation()` gives — what a "follow me while driving" map
+    /// mode needs.
+    func startUpdatingLocation() {
+        wantsContinuousUpdates = true
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.startUpdatingLocation()
+        default:
+            break
+        }
+    }
+
+    func stopUpdatingLocation() {
+        wantsContinuousUpdates = false
+        manager.stopUpdatingLocation()
+    }
+
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
-        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
+        guard authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways else { return }
+        if wantsContinuousUpdates {
+            manager.startUpdatingLocation()
+        } else {
             manager.requestLocation()
         }
     }
